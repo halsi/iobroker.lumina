@@ -237,16 +237,16 @@ body {
 }
 .sensor-cell {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 6px 10px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--sep);
-  font-size: 12px;
+  font-size: 18px;
 }
 .sensor-cell:nth-child(odd)  { border-right: 1px solid var(--sep); }
 .sensor-cell:nth-last-child(-n+2) { border-bottom: none; }
 .sensor-name { color: var(--purple); }
 
 /* these classes are set by JS */
-.sensor-state { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.sensor-state { font-size: 15px; font-weight: 700; padding: 4px 12px; border-radius: 99px; }
 .sensor-open    { background: rgba(204,34,0,0.2);  color: #ee4444; }
 .sensor-closed  { background: rgba(68,170,68,0.2); color: #44AA44; }
 .sensor-unknown { background: rgba(255,255,255,0.04); color: #333; }
