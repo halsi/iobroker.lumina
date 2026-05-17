@@ -138,22 +138,22 @@ body {
 #hdr-zone::before {
   content: '';
   display: block;
-  width: 56px; height: 56px;
-  background: linear-gradient(to top right, var(--bluey) 50%, #000 50%);
+  width: 60px; height: 60px;
+  background: linear-gradient(to top right, var(--bluey) 49%, transparent 51%);
   position: absolute; left: 0; bottom: var(--bar-height); z-index: 0;
 }
 #hdr-zone::after {
   content: '';
   display: block;
-  width: 56px; height: 56px;
-  background: #000;
-  border-radius: 0 0 0 44px;
+  width: 60px; height: 60px;
+  background: var(--bg);
+  border-radius: 0 0 0 48px;
   position: absolute; left: 0; bottom: var(--bar-height); z-index: 1;
 }
 
 #banner {
   flex: 1;
-  padding-left: 72px;
+  padding-left: 76px;
   padding-bottom: 36px;
   font-size: 52px;
   font-weight: 700;
@@ -175,22 +175,24 @@ body {
 /* Data cascade (decorative animated numbers) */
 #data-cascade {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
-  gap: 0 8px;
+  gap: 0 10px;
   height: 120px;
+  min-width: 220px;
   overflow: hidden;
-  padding-right: 8px;
-  font-size: 13px;
-  line-height: 1.15;
+  padding: 8px 12px 0;
+  font-size: 14px;
+  line-height: 1.3;
   color: var(--golden-orange);
   position: relative; z-index: 2;
-  animation: cascade-fade 4s ease 0.5s infinite;
+  animation: cascade-fade 6s ease 0.5s infinite;
+  opacity: 0.7;
 }
 @keyframes cascade-fade {
-  0%, 40%  { color: var(--golden-orange); }
-  45%, 55% { color: #fff; }
-  60%, 100% { color: var(--golden-orange); }
+  0%, 40%  { color: var(--golden-orange); opacity: 0.7; }
+  45%, 55% { color: #ffcc66; opacity: 1; }
+  60%, 100% { color: var(--golden-orange); opacity: 0.7; }
 }
 .dc-col { text-align: right; }
 
@@ -207,12 +209,12 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  width: 130px; height: 46px;
-  padding: 6px 14px;
+  width: 100px; height: 38px;
+  padding: 5px 12px;
   border-radius: 100vmax;
   border: none;
   font-family: 'Antonio', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   color: #000;
@@ -265,7 +267,7 @@ body {
 #bar-top {
   display: flex;
   height: var(--bar-height);
-  margin-left: 56px;
+  margin-left: 60px;
 }
 .bar { height: 100%; }
 .bar-1 { width: 38%; background: var(--bluey);          border-right: 4px solid #000; }
@@ -286,28 +288,28 @@ body {
 /* Corner cut bottom-left */
 #content-zone::before {
   content: '';
-  width: 56px; height: 56px;
-  background: linear-gradient(to bottom right, var(--red) 50%, #000 50%);
+  width: 60px; height: 60px;
+  background: linear-gradient(to bottom right, var(--red) 49%, transparent 51%);
   position: absolute; left: 0; top: 0; z-index: 0;
 }
 #content-zone::after {
   content: '';
-  width: 56px; height: 56px;
-  background: #000;
-  border-radius: 44px 0 0 0;
+  width: 60px; height: 60px;
+  background: var(--bg);
+  border-radius: 48px 0 0 0;
   position: absolute; left: 0; top: 0; z-index: 1;
 }
 
 /* ── Data panels (left of content) ─────────────────────────────── */
 #data-panels {
   width: 780px;
-  padding-left: 68px;
+  padding-left: 72px;
   padding-top: 14px;
   padding-right: 10px;
   padding-bottom: 8px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: 1fr 1fr;
   gap: 8px;
   position: relative; z-index: 2;
   overflow: hidden;
@@ -315,9 +317,12 @@ body {
 
 /* ── LCARS Cards ────────────────────────────────────────────────── */
 .lcard {
-  background: #0a0a0a;
+  background: #0e0e0e;
+  border: 1px solid #1a1a1a;
   border-radius: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .lcard-header {
@@ -334,7 +339,7 @@ body {
 .lcard-header-left  { border-radius: 100vmax 0 0 100vmax; padding-left: 14px; }
 .lcard-header-right { border-radius: 0 100vmax 100vmax 0; padding-right: 14px; justify-content: flex-end; }
 
-.lcard-body { padding: 6px 10px 8px; }
+.lcard-body { padding: 6px 10px 8px; flex: 1; overflow: hidden; }
 
 .lrow {
   display: flex;
@@ -464,6 +469,9 @@ body {
   100% { transform: scale(1);    filter: brightness(1); }
 }
 .btn-pressed { animation: btn-press 0.2s ease-out; }
+
+/* Fix 1: Hide lcars.js injected UI elements */
+#topBtn, .headtrim, .baseboard { display: none !important; }
 </style>
 </head>
 <body>

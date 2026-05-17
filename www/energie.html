@@ -209,7 +209,8 @@ function fitViewBox() {
   const svg = document.getElementById('flow-svg');
   const w = svg.clientWidth || 1920;
   const h = svg.clientHeight || 906;
-  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  // Add 20px top margin so the SOLAR label (y≈36) doesn't clip at the iframe edge
+  svg.setAttribute('viewBox', `0 -20 ${w} ${h}`);
   // Scale node positions from reference (1920×906) to actual size
   const sx = w / 1920, sy = h / 906;
   const nodes = [
