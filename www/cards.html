@@ -192,7 +192,7 @@ body {
 .batt-icon {
   display: inline-flex; align-items: center;
   border: 2px solid #555; border-radius: 3px;
-  padding: 2px 3px; height: 18px; position: relative;
+  padding: 2px 4px; height: 18px; min-width: 42px; position: relative;
 }
 .batt-icon::after {
   content: ''; position: absolute; right: -4px; top: 50%;
@@ -388,7 +388,7 @@ body {
         <span class="nuki-label">Haustür</span>
         <span class="nuki-lock" id="nuki-lock">…</span>
         <span class="nuki-batt">
-          <span class="batt-icon"><span class="batt-fill" id="batt-fill" style="width:14px;background:#44AA44;"></span></span>
+          <span class="batt-icon"><span class="batt-fill" id="batt-fill" style="width:30px;background:#44AA44;"></span></span>
           <span class="batt-pct" id="batt-pct">…%</span>
         </span>
       </div>
@@ -733,7 +733,7 @@ function setNukiBatt(val) {
   const pct = parseInt(val); if (isNaN(pct)) return;
   const fill = document.getElementById('batt-fill'), pctEl = document.getElementById('batt-pct');
   if (pctEl) pctEl.textContent = pct + '%';
-  if (fill) { const w = Math.max(2, Math.round(pct*14/100)); const color = pct<=20?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; fill.style.width=w+'px'; fill.style.background=color; }
+  if (fill) { const w = Math.max(2, Math.round(pct*30/100)); const color = pct<=20?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; fill.style.width=w+'px'; fill.style.background=color; }
 }
 
 // ── Energie ────────────────────────────────────────────────────────────────
