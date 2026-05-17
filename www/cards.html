@@ -533,6 +533,20 @@ body {
       </div>
     </div>
 
+    <div class="card card-blue">
+      <div class="card-header"><span class="ch-dot"></span>Pool Chemie</div>
+      <div class="card-body">
+        <div class="row">
+          <span class="lbl">pH-Wert</span>
+          <span class="val" id="pool-ph"><span class="loading">…</span></span>
+        </div>
+        <div class="row">
+          <span class="lbl">ORP</span>
+          <span class="val" id="pool-orp"><span class="loading">…</span></span>
+        </div>
+      </div>
+    </div>
+
     <div class="card card-teal2">
       <div class="card-header"><span class="ch-dot"></span>Wasser</div>
       <div class="valve-grid">
@@ -625,6 +639,8 @@ const CAR_OIDs = {
 const WASSER_OIDs = {
   'w-moisture': '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.moisture',
   'w-batt':     '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.battery_ok',
+  'pool-ph':    '0_userdata.0.Pool.Pool-PH-Wert',
+  'pool-orp':   '0_userdata.0.Pool.PoolORP',
 };
 const VALVE_OIDs = {
   'v-garten':     '0_userdata.0.Wasser.Gartenwasserventil',
@@ -785,6 +801,22 @@ function setWasser(elId, val) {
   } else if (elId==='w-batt') {
     const pct=parseFloat(val), fill=document.getElementById('w-batt-fill');
     if (!isNaN(pct)&&fill) { const w=Math.max(2,Math.round(pct*14/100)); fill.style.width=w+'px'; fill.style.background=pct<=25?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; }
+  } else if (elId==='pool-ph') {
+    const el=document.getElementById('pool-ph'), n=parseFloat(val);
+    if (!el||isNaN(n)) return;
+    const diff=Math.abs(n-7.2);
+    const color = diff<=0.1 ? '#44AA44' : '#CC2200';
+    el.innerHTML = n.toFixed(1) + '<span class="u"> pH</span>';
+    el.style.color = color;
+  } else if (elId==='pool-orp') {
+    const el=document.getElementById('pool-orp'), n=parseFloat(val);
+    if (!el||isNaN(n)) return;
+    let color;
+    if (n < 620 || n > 800)      color = '#CC2200';
+    else if (n < 650 || n > 750) color = '#FFAA00';
+    else                          color = '#44AA44';
+    el.innerHTML = Math.round(n) + '<span class="u"> mV</span>';
+    el.style.color = color;
   }
 }
 function setValve(elId, val) {
