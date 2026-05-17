@@ -176,9 +176,9 @@ body {
 .row:last-child { border-bottom: none; }
 .row.double-sep { border-bottom: 2px solid rgba(255,255,255,0.12); padding-bottom: 9px; margin-bottom: 2px; }
 
-.lbl { font-size: 13px; }
+.lbl { font-size: 21px; }
 .val { font-size: 21px; font-weight: 600; color: #fff; }
-.val .u { font-size: 12px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+.val .u { font-size: 21px; font-weight: 400; color: var(--muted); margin-left: 2px; }
 .val.loading { color: #2a2a3a; font-size: 14px; }
 
 /* ── Battery bar ─────────────────────────────────────────────────── */
@@ -537,26 +537,8 @@ body {
   <!-- ── HEIZUNG ───────────────────────── -->
   <div class="col">
 
-    <div class="card card-salmon">
-      <div class="card-header"><span class="ch-dot"></span>Temperaturen</div>
-      <div class="card-body">
-        <div class="row">
-          <span class="lbl">Vorlauf</span>
-          <span class="val" id="h-vorlauf"><span class="loading">…</span></span>
-        </div>
-        <div class="row">
-          <span class="lbl">Warmwasser</span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span id="h-hwc-flame" class="hwc-flame">🔥</span>
-            <button id="h-hwc-heat-btn" class="hwc-btn" onclick="pressEffect(this);activateHwcHeating()">▲ HEIZEN</button>
-            <span class="val" id="h-hwc"><span class="loading">…</span></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="card card-peach">
-      <div class="card-header"><span class="ch-dot"></span>Steuerung</div>
+      <div class="card-header"><span class="ch-dot"></span>Heizung</div>
       <div class="card-body">
         <div class="row"><span class="lbl">Heizkurve</span><span class="val" id="h-heizkurve"><span class="loading">…</span></span></div>
         <div class="row">
