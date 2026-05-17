@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Energie Live</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --orange:  #FF9900;
+  --yellow:  #FFCC00;
+  --blue:    #4488FF;
+  --teal:    #00AACC;
+  --teal2:   #66CCBB;
+  --purple:  #CC99FF;
+  --lblue:   #99CCFF;
+  --green:   #44CC88;
+  --red:     #FF5555;
+  --bg:      #0c0c15;
+  --card-bg: #13131e;
+  --card-bd: rgba(255,255,255,0.07);
+  --muted:   #666680;
+}
+
+body {
+  background: var(--bg);
+  color: #e8e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  width: 1920px; height: 1080px;
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+#header {
+  position: relative;
+  display: flex; align-items: center;
+  height: 66px; padding: 0 28px; gap: 16px;
+  background: var(--bg);
+}
+#header::after {
+  content: ''; position: absolute;
+  bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg,
+    var(--orange) 0%, var(--yellow) 30%,
+    var(--teal) 65%, var(--purple) 100%);
+}
+.hdr-logo { font-size: 22px; font-weight: 800; color: var(--orange); flex-shrink: 0; }
+.hdr-pip  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.hdr-sub  { font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); flex: 1; }
+.hdr-div  { width: 1px; height: 28px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+#hdr-time { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.5px; flex-shrink: 0; }
+#hdr-date { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+
+.conn-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: 99px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+}
+#conn-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #2a2a3a; transition: background 0.3s;
+}
+#conn-dot.on  { background: #44AA44; box-shadow: 0 0 6px #44AA4466; }
+#conn-dot.off { background: #CC2200; }
+
+/* ── Flow path animations ────────────────────────────────────── */
+.flow-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 10 8;
+  stroke-opacity: 0.12;
+  transition: stroke 0.4s, stroke-opacity 0.4s;
+}
+.flow-on  { stroke-opacity: 1 !important; animation: dash-fwd 1.2s linear infinite; }
+.flow-rev { stroke-opacity: 1 !important; animation: dash-rev 1.2s linear infinite; }
+
+@keyframes dash-fwd { from { stroke-dashoffset: 36; } to { stroke-dashoffset: 0; } }
+@keyframes dash-rev { from { stroke-dashoffset: -36; } to { stroke-dashoffset: 0; } }
+
+/* ── Node glow ring ──────────────────────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.10; }
+  50%       { opacity: 0.28; }
+}
+.node-ring     { animation: pulse-glow 2.5s ease-in-out infinite; }
+.node-ring-off { opacity: 0.05 !important; animation: none !important; }
+
+/* ── Bottom data strip ───────────────────────────────────────── */
+#data-strip {
+  display: flex; gap: 12px;
+  padding: 10px 24px;
+  height: 174px;
+  align-items: stretch;
+}
+.d-card {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--card-bd);
+  border-radius: 14px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px;
+}
+.d-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align: center; }
+.d-val   { font-size: 32px; font-weight: 700; color: #fff; line-height: 1; }
+.d-val .u { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 3px; }
+.d-val-lg { font-size: 46px; }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ═══════════════════════════════════════════════════════════════ -->
+<header id="header">
+  <div class="hdr-logo">Kleinwilfersdorf 92</div>
+  <div class="hdr-pip" style="background:var(--orange)"></div>
+  <div class="hdr-pip" style="background:var(--yellow)"></div>
+  <div class="hdr-pip" style="background:var(--teal)"></div>
+  <div class="hdr-sub">Energie Live</div>
+  <div class="hdr-div"></div>
+  <span id="hdr-time">00:00:00</span>
+  <span id="hdr-date">—</span>
+  <div class="hdr-div"></div>
+  <div class="conn-pill"><div id="conn-dot"></div><span>ioBroker</span></div>
+</header>
+
+<!-- ══ ENERGY FLOW SVG ══════════════════════════════════════════════════════ -->
+<!--
+  Layout (1920 × 840):
+    PV    (960, 140)
+    Batt  (320, 450)   House (960, 450)   Grid (1600, 450)
+                       WB    (960, 730)
+  Node radius: 85px
+-->
+<svg width="1920" height="840" viewBox="0 0 1920 840">
+
+  <!-- ── Flow paths ────────────────────────────────────────────── -->
+  <!-- PV (960,225) → House (960,365): top-to-bottom -->
+  <path id="fp-pv"   class="flow-line" d="M 960,225  L 960,365"  stroke="#FFCC00"/>
+  <!-- Battery (405,450) ↔ House (875,450): left-to-right = discharging -->
+  <path id="fp-batt" class="flow-line" d="M 405,450  L 875,450"  stroke="#CC99FF"/>
+  <!-- House (1045,450) ↔ Grid (1515,450): left-to-right = export -->
+  <path id="fp-grid" class="flow-line" d="M 1045,450 L 1515,450" stroke="#66CCBB"/>
+  <!-- House (960,535) → Wallbox (960,645): top-to-bottom -->
+  <path id="fp-wb"   class="flow-line" d="M 960,535  L 960,645"  stroke="#99CCFF"/>
+
+  <!-- ── Flow power labels (shown on active paths) ─────────────── -->
+  <text id="fl-pv"   x="990"  y="302" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#FFCC00" opacity="0"/>
+  <text id="fl-batt" x="590"  y="440" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#CC99FF" opacity="0"/>
+  <text id="fl-grid" x="1200" y="440" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#66CCBB" opacity="0"/>
+  <text id="fl-wb"   x="985"  y="598" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#99CCFF" opacity="0"/>
+
+  <!-- ══ PV NODE (960, 140) ════════════════════════════════════════ -->
+  <g transform="translate(960,140)">
+    <circle class="node-ring" r="108" fill="rgba(255,204,0,0.10)" stroke="rgba(255,204,0,0.25)" stroke-width="1.5"/>
+    <circle r="85" fill="rgba(255,204,0,0.07)" stroke="#FFCC00" stroke-width="1.5"/>
+    <text y="-8"  text-anchor="middle" dominant-baseline="middle" font-size="38" font-family="system-ui">☀️</text>
+    <text id="vn-pv" y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="21" font-weight="700" fill="#fff">–</text>
+    <text y="-115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="700" letter-spacing="3" fill="#FFCC00">SOLAR</text>
+  </g>
+
+  <!-- ══ BATTERY NODE (320, 450) ══════════════════════════════════ -->
+  <g transform="translate(320,450)">
+    <circle class="node-ring" r="108" fill="rgba(204,153,255,0.10)" stroke="rgba(204,153,255,0.25)" stroke-width="1.5"/>
+    <circle r="85" fill="rgba(204,153,255,0.07)" stroke="#CC99FF" stroke-width="1.5"/>
+    <text id="vn-batt-soc" y="-4"  text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="30" font-weight="700" fill="#CC99FF">–</text>
+    <text id="vn-batt-rem" y="28"  text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#666680">–</text>
+    <text id="vn-batt-dir" y="56"  text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="700" letter-spacing="1.5" fill="#666680" opacity="0">–</text>
+    <text y="-115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="700" letter-spacing="3" fill="#CC99FF">BATTERIE</text>
+  </g>
+
+  <!-- ══ HOUSE NODE (960, 450) ════════════════════════════════════ -->
+  <g transform="translate(960,450)">
+    <circle class="node-ring" r="108" fill="rgba(68,136,255,0.10)" stroke="rgba(68,136,255,0.25)" stroke-width="1.5"/>
+    <circle r="85" fill="rgba(68,136,255,0.07)" stroke="#4488FF" stroke-width="1.5"/>
+    <text y="-8"  text-anchor="middle" dominant-baseline="middle" font-size="38" font-family="system-ui">🏠</text>
+    <text id="vn-house" y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="21" font-weight="700" fill="#fff">–</text>
+    <text y="-115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="700" letter-spacing="3" fill="#4488FF">HAUS</text>
+  </g>
+
+  <!-- ══ GRID NODE (1600, 450) ════════════════════════════════════ -->
+  <g transform="translate(1600,450)">
+    <circle class="node-ring" r="108" fill="rgba(102,204,187,0.10)" stroke="rgba(102,204,187,0.25)" stroke-width="1.5"/>
+    <circle r="85" fill="rgba(102,204,187,0.07)" stroke="#66CCBB" stroke-width="1.5"/>
+    <text y="-8"  text-anchor="middle" dominant-baseline="middle" font-size="38" font-family="system-ui">⚡</text>
+    <text id="vn-grid"     y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="21" font-weight="700" fill="#fff">–</text>
+    <text id="vn-grid-dir" y="56" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="700" letter-spacing="1.5" fill="#666680" opacity="0">–</text>
+    <text y="-115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="700" letter-spacing="3" fill="#66CCBB">NETZ</text>
+  </g>
+
+  <!-- ══ WALLBOX NODE (960, 730) ══════════════════════════════════ -->
+  <g transform="translate(960,730)">
+    <circle id="wb-ring" class="node-ring node-ring-off" r="108" fill="rgba(153,204,255,0.10)" stroke="rgba(153,204,255,0.25)" stroke-width="1.5"/>
+    <circle r="85" fill="rgba(153,204,255,0.07)" stroke="#99CCFF" stroke-width="1.5"/>
+    <text y="-8"  text-anchor="middle" dominant-baseline="middle" font-size="38" font-family="system-ui">🚗</text>
+    <text id="vn-wb" y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="21" font-weight="700" fill="#fff">–</text>
+    <text y="-115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="700" letter-spacing="3" fill="#99CCFF">WALLBOX</text>
+  </g>
+
+</svg>
+
+<!-- ══ BOTTOM DATA STRIP ════════════════════════════════════════════════════ -->
+<div id="data-strip">
+
+  <div class="d-card" style="border-color:rgba(255,204,0,0.25);">
+    <div class="d-label" style="color:var(--yellow);">Autarkie</div>
+    <div class="d-val d-val-lg" id="d-autarkie" style="color:var(--yellow);">–</div>
+  </div>
+
+  <div class="d-card" style="border-color:rgba(255,204,0,0.15);">
+    <div class="d-label" style="color:var(--yellow);">PV Heute</div>
+    <div class="d-val" id="d-pv-day">–</div>
+  </div>
+
+  <div class="d-card" style="border-color:rgba(255,204,0,0.15);">
+    <div class="d-label" style="color:var(--yellow);">PV Forecast</div>
+    <div class="d-val" id="d-forecast">–</div>
+  </div>
+
+  <div class="d-card" style="border-color:rgba(102,204,187,0.2);">
+    <div class="d-label" style="color:var(--teal2);">Netzbezug Heute</div>
+    <div class="d-val" id="d-bezug-day">–</div>
+  </div>
+
+  <div class="d-card" style="border-color:rgba(68,136,255,0.2);">
+    <div class="d-label" style="color:var(--blue);">Verbrauch Heute</div>
+    <div class="d-val" id="d-load-day">–</div>
+  </div>
+
+  <div class="d-card" style="border-color:rgba(204,153,255,0.25);">
+    <div class="d-label" style="color:var(--purple);">Batterie Ladestand</div>
+    <div class="d-val d-val-lg" id="d-batt-soc" style="color:var(--purple);">–</div>
+  </div>
+
+  <div class="d-card" style="border-color:rgba(204,153,255,0.15);">
+    <div class="d-label" style="color:var(--purple);">Restkapazität</div>
+    <div class="d-val" id="d-batt-rem-strip">–</div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ── Clock ──────────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('hdr-time').textContent =
+    now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('hdr-date').textContent =
+    now.toLocaleDateString('de-AT', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── OIDs ──────────────────────────────────────────────────────────────────
+const OIDs = {
+  pv:          'modbus.0.inputRegisters.5016_Total_DC_Power',
+  load:        'modbus.0.inputRegisters.13007_Load_power_',
+  bezug:       '0_userdata.0.Photovoltaik.Smartmeter-EVN.SmartMeter-EVN-Bezug',
+  einspeisung: '0_userdata.0.Photovoltaik.Smartmeter-EVN.SmartMeter-EVN-Einspeisung',
+  autarkie:    '0_userdata.0.Photovoltaik.Autarkie',
+  battSoc:     'bydhvs.0.State.SOC',
+  battRem:     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
+  wbPower:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
+  pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
+  bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
+  loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
+  forecast:    '0_userdata.0.Photovoltaik.PV-Forecast',
+};
+
+// ── Live values ────────────────────────────────────────────────────────────
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0 };
+const THRESH = 30; // W – minimum to show a flow
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
+function setText(id, v) { const e = el(id); if (e) e.textContent = v; }
+function setHTML(id, v) { const e = el(id); if (e) e.innerHTML = v; }
+function setSvgAttr(id, attr, v) { const e = el(id); if (e) e.setAttribute(attr, v); }
+
+function fmtW(w) {
+  const n = Math.abs(parseFloat(w));
+  if (isNaN(n)) return '–';
+  return n >= 1000 ? (n / 1000).toFixed(2) + ' kW' : Math.round(n) + ' W';
+}
+
+// ── Flow control ───────────────────────────────────────────────────────────
+function setFlow(pathId, on, reverse) {
+  const p = el(pathId); if (!p) return;
+  p.classList.remove('flow-on', 'flow-rev');
+  if (on) p.classList.add(reverse ? 'flow-rev' : 'flow-on');
+}
+
+function setFlowLabel(id, text, visible, color) {
+  const e = el(id); if (!e) return;
+  e.textContent = text;
+  e.setAttribute('opacity', visible ? '1' : '0');
+  if (color) e.setAttribute('fill', color);
+}
+
+// ── Update flows from live state ───────────────────────────────────────────
+function updateFlows() {
+  const { pv, load, bezug, einspeisung, wbPower } = live;
+
+  // Battery net power: positive = charging (house→batt), negative = discharging (batt→house)
+  const battPow = pv + bezug - einspeisung - load;
+  const battCharge = battPow > THRESH;
+  const battDisch  = battPow < -THRESH;
+  const battOn     = battCharge || battDisch;
+
+  // Grid
+  const gridImp = bezug       > THRESH;
+  const gridExp = einspeisung > THRESH;
+  const gridOn  = gridImp || gridExp;
+  const gridPow = gridImp ? bezug : einspeisung;
+
+  // PV → House (always forward when active)
+  const pvOn = pv > THRESH;
+  setFlow('fp-pv', pvOn, false);
+  setFlowLabel('fl-pv', pvOn ? fmtW(pv) : '', pvOn, '#FFCC00');
+  setText('vn-pv', pvOn ? fmtW(pv) : '–');
+
+  // Battery ↔ House
+  // Path direction: left(Battery) → right(House)
+  // flow-on (fwd) = discharging (batt→house)
+  // flow-rev      = charging    (house→batt)
+  const battColor = battDisch ? '#FF9900' : '#CC99FF';
+  el('fp-batt').style.stroke = battColor;
+  setFlow('fp-batt', battOn, battCharge);
+  setFlowLabel('fl-batt', battOn ? fmtW(Math.abs(battPow)) : '', battOn, battColor);
+  const bdEl = el('vn-batt-dir');
+  if (bdEl) {
+    bdEl.textContent = battCharge ? 'LADEN' : battDisch ? 'ENTLADEN' : '';
+    bdEl.setAttribute('opacity', battOn ? '1' : '0');
+    bdEl.setAttribute('fill', battCharge ? '#44CC88' : '#FF9900');
+  }
+
+  // Grid ↔ House
+  // Path direction: left(House) → right(Grid)
+  // flow-on (fwd) = exporting (house→grid)
+  // flow-rev      = importing (grid→house)
+  const gridColor = gridImp ? '#FF5555' : '#66CCBB';
+  el('fp-grid').style.stroke = gridColor;
+  setFlow('fp-grid', gridOn, gridImp);
+  setFlowLabel('fl-grid', gridOn ? fmtW(gridPow) : '', gridOn, gridColor);
+  const gnEl = el('vn-grid');
+  if (gnEl) {
+    gnEl.textContent = gridOn ? fmtW(gridPow) : '–';
+    gnEl.setAttribute('fill', gridImp ? '#FF5555' : gridExp ? '#44CC88' : '#fff');
+  }
+  const gdEl = el('vn-grid-dir');
+  if (gdEl) {
+    gdEl.textContent = gridImp ? 'BEZUG' : gridExp ? 'EINSPEISUNG' : '';
+    gdEl.setAttribute('opacity', gridOn ? '1' : '0');
+    gdEl.setAttribute('fill', gridColor);
+  }
+
+  // House → Wallbox (always forward)
+  const wbOn = wbPower > THRESH;
+  setFlow('fp-wb', wbOn, false);
+  setFlowLabel('fl-wb', wbOn ? fmtW(wbPower) : '', wbOn, '#99CCFF');
+  setText('vn-wb', wbOn ? fmtW(wbPower) : '–');
+  const wbRing = el('wb-ring');
+  if (wbRing) wbRing.className.baseVal = wbOn ? 'node-ring' : 'node-ring node-ring-off';
+
+  // House load
+  setText('vn-house', load > THRESH ? fmtW(load) : '–');
+}
+
+// ── Apply incoming state ───────────────────────────────────────────────────
+function applyState(oid, val) {
+  const n = parseFloat(val);
+  switch (oid) {
+    case OIDs.pv:          live.pv          = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.load:        live.load        = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n; updateFlows(); break;
+
+    case OIDs.autarkie:
+      setHTML('d-autarkie', isNaN(n) ? '–' : Math.round(n) + '<span class="u">%</span>');
+      break;
+
+    case OIDs.battSoc: {
+      const soc = isNaN(n) ? '–' : Math.round(n) + '%';
+      setText('vn-batt-soc', soc);
+      setHTML('d-batt-soc', isNaN(n) ? '–' : Math.round(n) + '<span class="u">%</span>');
+      const socEl = el('vn-batt-soc');
+      if (socEl) socEl.setAttribute('fill', n <= 20 ? '#FF5555' : n <= 40 ? '#FFAA00' : '#CC99FF');
+      break;
+    }
+
+    case OIDs.battRem: {
+      const rem = isNaN(n) ? '–' : n.toFixed(1) + ' kWh';
+      setText('vn-batt-rem', rem);
+      setHTML('d-batt-rem-strip', isNaN(n) ? '–' : n.toFixed(1) + '<span class="u"> kWh</span>');
+      break;
+    }
+
+    case OIDs.pvDay:    setHTML('d-pv-day',    isNaN(n) ? '–' : n.toFixed(1) + '<span class="u"> kWh</span>'); break;
+    case OIDs.bezugDay: setHTML('d-bezug-day', isNaN(n) ? '–' : n.toFixed(1) + '<span class="u"> kWh</span>'); break;
+    case OIDs.loadDay:  setHTML('d-load-day',  isNaN(n) ? '–' : n.toFixed(1) + '<span class="u"> kWh</span>'); break;
+    case OIDs.forecast: setHTML('d-forecast',  isNaN(n) ? '–' : n.toFixed(1) + '<span class="u"> kWh</span>'); break;
+  }
+}
+
+// ── Socket.io ──────────────────────────────────────────────────────────────
+const connDot = el('conn-dot');
+const socket  = io({ path: '/socket.io' });
+const allOids = Object.values(OIDs);
+
+socket.on('connect', () => {
+  connDot.className = 'on';
+  allOids.forEach(oid => {
+    socket.emit('subscribe', oid, { ack: true }, () => {});
+    socket.emit('getStates', [oid], (err, states) => {
+      if (!states) return;
+      const e = states[oid];
+      if (!e || e.val === null || e.val === undefined) return;
+      applyState(oid, e.val);
+    });
+  });
+});
+socket.on('disconnect', () => { connDot.className = 'off'; });
+socket.on('stateChange', (oid, state) => {
+  if (!state || state.val === null || state.val === undefined) return;
+  applyState(oid, state.val);
+});
+
+// Periodic refresh every 5 minutes
+setInterval(() => {
+  if (!socket || !socket.connected) return;
+  allOids.forEach(oid => socket.emit('getStates', [oid], (err, states) => {
+    if (!states) return;
+    const e = states[oid];
+    if (!e || e.val === null || e.val === undefined) return;
+    applyState(oid, e.val);
+  }));
+}, 300000);
+</script>
+</body>
+</html>
