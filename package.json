@@ -1,0 +1,14 @@
+{
+  "name": "iobroker.lumina",
+  "version": "0.1.0",
+  "description": "Modern 1920x1080 home control wall display",
+  "author": "Wolfgang Halbartschlager",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.0.0"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "common": {
+    "name": "lumina",
+    "version": "0.1.0",
+    "news": {
+      "0.1.0": {
+        "en": "Initial release",
+        "de": "Erste Version"
+      }
+    },
+    "title": "Lumina",
+    "titleLang": {
+      "en": "Lumina",
+      "de": "Lumina"
+    },
+    "desc": {
+      "en": "Modern 1920x1080 home control wall display",
+      "de": "Modernes 1920x1080 Haussteuerungs-Wanddisplay"
+    },
+    "authors": ["Wolfgang Halbartschlager"],
+    "keywords": ["home", "walldisplay", "dashboard", "lumina"],
+    "license": "MIT",
+    "type": "general",
+    "main": "main.js",
+    "enabled": true,
+    "readyToRun": true,
+    "mode": "daemon",
+    "platform": "Javascript/Node.js",
+    "adminUI": {
+      "config": "none"
+    },
+    "webservers": [
+      {
+        "path": "www",
+        "name": "lumina"
+      }
+    ]
+  },
+  "native": {},
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "name": "Connection",
+        "type": "boolean",
+        "role": "indicator.connected",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
+}
