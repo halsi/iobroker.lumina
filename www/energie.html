@@ -100,6 +100,8 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
   <!-- ── Flow paths ────────────────────────────────────────────── -->
   <!-- PV (960,236) → House (960,400): vertical -->
   <path id="fp-pv"      class="flow-line" d="M 960,236  L 960,400"   stroke="#FFCC00"/>
+  <!-- Solar (875,151) → Battery (320,151) → Battery (320,400): L-shape left then down -->
+  <path id="fp-pv-batt" class="flow-line" d="M 875,151 L 320,151 L 320,400" stroke="#FFCC00" fill="none"/>
   <!-- Battery (405,485) ↔ House (875,485): horizontal -->
   <path id="fp-batt"    class="flow-line" d="M 405,485  L 875,485"   stroke="#CC99FF"/>
   <!-- House (1045,485) ↔ Grid (1515,485): horizontal -->
@@ -131,7 +133,7 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
     <text id="vn-batt-soc" y="-4"  text-anchor="middle" dominant-baseline="middle" font-family="system-ui,sans-serif" font-size="30" font-weight="700" fill="#CC99FF">–</text>
     <text id="vn-batt-rem" y="28"  text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#666680">–</text>
     <text id="vn-batt-dir" y="56"  text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="700" letter-spacing="1.5" fill="#666680" opacity="0">–</text>
-    <text y="-125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#CC99FF">BATTERIE</text>
+    <text y="125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#CC99FF">BATTERIE</text>
   </g>
 
   <!-- ══ HOUSE NODE (960, 485) ════════════════════════════════════ -->
@@ -140,7 +142,7 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
     <circle r="85" fill="rgba(68,136,255,0.07)" stroke="#4488FF" stroke-width="1.5"/>
     <text y="-8"  text-anchor="middle" dominant-baseline="middle" font-size="38" font-family="system-ui">🏠</text>
     <text id="vn-house" y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="21" font-weight="700" fill="#fff">–</text>
-    <text y="-125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#4488FF">HAUS</text>
+    <text y="125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#4488FF">HAUS</text>
   </g>
 
   <!-- ══ GRID NODE (1600, 485) ════════════════════════════════════ -->
@@ -234,6 +236,13 @@ function fitViewBox() {
     const el = document.getElementById(p.id); if (!el) return;
     el.setAttribute('d', `M ${Math.round(p.x1*sx)},${Math.round(p.y1*sy)} L ${Math.round(p.x2*sx)},${Math.round(p.y2*sy)}`);
   });
+  // L-shaped path: Solar left edge → Battery x → Battery top edge
+  const pvBattEl = document.getElementById('fp-pv-batt');
+  if (pvBattEl) {
+    pvBattEl.setAttribute('d',
+      `M ${Math.round(875*sx)},${Math.round(151*sy)} L ${Math.round(320*sx)},${Math.round(151*sy)} L ${Math.round(320*sx)},${Math.round(400*sy)}`
+    );
+  }
   const labels = [
     { id:'fl-pv',   x:990,  y:318 },
     { id:'fl-batt', x:590,  y:475 },
@@ -316,6 +325,8 @@ function updateFlows() {
   setFlow('fp-pv', pvOn, false);
   setFlowLabel('fl-pv', pvOn ? fmtW(pv) : '', pvOn, '#FFCC00');
   setText('vn-pv', pvOn ? fmtW(pv) : '–');
+  // PV → Battery (L-shape, only when battery is charging)
+  setFlow('fp-pv-batt', pvOn && battCharge, false);
 
   // Battery ↔ House
   // Path direction: left(Battery) → right(House)
