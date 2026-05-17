@@ -232,7 +232,7 @@ body {
 
 /* ── Sensor grid ─────────────────────────────────────────────────── */
 .sensor-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
+  display: grid; grid-template-columns: 1fr;
   border-top: 1px solid var(--sep);
 }
 .sensor-cell {
@@ -241,8 +241,7 @@ body {
   border-bottom: 1px solid var(--sep);
   font-size: 18px;
 }
-.sensor-cell:nth-child(odd)  { border-right: 1px solid var(--sep); }
-.sensor-cell:nth-last-child(-n+2) { border-bottom: none; }
+.sensor-cell:last-child { border-bottom: none; }
 .sensor-name { color: var(--purple); }
 
 /* these classes are set by JS */
@@ -254,12 +253,13 @@ body {
 /* ── Nuki ────────────────────────────────────────────────────────── */
 .nuki-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 16px;
+  padding: 10px 14px;
   background: rgba(204,153,255,0.04);
   border-bottom: 1px solid var(--sep);
+  font-size: 18px;
 }
-.nuki-label  { color: var(--purple); font-size: 13px; font-weight: 600; }
-.nuki-lock   { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 99px; }
+.nuki-label  { color: var(--purple); font-size: 18px; font-weight: 600; }
+.nuki-lock   { font-size: 15px; font-weight: 700; padding: 4px 12px; border-radius: 99px; }
 .nuki-locked   { background: rgba(68,170,68,0.2); color: #44AA44; }
 .nuki-unlocked { background: rgba(204,34,0,0.2);  color: #CC2200; }
 .nuki-batt   { display: flex; align-items: center; gap: 5px; }
@@ -417,21 +417,6 @@ body {
       </div>
     </div>
 
-    <div class="card card-peach">
-      <div class="card-header"><span class="ch-dot"></span>Heizung</div>
-      <div class="card-body">
-        <div class="row"><span class="lbl">Heizkurve</span><span class="val" id="h-heizkurve"><span class="loading">…</span></span></div>
-        <div class="row">
-          <span class="lbl">Sommermodus</span>
-          <button class="h-ctrl-btn" id="h-sommer-btn" onclick="pressEffect(this);toggleSommermodus()">…</button>
-        </div>
-        <div class="row">
-          <span class="lbl">Urlaubsmodus</span>
-          <button class="h-ctrl-btn" id="h-urlaub-btn" onclick="pressEffect(this);toggleUrlaubsmodus()">…</button>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <!-- ── ENERGIE ───────────────────────── -->
@@ -472,6 +457,21 @@ body {
         <div class="row"><span class="lbl">Restkapazität</span><span class="val" id="e-batt-rem"><span class="loading">…</span></span></div>
         <div class="row" style="justify-content:center;padding-top:10px;">
           <button class="lcars-btn" onclick="pressEffect(this);forceBattCharge()">Manual Charge</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-peach">
+      <div class="card-header"><span class="ch-dot"></span>Heizung</div>
+      <div class="card-body">
+        <div class="row"><span class="lbl">Heizkurve</span><span class="val" id="h-heizkurve"><span class="loading">…</span></span></div>
+        <div class="row">
+          <span class="lbl">Sommermodus</span>
+          <button class="h-ctrl-btn" id="h-sommer-btn" onclick="pressEffect(this);toggleSommermodus()">…</button>
+        </div>
+        <div class="row">
+          <span class="lbl">Urlaubsmodus</span>
+          <button class="h-ctrl-btn" id="h-urlaub-btn" onclick="pressEffect(this);toggleUrlaubsmodus()">…</button>
         </div>
       </div>
     </div>
