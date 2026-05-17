@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Lumina LCARS</title>
+<link rel="shortcut icon" href="favicon32.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+@font-face {
+  font-family: 'Antonio';
+  font-weight: 400;
+  src: url('assets/Antonio-Regular.woff2') format('woff2'),
+       url('assets/Antonio-Regular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Antonio';
+  font-weight: 700;
+  src: url('assets/Antonio-Bold.woff2') format('woff2'),
+       url('assets/Antonio-Bold.woff') format('woff');
+}
+
+*, *:before, *:after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --lfw: 220px;
+  --african-violet: #cc99ff;
+  --almond:         #ffaa90;
+  --almond-creme:   #ffbbaa;
+  --butterscotch:   #ff9966;
+  --golden-orange:  #ff9900;
+  --orange:         #ff8800;
+  --peach:          #ff8866;
+  --moonlit-violet: #9966ff;
+  --bluey:          #8899ff;
+  --blue:           #5566ff;
+  --lilac:          #cc55ff;
+  --red:            #cc4444;
+  --sunflower:      #ffcc99;
+  --gold:           #ffaa00;
+  --teal2:          #66ccbb;
+  --bg:             #000;
+  --panel-border:   4px solid #000;
+  --radius-top:     0 0 0 140px;
+  --radius-bottom:  140px 0 0 0;
+  --bar-height:     26px;
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Antonio', 'Arial Narrow', sans-serif;
+  font-weight: 400;
+  color: var(--african-violet);
+  width: 1920px; height: 1080px;
+  overflow: hidden;
+  display: flex;
+  padding: 8px 12px 8px 8px;
+  gap: 0;
+}
+
+/* ══ LEFT SIDEBAR ══════════════════════════════════════════════════ */
+#sidebar {
+  width: var(--lfw);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+#elbow-top {
+  background: var(--bluey);
+  border-radius: var(--radius-top);
+  border-bottom: var(--panel-border);
+  height: 155px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 10px 10px;
+  color: #000;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.sb-panel {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 8px 10px;
+  border-bottom: var(--panel-border);
+  color: #000;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  text-align: right;
+  cursor: default;
+}
+
+.sb-panel .hop { font-size: 10px; opacity: 0.7; }
+
+#elbow-bottom {
+  background: var(--red);
+  border-radius: var(--radius-bottom);
+  border-top: var(--panel-border);
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 10px 10px;
+  color: #000;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+/* ══ RIGHT AREA ════════════════════════════════════════════════════ */
+#right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-left: 0;
+  min-width: 0;
+}
+
+/* ── Top header zone ────────────────────────────────────────────── */
+#hdr-zone {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  height: 155px;
+  position: relative;
+}
+
+/* Corner cut top-left */
+#hdr-zone::before {
+  content: '';
+  display: block;
+  width: 56px; height: 56px;
+  background: linear-gradient(to top right, var(--bluey) 50%, #000 50%);
+  position: absolute; left: 0; bottom: var(--bar-height); z-index: 0;
+}
+#hdr-zone::after {
+  content: '';
+  display: block;
+  width: 56px; height: 56px;
+  background: #000;
+  border-radius: 0 0 0 44px;
+  position: absolute; left: 0; bottom: var(--bar-height); z-index: 1;
+}
+
+#banner {
+  flex: 1;
+  padding-left: 72px;
+  padding-bottom: 36px;
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--golden-orange);
+  text-transform: uppercase;
+  line-height: 1;
+  position: relative; z-index: 2;
+}
+
+#banner-sub {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--african-violet);
+  letter-spacing: 4px;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Data cascade (decorative animated numbers) */
+#data-cascade {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0 8px;
+  height: 120px;
+  overflow: hidden;
+  padding-right: 8px;
+  font-size: 13px;
+  line-height: 1.15;
+  color: var(--golden-orange);
+  position: relative; z-index: 2;
+  animation: cascade-fade 4s ease 0.5s infinite;
+}
+@keyframes cascade-fade {
+  0%, 40%  { color: var(--golden-orange); }
+  45%, 55% { color: #fff; }
+  60%, 100% { color: var(--golden-orange); }
+}
+.dc-col { text-align: right; }
+
+/* Nav buttons */
+#nav-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-self: center;
+  padding-right: 8px;
+  position: relative; z-index: 2;
+}
+.nav-btn {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 130px; height: 46px;
+  padding: 6px 14px;
+  border-radius: 100vmax;
+  border: none;
+  font-family: 'Antonio', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #000;
+  cursor: pointer;
+}
+.nav-btn:hover { filter: brightness(115%); }
+.nav-btn:active { filter: brightness(80%); }
+.nav-btn:nth-child(1) { background: var(--bluey); }
+.nav-btn:nth-child(2) { background: var(--butterscotch); }
+.nav-btn:nth-child(3) { background: var(--golden-orange); }
+.nav-btn:nth-child(4) { background: var(--african-violet); }
+
+/* Clock */
+#hdr-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-right: 8px;
+  padding-bottom: 34px;
+  position: relative; z-index: 2;
+}
+#hdr-time { font-size: 38px; font-weight: 700; color: #fff; line-height: 1; }
+#hdr-date { font-size: 12px; color: var(--african-violet); letter-spacing: 1px; }
+
+/* Conn pill */
+#conn-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #666;
+  align-self: flex-end;
+  margin-bottom: 36px;
+  margin-right: 4px;
+  position: relative; z-index: 2;
+}
+#conn-dot { width: 7px; height: 7px; border-radius: 50%; background: #222; transition: background 0.3s; }
+#conn-dot.on  { background: #44aa44; box-shadow: 0 0 6px #44aa4466; }
+#conn-dot.off { background: #cc2200; }
+
+/* ── Bar strips ─────────────────────────────────────────────────── */
+#bar-top {
+  display: flex;
+  height: var(--bar-height);
+  margin-left: 56px;
+}
+.bar { height: 100%; }
+.bar-1 { width: 38%; background: var(--bluey);          border-right: 4px solid #000; }
+.bar-2 { width: 4%;  background: var(--golden-orange);  border-right: 4px solid #000; }
+.bar-3 { width: 15%; background: var(--african-violet);  border-right: 4px solid #000; }
+.bar-4 { flex: 1;   background: var(--african-violet);  border-right: 4px solid #000; }
+.bar-5 { width: 4%;  background: var(--red); }
+
+/* ── Content zone ───────────────────────────────────────────────── */
+#content-zone {
+  flex: 1;
+  display: flex;
+  gap: 0;
+  position: relative;
+  min-height: 0;
+}
+
+/* Corner cut bottom-left */
+#content-zone::before {
+  content: '';
+  width: 56px; height: 56px;
+  background: linear-gradient(to bottom right, var(--red) 50%, #000 50%);
+  position: absolute; left: 0; top: 0; z-index: 0;
+}
+#content-zone::after {
+  content: '';
+  width: 56px; height: 56px;
+  background: #000;
+  border-radius: 44px 0 0 0;
+  position: absolute; left: 0; top: 0; z-index: 1;
+}
+
+/* ── Data panels (left of content) ─────────────────────────────── */
+#data-panels {
+  width: 780px;
+  padding-left: 68px;
+  padding-top: 14px;
+  padding-right: 10px;
+  padding-bottom: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 8px;
+  position: relative; z-index: 2;
+  overflow: hidden;
+}
+
+/* ── LCARS Cards ────────────────────────────────────────────────── */
+.lcard {
+  background: #0a0a0a;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.lcard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #000;
+}
+.lcard-header-left  { border-radius: 100vmax 0 0 100vmax; padding-left: 14px; }
+.lcard-header-right { border-radius: 0 100vmax 100vmax 0; padding-right: 14px; justify-content: flex-end; }
+
+.lcard-body { padding: 6px 10px 8px; }
+
+.lrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 13px;
+}
+.lrow:last-child { border-bottom: none; }
+.llbl { color: var(--african-violet); font-size: 12px; }
+.lval { font-size: 20px; font-weight: 700; color: #fff; }
+.lval .u { font-size: 11px; color: #444; margin-left: 2px; font-weight: 400; }
+.lval.loading { color: #1a1a1a; font-size: 13px; }
+
+/* Sensor pills */
+.spill { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 99px; }
+.spill-open   { background: rgba(204,34,0,0.2);   color: #ee4444; }
+.spill-closed { background: rgba(68,170,68,0.2);  color: #44aa44; }
+.spill-unk    { background: rgba(255,255,255,0.04); color: #333; }
+
+/* Batt bar */
+.bbar-wrap { width: 50px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.07); overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 4px; }
+.bbar-fill { height: 100%; border-radius: 3px; background: #44aa44; transition: width 0.4s, background 0.4s; }
+
+/* Nuki */
+.nuki-badge { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.nuki-locked   { background: rgba(68,170,68,0.2); color: #44aa44; }
+.nuki-unlocked { background: rgba(204,34,0,0.2);  color: #cc2200; }
+
+/* Valve btn */
+.vbtn {
+  font-family: 'Antonio', sans-serif;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px;
+  border: 1px solid; border-radius: 8px; cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.2s;
+}
+.vbtn-on  { background: rgba(255,100,100,0.2); color: #ff8888; border-color: rgba(255,100,100,0.4); }
+.vbtn-off { background: rgba(136,153,255,0.1); color: var(--bluey); border-color: rgba(136,153,255,0.2); }
+
+/* Heizung btn */
+.hbtn {
+  font-family: 'Antonio', sans-serif;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 8px; cursor: pointer;
+  text-transform: uppercase; border: 1px solid;
+  background: rgba(255,170,136,0.08);
+  color: var(--peach); border-color: rgba(255,170,136,0.2);
+}
+.hbtn.h-on { background: rgba(255,136,102,0.2); color: var(--butterscotch); border-color: rgba(255,136,102,0.4); }
+
+/* Car presence */
+.cpres { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.cpres-yes { background: rgba(68,170,68,0.2); color: #44aa44; }
+.cpres-no  { background: rgba(255,255,255,0.04); color: #333; }
+
+/* Shield */
+.shield-badge { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.shield-active   { background: rgba(255,50,50,0.15); color: #ff5555; }
+.shield-inactive { background: rgba(68,170,68,0.15); color: #44aa44; }
+.shield-night    { background: rgba(68,153,255,0.15); color: #4499ff; }
+.shield-gif { width: 36px; mix-blend-mode: screen; }
+
+/* HWC flame */
+@keyframes flicker { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.hwc-flame { animation: flicker 0.9s ease-in-out infinite; display: none; }
+.hwc-btn {
+  font-family: 'Antonio', sans-serif; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 6px; cursor: pointer; border: 1px solid;
+  background: rgba(255,153,0,0.15); color: var(--golden-orange);
+  border-color: rgba(255,153,0,0.3); display: none; text-transform: uppercase;
+}
+
+/* Manual charge btn */
+.lcars-btn {
+  font-family: 'Antonio', sans-serif; font-size: 11px; font-weight: 700;
+  padding: 4px 14px; border-radius: 100vmax; cursor: pointer; border: none;
+  background: var(--african-violet); color: #000; text-transform: uppercase;
+}
+
+/* ── Energie iframe ─────────────────────────────────────────────── */
+#energie-frame-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 14px;
+  padding-right: 0;
+  padding-bottom: 8px;
+  min-width: 0;
+  position: relative; z-index: 2;
+}
+
+.iframe-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--golden-orange);
+  padding-left: 8px;
+  margin-bottom: 4px;
+}
+
+#energie-iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  display: block;
+  background: #000;
+}
+
+/* ── LCARS bars between sections ────────────────────────────────── */
+.lcars-bar {
+  height: 5px;
+  background: var(--african-violet);
+  border-radius: 99px;
+  margin: 4px 0;
+  border-left: 14px solid var(--moonlit-violet);
+  border-right: 14px solid var(--moonlit-violet);
+}
+
+@keyframes btn-press {
+  0%   { transform: scale(1);    filter: brightness(1); }
+  30%  { transform: scale(0.92); filter: brightness(1.5); }
+  100% { transform: scale(1);    filter: brightness(1); }
+}
+.btn-pressed { animation: btn-press 0.2s ease-out; }
+</style>
+</head>
+<body>
+
+<!-- ══ LEFT SIDEBAR ═══════════════════════════════════════════════ -->
+<div id="sidebar">
+
+  <div id="elbow-top">LCARS<br><span class="hop" style="font-size:10px;opacity:.6">01-KW92</span></div>
+
+  <div class="sb-panel" style="background:var(--african-violet);height:58px;">
+    STATUS<br><span class="hop">02·SHIELD</span>
+  </div>
+  <div class="sb-panel" style="background:var(--golden-orange);height:68px;">
+    ENERGIE<br><span class="hop">03·PV·BATT</span>
+  </div>
+  <div class="sb-panel" style="background:var(--butterscotch);height:55px;">
+    AUTO<br><span class="hop">04·WALLBOX</span>
+  </div>
+  <div class="sb-panel" style="background:var(--teal2);height:55px;">
+    WASSER<br><span class="hop">05·VENTILE</span>
+  </div>
+  <div class="sb-panel" style="background:var(--peach);height:55px;">
+    HEIZUNG<br><span class="hop">06·EBUSD</span>
+  </div>
+  <div class="sb-panel" style="background:var(--bluey);height:55px;">
+    SENSOREN<br><span class="hop">07·NUKI</span>
+  </div>
+
+  <div id="elbow-bottom">
+    <div id="conn-pill">
+      <div id="conn-dot"></div>
+      <span>ioBroker</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ RIGHT AREA ═════════════════════════════════════════════════ -->
+<div id="right">
+
+  <!-- Header zone -->
+  <div id="hdr-zone">
+    <div id="banner">
+      Kleinwilfersdorf 92
+      <span id="banner-sub">Home Control · LCARS</span>
+    </div>
+    <div id="data-cascade">
+      <div class="dc-col">93<br>1853<br>24109<br>7<br>7024<br>322<br>4149<br>86<br>05</div>
+      <div class="dc-col">21509<br>68417<br>80<br>2048<br>319825<br>46233<br>05<br>2014<br>30986</div>
+      <div class="dc-col">585101<br>25403<br>31219<br>752<br>0604<br>21048<br>293612<br>534082<br>206</div>
+      <div class="dc-col">2107853<br>12201972<br>24487255<br>30412<br>98<br>4024161<br>888<br>35045<br>41520</div>
+      <div class="dc-col">33<br>56<br>04<br>69<br>41<br>15<br>25<br>65<br>21</div>
+      <div class="dc-col">0223<br>688<br>28471<br>21366<br>8654<br>31<br>1984<br>272<br>21854</div>
+    </div>
+    <div id="nav-buttons">
+      <button class="nav-btn" onclick="location.href='cards.html'">Cards</button>
+      <button class="nav-btn" onclick="location.href='energie.html'">Energie</button>
+      <button class="nav-btn">Netzwerk</button>
+      <button class="nav-btn">System</button>
+    </div>
+    <div id="hdr-clock">
+      <div id="hdr-time">00:00:00</div>
+      <div id="hdr-date">—</div>
+    </div>
+  </div>
+
+  <!-- Bar strips -->
+  <div id="bar-top">
+    <div class="bar bar-1"></div>
+    <div class="bar bar-2"></div>
+    <div class="bar bar-3"></div>
+    <div class="bar bar-4"></div>
+    <div class="bar bar-5"></div>
+  </div>
+
+  <!-- Content zone -->
+  <div id="content-zone">
+
+    <!-- ── Data panels ──────────────────────────────────────────── -->
+    <div id="data-panels">
+
+      <!-- Temperaturen -->
+      <div class="lcard">
+        <div class="lcard-header lcard-header-left" style="background:var(--golden-orange)">Temperaturen</div>
+        <div class="lcard-body">
+          <div class="lrow"><span class="llbl">Außen</span><span class="lval" id="temp-outdoor"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Innen</span><span class="lval" id="temp-indoor"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Pool</span><span class="lval" id="temp-pool"><span class="loading">…</span></span></div>
+          <div class="lrow">
+            <span class="llbl">Warmwasser</span>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span id="hwc-flame" class="hwc-flame">🔥</span>
+              <button id="hwc-heat-btn" class="hwc-btn" onclick="pressEffect(this);activateHwcHeating()">▲ HZG</button>
+              <span class="lval" id="temp-hwc"><span class="loading">…</span></span>
+            </div>
+          </div>
+          <div class="lrow"><span class="llbl">Vorlauf</span><span class="lval" id="temp-vorlauf"><span class="loading">…</span></span></div>
+        </div>
+      </div>
+
+      <!-- Energie Aktuell -->
+      <div class="lcard">
+        <div class="lcard-header lcard-header-left" style="background:var(--gold)">Energie · Live</div>
+        <div class="lcard-body">
+          <div class="lrow"><span class="llbl">PV</span><span class="lval" id="e-pv"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Verbrauch</span><span class="lval" id="e-load"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Netzbezug</span><span class="lval" id="e-bezug"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Einspeisung</span><span class="lval" id="e-einspeisung"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Autarkie</span><span class="lval" id="e-autarkie"><span class="loading">…</span></span></div>
+        </div>
+      </div>
+
+      <!-- Shield + Sensoren -->
+      <div class="lcard">
+        <div class="lcard-header lcard-header-left" style="background:var(--african-violet)">Shield · Türen</div>
+        <div class="lcard-body">
+          <div class="lrow">
+            <span class="llbl">Alarm</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif">
+              <span id="shield-label" class="shield-badge shield-inactive">INACTIVE</span>
+            </div>
+          </div>
+          <div class="lrow">
+            <span class="llbl">Haustür</span>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span class="nuki-badge" id="nuki-lock">…</span>
+            </div>
+          </div>
+          <div class="lrow"><span class="llbl">Eingang</span><span class="spill spill-unk" id="s-eingang">…</span></div>
+          <div class="lrow"><span class="llbl">Terrasse</span><span class="spill spill-unk" id="s-terrasse">…</span></div>
+          <div class="lrow"><span class="llbl">Schlafzimmer</span><span class="spill spill-unk" id="s-schlafzimmer">…</span></div>
+          <div class="lrow"><span class="llbl">Garage</span><span class="spill spill-unk" id="s-garage">…</span></div>
+        </div>
+      </div>
+
+      <!-- Batterie -->
+      <div class="lcard">
+        <div class="lcard-header lcard-header-left" style="background:var(--moonlit-violet)">Batterie · BYD</div>
+        <div class="lcard-body">
+          <div class="lrow">
+            <span class="llbl">Ladestand</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="bbar-wrap"><div class="bbar-fill" id="e-batt-bar"></div></div>
+              <span class="lval" id="e-batt-pct"><span class="loading">…</span></span>
+            </div>
+          </div>
+          <div class="lrow"><span class="llbl">Restkapazität</span><span class="lval" id="e-batt-rem"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Heute PV</span><span class="lval" id="e-pv-day"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Forecast</span><span class="lval" id="e-forecast"><span class="loading">…</span></span></div>
+          <div class="lrow" style="justify-content:center;padding-top:4px;">
+            <button class="lcars-btn" onclick="pressEffect(this);forceBattCharge()">Manual Charge</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto -->
+      <div class="lcard">
+        <div class="lcard-header lcard-header-left" style="background:var(--bluey)">BYD Sealion 7</div>
+        <div class="lcard-body">
+          <div class="lrow">
+            <span class="llbl">Status</span>
+            <span class="cpres" id="car-presence">…</span>
+          </div>
+          <div class="lrow">
+            <span class="llbl">Ladestand</span>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div class="bbar-wrap"><div class="bbar-fill" id="car-soc-bar"></div></div>
+              <span class="lval" id="car-soc"><span class="loading">…</span></span>
+            </div>
+          </div>
+          <div class="lrow"><span class="llbl">Entfernung</span><span class="lval" id="car-distance"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Innentemp</span><span class="lval" id="car-temp"><span class="loading">…</span></span></div>
+          <div class="lrow"><span class="llbl">Wallbox</span><span class="lval" id="e-wb-power"><span class="loading">…</span></span></div>
+        </div>
+      </div>
+
+      <!-- Heizung + Wasser -->
+      <div class="lcard">
+        <div class="lcard-header lcard-header-left" style="background:var(--peach)">Heizung · Wasser</div>
+        <div class="lcard-body">
+          <div class="lrow"><span class="llbl">Vorlauf</span><span class="lval" id="h-vorlauf"><span class="loading">…</span></span></div>
+          <div class="lrow">
+            <span class="llbl">Sommermodus</span>
+            <button class="hbtn" id="h-sommer-btn" onclick="pressEffect(this);toggleSommermodus()">…</button>
+          </div>
+          <div class="lrow">
+            <span class="llbl">Urlaubsmodus</span>
+            <button class="hbtn" id="h-urlaub-btn" onclick="pressEffect(this);toggleUrlaubsmodus()">…</button>
+          </div>
+          <div style="height:6px;"></div>
+          <div class="lrow"><span class="llbl">Bodenfeuchte</span><span class="lval" id="w-moisture"><span class="loading">…</span></span></div>
+          <div class="lrow" style="flex-wrap:wrap;gap:4px;justify-content:flex-start;">
+            <button class="vbtn vbtn-off" id="v-garten"   onclick="pressEffect(this);toggleValve('v-garten')">Garten</button>
+            <button class="vbtn vbtn-off" id="v-pool"     onclick="pressEffect(this);toggleValve('v-pool')">Pool</button>
+            <button class="vbtn vbtn-off" id="v-beregner" onclick="pressEffect(this);toggleValve('v-beregner')">Beregner</button>
+            <button class="vbtn vbtn-off" id="v-hochbeet" onclick="pressEffect(this);toggleValve('v-hochbeet')">Hochbeet</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /data-panels -->
+
+    <!-- ── Energie iframe ───────────────────────────────────────── -->
+    <div id="energie-frame-wrap">
+      <div class="iframe-label">⚡ Energie · Live Flow</div>
+      <iframe id="energie-iframe" src="energie.html" scrolling="no"></iframe>
+    </div>
+
+  </div><!-- /content-zone -->
+
+</div><!-- /right -->
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ── Clock ──────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('hdr-time').textContent =
+    now.toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('hdr-date').textContent =
+    now.toLocaleDateString('de-AT', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+}
+updateClock(); setInterval(updateClock, 1000);
+
+// ── Auto-reload ────────────────────────────────────────────────────
+let _hiddenAt = null;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { _hiddenAt = Date.now(); }
+  else if (_hiddenAt && Date.now() - _hiddenAt > 30000) { location.reload(); }
+  else { _hiddenAt = null; }
+});
+
+// ── OIDs ──────────────────────────────────────────────────────────
+const TEMP_OIDs = {
+  'temp-outdoor': 'mqtt.0.ebusd.700.DisplayedOutsideTemp',
+  'temp-indoor':  'mqtt.0.ebusd.700.z1RoomTemp',
+  'temp-pool':    '0_userdata.0.Pool.Pooltemperatur',
+  'temp-hwc':     'mqtt.0.ebusd.700.HwcStorageTemp',
+  'temp-vorlauf': 'mqtt.0.ebusd.700.Hc1FlowTemp',
+};
+const SENSOR_OIDs = {
+  's-eingang':      { oid:'shelly.0.SHDW-2#6A9B59#1.sensor.door',     type:'shelly' },
+  's-terrasse':     { oid:'shelly.0.SHDW-2#483FDA82526B#1.sensor.door',type:'shelly' },
+  's-schlafzimmer': { oid:'shelly.0.SHDW-2#6C3B61#1.sensor.door',     type:'shelly' },
+  's-garage':       { oid:'shelly.0.SHSW-1#E8DB84AB43B2#1.ext.switch1',type:'shelly1'},
+};
+const ENERGIE_OIDs = {
+  'e-pv':          'modbus.0.inputRegisters.5016_Total_DC_Power',
+  'e-load':        'modbus.0.inputRegisters.13007_Load_power_',
+  'e-bezug':       '0_userdata.0.Photovoltaik.Smartmeter-EVN.SmartMeter-EVN-Bezug',
+  'e-einspeisung': '0_userdata.0.Photovoltaik.Smartmeter-EVN.SmartMeter-EVN-Einspeisung',
+  'e-autarkie':    '0_userdata.0.Photovoltaik.Autarkie',
+  'e-pv-day':      'modbus.0.inputRegisters.13001_Daily_PV_Generation',
+  'e-batt-pct':    'bydhvs.0.State.SOC',
+  'e-batt-rem':    '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
+  'e-wb-power':    '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
+  'e-forecast':    '0_userdata.0.Photovoltaik.PV-Forecast',
+};
+const CAR_OIDs = {
+  'car-presence': '0_userdata.0.Auto.BYD-Sealion7.Anwesenheit',
+  'car-soc':      '0_userdata.0.Auto.BYD-Sealion7.SoC',
+  'car-temp':     '0_userdata.0.Auto.BYD-Sealion7.CurrentInsideTemp',
+  'car-distance': '0_userdata.0.Auto.BYD-Sealion7.distance-from-home-actual',
+};
+const WASSER_OIDs = { 'w-moisture': '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.moisture' };
+const VALVE_OIDs = {
+  'v-garten':   '0_userdata.0.Wasser.Gartenwasserventil',
+  'v-pool':     '0_userdata.0.Pool.Poolwasserventil',
+  'v-beregner': '0_userdata.0.Wasser.Gartenberegner',
+  'v-hochbeet': '0_userdata.0.Wasser.Gartenwasser-Hochbeet',
+};
+const NUKI_LOCK_OID = 'mqtt.0.nuki.434A70D7.state';
+const SHIELD_OID    = 'alarm.0.use.list';
+const HWC_HEAT_OID  = '0_userdata.0.Heizung.Warmwaser-Speicherladung';
+const BATT_CHARGE_OID = '0_userdata.0.Photovoltaik.Battery.ForceFillUp';
+const SOMMER_OID    = '0_userdata.0.Heizung.Heizung-Sommermodus';
+const URLAUB_OID    = '0_userdata.0.Heizung.Heizung-Urlaubsmodus';
+const H_VORLAUF_OID = 'mqtt.0.ebusd.700.Hc1FlowTemp';
+const H_HWC_OID     = 'mqtt.0.ebusd.700.HwcStorageTemp';
+
+// ── Helpers ────────────────────────────────────────────────────────
+const el = id => document.getElementById(id);
+function round1(v) { const n=parseFloat(v); return isNaN(n)?'–':n.toFixed(1); }
+function fmtW(v)   { const n=parseFloat(v); return isNaN(n)?'–':Math.round(n)+'<span class="u"> W</span>'; }
+function fmtKWh(v) { const n=parseFloat(v); return isNaN(n)?'–':n.toFixed(1)+'<span class="u"> kWh</span>'; }
+function fmtPct(v) { const n=parseFloat(v); return isNaN(n)?'–':Math.round(n)+'<span class="u"> %</span>'; }
+function pressEffect(e) { e.classList.remove('btn-pressed'); void e.offsetWidth; e.classList.add('btn-pressed'); }
+
+let _hwcTemp=null, _hwcActive=false;
+function updateHwcUI() {
+  const btn=el('hwc-heat-btn'), flame=el('hwc-flame');
+  if (!btn||!flame) return;
+  if (_hwcActive) { flame.style.display='inline'; btn.style.display='none'; }
+  else if (_hwcTemp!==null&&_hwcTemp<50) { btn.style.display='inline-block'; flame.style.display='none'; }
+  else { btn.style.display='none'; flame.style.display='none'; }
+}
+function activateHwcHeating() { socket.emit('setState', HWC_HEAT_OID, {val:true,ack:false}); }
+function forceBattCharge()    { socket.emit('setState', BATT_CHARGE_OID, {val:true,ack:false}); }
+function toggleSommermodus()  { const b=el('h-sommer-btn'); socket.emit('setState',SOMMER_OID,{val:!b.classList.contains('h-on'),ack:false}); }
+function toggleUrlaubsmodus() { const b=el('h-urlaub-btn'); socket.emit('setState',URLAUB_OID,{val:!b.classList.contains('h-on'),ack:false}); }
+function toggleValve(id) { const b=el(id); socket.emit('setState',VALVE_OIDs[id],{val:!b.classList.contains('vbtn-on'),ack:false}); }
+
+function isOpen(val,type) {
+  if (type==='shelly')  return val===true;
+  if (type==='shelly1') return val===0||val==='0';
+  return val==='true'||val===true;
+}
+
+function applyState(oid, val) {
+  // Temps
+  const tId = Object.entries(TEMP_OIDs).find(([,o])=>o===oid)?.[0];
+  if (tId) {
+    const e=el(tId); if(e) e.innerHTML=`${round1(val)}<span class="u"> °C</span>`;
+    if (tId==='temp-hwc'||oid===H_HWC_OID) { _hwcTemp=parseFloat(val); updateHwcUI(); }
+  }
+
+  // Sensors
+  const sCfg = Object.entries(SENSOR_OIDs).find(([,c])=>c.oid===oid)?.[1];
+  if (sCfg) {
+    const sId = Object.entries(SENSOR_OIDs).find(([,c])=>c.oid===oid)?.[0];
+    const e=el(sId); if(e) {
+      if (isOpen(val,sCfg.type)) { e.textContent='OPEN'; e.className='spill spill-open'; }
+      else { e.textContent='CLOSED'; e.className='spill spill-closed'; }
+    }
+  }
+
+  // Energie
+  const eIds = Object.entries(ENERGIE_OIDs).filter(([,o])=>o===oid).map(([id])=>id);
+  eIds.forEach(id => {
+    const e=el(id); if(!e) return;
+    if (['e-pv','e-load','e-bezug','e-einspeisung','e-wb-power'].includes(id)) e.innerHTML=fmtW(val);
+    else if (['e-autarkie','e-batt-pct'].includes(id)) e.innerHTML=fmtPct(val);
+    else if (['e-pv-day','e-batt-rem','e-forecast'].includes(id)) e.innerHTML=fmtKWh(val);
+    if (id==='e-batt-pct') {
+      const pct=parseFloat(val), bar=el('e-batt-bar');
+      if(bar&&!isNaN(pct)) { bar.style.width=Math.max(0,Math.min(100,pct))+'%'; bar.style.background=pct<=20?'#cc2200':pct<=40?'#ffaa00':'#44aa44'; }
+    }
+  });
+
+  // Car
+  const cId = Object.entries(CAR_OIDs).find(([,o])=>o===oid)?.[0];
+  if (cId) {
+    const e=el(cId); if(!e) return;
+    if (cId==='car-presence') {
+      const on=val===true||val==='true'||val===1;
+      e.textContent=on?'ANWESEND':'ABWESEND';
+      e.className='cpres '+(on?'cpres-yes':'cpres-no');
+    } else if (cId==='car-soc') {
+      const pct=parseFloat(val);
+      e.innerHTML=isNaN(pct)?'–':Math.round(pct)+'<span class="u"> %</span>';
+      const bar=el('car-soc-bar');
+      if(bar&&!isNaN(pct)) { bar.style.width=Math.max(0,Math.min(100,pct))+'%'; bar.style.background=pct<=20?'#cc2200':pct<=40?'#ffaa00':'#44aa44'; }
+    } else if (cId==='car-temp') {
+      e.innerHTML=round1(val)+'<span class="u"> °C</span>';
+    } else if (cId==='car-distance') {
+      const n=parseFloat(val);
+      e.innerHTML=isNaN(n)?'–':n>=1000?(n/1000).toFixed(1)+'<span class="u"> km</span>':Math.round(n)+'<span class="u"> m</span>';
+    }
+  }
+
+  // Wasser
+  if (oid===WASSER_OIDs['w-moisture']) {
+    const e=el('w-moisture'),n=parseFloat(val);
+    if(e) e.textContent=isNaN(n)?'–':Math.round(n)+' %';
+  }
+
+  // Valves
+  const vId = Object.entries(VALVE_OIDs).find(([,o])=>o===oid)?.[0];
+  if (vId) { const b=el(vId); if(b) b.className='vbtn '+(val===true||val==='true'||val===1?'vbtn-on':'vbtn-off'); }
+
+  // Nuki
+  if (oid===NUKI_LOCK_OID) {
+    const e=el('nuki-lock'); if(!e) return;
+    if(val===1||val==='1') { e.textContent='LOCKED';   e.className='nuki-badge nuki-locked'; }
+    else { e.textContent='UNLOCKED'; e.className='nuki-badge nuki-unlocked'; }
+  }
+
+  // Shield
+  if (oid===SHIELD_OID) {
+    const img=el('shield-gif'), lbl=el('shield-label');
+    const v=parseInt(val);
+    if(v===1) { img.src='/vis.0/main/img/star/active.gif'; lbl.textContent='ACTIVE'; lbl.className='shield-badge shield-active'; }
+    else if(v===3) { img.src='/vis.0/main/img/star/night.gif'; lbl.textContent='NIGHT'; lbl.className='shield-badge shield-night'; }
+    else { img.src='/vis.0/main/img/star/inactive.gif'; lbl.textContent='INACTIVE'; lbl.className='shield-badge shield-inactive'; }
+  }
+
+  // HWC
+  if (oid===HWC_HEAT_OID) { _hwcActive=val===true||val==='true'||val===1; updateHwcUI(); }
+  if (oid===H_VORLAUF_OID) { const e=el('h-vorlauf'); if(e) e.innerHTML=`${round1(val)}<span class="u"> °C</span>`; }
+  if (oid===H_HWC_OID) { const e=el('temp-hwc'); if(e) e.innerHTML=`${round1(val)}<span class="u"> °C</span>`; _hwcTemp=parseFloat(val); updateHwcUI(); }
+  if (oid===SOMMER_OID) { const b=el('h-sommer-btn'); if(b) { const on=val===true||val==='true'||val===1; b.classList.toggle('h-on',on); b.textContent=on?'AKTIV':'INAKTIV'; } }
+  if (oid===URLAUB_OID) { const b=el('h-urlaub-btn'); if(b) { const on=val===true||val==='true'||val===1; b.classList.toggle('h-on',on); b.textContent=on?'AKTIV':'INAKTIV'; } }
+}
+
+// ── Socket ─────────────────────────────────────────────────────────
+const socket = io({ path: '/socket.io' });
+
+const allOids = [...new Set([
+  ...Object.values(TEMP_OIDs),
+  ...Object.values(SENSOR_OIDs).map(c=>c.oid),
+  ...Object.values(ENERGIE_OIDs),
+  ...Object.values(CAR_OIDs),
+  ...Object.values(WASSER_OIDs),
+  ...Object.values(VALVE_OIDs),
+  NUKI_LOCK_OID, SHIELD_OID, HWC_HEAT_OID,
+  BATT_CHARGE_OID, SOMMER_OID, URLAUB_OID, H_VORLAUF_OID, H_HWC_OID,
+])];
+
+socket.on('connect', () => {
+  el('conn-dot').className = 'on';
+  allOids.forEach(oid => {
+    socket.emit('subscribe', oid, {ack:true}, ()=>{});
+    socket.emit('getStates', [oid], (err,states) => {
+      if (!states) return;
+      const s=states[oid]; if(!s||s.val===null||s.val===undefined) return;
+      applyState(oid, s.val);
+    });
+  });
+});
+socket.on('disconnect', () => { el('conn-dot').className = 'off'; });
+socket.on('stateChange', (oid, state) => {
+  if (!state||state.val===null||state.val===undefined) return;
+  applyState(oid, state.val);
+});
+setInterval(() => {
+  if (!socket||!socket.connected) return;
+  allOids.forEach(oid => socket.emit('getStates',[oid],(err,states)=>{
+    if(!states) return; const s=states[oid]; if(!s||s.val==null) return; applyState(oid,s.val);
+  }));
+}, 300000);
+</script>
+</body>
+</html>
