@@ -28,9 +28,12 @@ body {
   background: var(--bg);
   color: #e8e8f0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  width: 1920px; height: 1080px;
+  width: 100vw; height: 100vh;
   overflow: hidden;
+  display: flex; flex-direction: column;
 }
+
+svg#flow-svg { flex: 1; width: 100%; display: block; }
 
 /* ── Flow path animations ────────────────────────────────────── */
 .flow-line {
@@ -59,7 +62,8 @@ body {
 #data-strip {
   display: flex; gap: 12px;
   padding: 10px 24px;
-  height: 174px;
+  height: 16.1vh;
+  flex-shrink: 0;
   align-items: stretch;
 }
 .d-card {
@@ -87,7 +91,7 @@ body {
                        WB    (960, 787)
   Node radius: 85px
 -->
-<svg width="1920" height="906" viewBox="0 0 1920 906">
+<svg id="flow-svg" viewBox="0 0 1920 906" preserveAspectRatio="xMidYMid meet">
 
   <!-- ── Flow paths ────────────────────────────────────────────── -->
   <!-- PV (960,236) → House (960,400): top-to-bottom -->
@@ -196,6 +200,47 @@ body {
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
+// ── Fit SVG viewBox to actual rendered size ────────────────────────────────
+function fitViewBox() {
+  const svg = document.getElementById('flow-svg');
+  const w = svg.clientWidth || 1920;
+  const h = svg.clientHeight || 906;
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  // Scale node positions from reference (1920×906) to actual size
+  const sx = w / 1920, sy = h / 906;
+  const nodes = [
+    { id: null, x: 960,  y: 151, el: svg.querySelectorAll('g')[0] },
+    { id: null, x: 320,  y: 485, el: svg.querySelectorAll('g')[1] },
+    { id: null, x: 960,  y: 485, el: svg.querySelectorAll('g')[2] },
+    { id: null, x: 1600, y: 485, el: svg.querySelectorAll('g')[3] },
+    { id: null, x: 960,  y: 787, el: svg.querySelectorAll('g')[4] },
+  ];
+  nodes.forEach(n => n.el && n.el.setAttribute('transform', `translate(${Math.round(n.x*sx)},${Math.round(n.y*sy)})`));
+  const paths = [
+    { id:'fp-pv',   x1:960, y1:236, x2:960,  y2:400  },
+    { id:'fp-batt', x1:405, y1:485, x2:875,  y2:485  },
+    { id:'fp-grid', x1:1045,y1:485, x2:1515, y2:485  },
+    { id:'fp-wb',   x1:960, y1:570, x2:960,  y2:702  },
+  ];
+  paths.forEach(p => {
+    const el = document.getElementById(p.id); if (!el) return;
+    el.setAttribute('d', `M ${Math.round(p.x1*sx)},${Math.round(p.y1*sy)} L ${Math.round(p.x2*sx)},${Math.round(p.y2*sy)}`);
+  });
+  const labels = [
+    { id:'fl-pv',   x:990,  y:318 },
+    { id:'fl-batt', x:590,  y:475 },
+    { id:'fl-grid', x:1200, y:475 },
+    { id:'fl-wb',   x:985,  y:636 },
+  ];
+  labels.forEach(l => {
+    const el = document.getElementById(l.id); if (!el) return;
+    el.setAttribute('x', Math.round(l.x*sx));
+    el.setAttribute('y', Math.round(l.y*sy));
+  });
+}
+window.addEventListener('load', fitViewBox);
+window.addEventListener('resize', fitViewBox);
+
 // ── OIDs ──────────────────────────────────────────────────────────────────
 const OIDs = {
   pv:          'modbus.0.inputRegisters.5016_Total_DC_Power',
