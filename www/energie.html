@@ -90,28 +90,30 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
 <!-- ══ ENERGY FLOW SVG ══════════════════════════════════════════════════════ -->
 <!--
   Layout (1920 × 906):
-    PV    (960, 151)
-    Batt  (320, 485)   House (960, 485)   Grid (1600, 485)
-                       WB    (960, 787)
+    PV      (960,  151)                WB   (1600, 151)
+    Batt    (320,  485)   House (960, 485)   Grid (1600, 485)
   Node radius: 85px
+  WB connects: Solar (horizontal left) and Grid (vertical down)
 -->
 <svg id="flow-svg" viewBox="0 0 1920 906" preserveAspectRatio="xMidYMid meet">
 
   <!-- ── Flow paths ────────────────────────────────────────────── -->
-  <!-- PV (960,236) → House (960,400): top-to-bottom -->
-  <path id="fp-pv"   class="flow-line" d="M 960,236  L 960,400"  stroke="#FFCC00"/>
-  <!-- Battery (405,485) ↔ House (875,485): left-to-right = discharging -->
-  <path id="fp-batt" class="flow-line" d="M 405,485  L 875,485"  stroke="#CC99FF"/>
-  <!-- House (1045,485) ↔ Grid (1515,485): left-to-right = export -->
-  <path id="fp-grid" class="flow-line" d="M 1045,485 L 1515,485" stroke="#66CCBB"/>
-  <!-- House (960,570) → Wallbox (960,702): top-to-bottom -->
-  <path id="fp-wb"   class="flow-line" d="M 960,570  L 960,702"  stroke="#99CCFF"/>
+  <!-- PV (960,236) → House (960,400): vertical -->
+  <path id="fp-pv"      class="flow-line" d="M 960,236  L 960,400"   stroke="#FFCC00"/>
+  <!-- Battery (405,485) ↔ House (875,485): horizontal -->
+  <path id="fp-batt"    class="flow-line" d="M 405,485  L 875,485"   stroke="#CC99FF"/>
+  <!-- House (1045,485) ↔ Grid (1515,485): horizontal -->
+  <path id="fp-grid"    class="flow-line" d="M 1045,485 L 1515,485"  stroke="#66CCBB"/>
+  <!-- Solar (1045,151) → Wallbox (1515,151): horizontal -->
+  <path id="fp-wb-pv"   class="flow-line" d="M 1045,151 L 1515,151"  stroke="#99CCFF"/>
+  <!-- Wallbox (1600,236) → Grid (1600,400): vertical -->
+  <path id="fp-wb-grid" class="flow-line" d="M 1600,236  L 1600,400" stroke="#99CCFF"/>
 
   <!-- ── Flow power labels (shown on active paths) ─────────────── -->
-  <text id="fl-pv"   x="990"  y="318" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#FFCC00" opacity="0"/>
-  <text id="fl-batt" x="590"  y="475" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#CC99FF" opacity="0"/>
-  <text id="fl-grid" x="1200" y="475" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#66CCBB" opacity="0"/>
-  <text id="fl-wb"   x="985"  y="636" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#99CCFF" opacity="0"/>
+  <text id="fl-pv"      x="990"  y="318" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#FFCC00" opacity="0"/>
+  <text id="fl-batt"    x="590"  y="475" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#CC99FF" opacity="0"/>
+  <text id="fl-grid"    x="1200" y="475" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#66CCBB" opacity="0"/>
+  <text id="fl-wb"      x="1280" y="136" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#99CCFF" opacity="0"/>
 
   <!-- ══ PV NODE (960, 151) ════════════════════════════════════════ -->
   <g transform="translate(960,151)">
@@ -138,7 +140,7 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
     <circle r="85" fill="rgba(68,136,255,0.07)" stroke="#4488FF" stroke-width="1.5"/>
     <text y="-8"  text-anchor="middle" dominant-baseline="middle" font-size="38" font-family="system-ui">🏠</text>
     <text id="vn-house" y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="21" font-weight="700" fill="#fff">–</text>
-    <text x="88" y="-88" text-anchor="start" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#4488FF">HAUS</text>
+    <text y="-125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#4488FF">HAUS</text>
   </g>
 
   <!-- ══ GRID NODE (1600, 485) ════════════════════════════════════ -->
@@ -148,16 +150,16 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
     <text y="-8"  text-anchor="middle" dominant-baseline="middle" font-size="38" font-family="system-ui">⚡</text>
     <text id="vn-grid"     y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="21" font-weight="700" fill="#fff">–</text>
     <text id="vn-grid-dir" y="56" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="700" letter-spacing="1.5" fill="#666680" opacity="0">–</text>
-    <text y="-125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#66CCBB">NETZ</text>
+    <text y="125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#66CCBB">NETZ</text>
   </g>
 
-  <!-- ══ WALLBOX NODE (960, 787) ══════════════════════════════════ -->
-  <g transform="translate(960,787)">
+  <!-- ══ WALLBOX NODE (1600, 151) — oben rechts, über NETZ ════════ -->
+  <g transform="translate(1600,151)">
     <circle id="wb-ring" class="node-ring node-ring-off" r="108" fill="rgba(153,204,255,0.10)" stroke="rgba(153,204,255,0.25)" stroke-width="1.5"/>
     <circle r="85" fill="rgba(153,204,255,0.07)" stroke="#99CCFF" stroke-width="1.5"/>
     <text y="-8"  text-anchor="middle" dominant-baseline="middle" font-size="38" font-family="system-ui">🚗</text>
     <text id="vn-wb" y="32" text-anchor="middle" font-family="system-ui,sans-serif" font-size="21" font-weight="700" fill="#fff">–</text>
-    <text x="-105" y="8" text-anchor="end" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#99CCFF">WALLBOX</text>
+    <text y="-125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#99CCFF">WALLBOX</text>
   </g>
 
 </svg>
@@ -209,23 +211,24 @@ function fitViewBox() {
   const svg = document.getElementById('flow-svg');
   const w = svg.clientWidth || 1920;
   const h = svg.clientHeight || 906;
-  // Add 20px top margin so the SOLAR label (y≈36) doesn't clip at the iframe edge
+  // Add 20px top margin so the SOLAR/WALLBOX labels don't clip at the iframe edge
   svg.setAttribute('viewBox', `0 -20 ${w} ${h}`);
   // Scale node positions from reference (1920×906) to actual size
   const sx = w / 1920, sy = h / 906;
   const nodes = [
-    { id: null, x: 960,  y: 151, el: svg.querySelectorAll('g')[0] },
-    { id: null, x: 320,  y: 485, el: svg.querySelectorAll('g')[1] },
-    { id: null, x: 960,  y: 485, el: svg.querySelectorAll('g')[2] },
-    { id: null, x: 1600, y: 485, el: svg.querySelectorAll('g')[3] },
-    { id: null, x: 960,  y: 787, el: svg.querySelectorAll('g')[4] },
+    { x: 960,  y: 151, el: svg.querySelectorAll('g')[0] }, // SOLAR
+    { x: 320,  y: 485, el: svg.querySelectorAll('g')[1] }, // BATT
+    { x: 960,  y: 485, el: svg.querySelectorAll('g')[2] }, // HOUSE
+    { x: 1600, y: 485, el: svg.querySelectorAll('g')[3] }, // GRID
+    { x: 1600, y: 151, el: svg.querySelectorAll('g')[4] }, // WALLBOX
   ];
   nodes.forEach(n => n.el && n.el.setAttribute('transform', `translate(${Math.round(n.x*sx)},${Math.round(n.y*sy)})`));
   const paths = [
-    { id:'fp-pv',   x1:960, y1:236, x2:960,  y2:400  },
-    { id:'fp-batt', x1:405, y1:485, x2:875,  y2:485  },
-    { id:'fp-grid', x1:1045,y1:485, x2:1515, y2:485  },
-    { id:'fp-wb',   x1:960, y1:570, x2:960,  y2:702  },
+    { id:'fp-pv',      x1:960,  y1:236, x2:960,  y2:400 },
+    { id:'fp-batt',    x1:405,  y1:485, x2:875,  y2:485 },
+    { id:'fp-grid',    x1:1045, y1:485, x2:1515, y2:485 },
+    { id:'fp-wb-pv',   x1:1045, y1:151, x2:1515, y2:151 },
+    { id:'fp-wb-grid', x1:1600, y1:236, x2:1600, y2:400 },
   ];
   paths.forEach(p => {
     const el = document.getElementById(p.id); if (!el) return;
@@ -235,7 +238,7 @@ function fitViewBox() {
     { id:'fl-pv',   x:990,  y:318 },
     { id:'fl-batt', x:590,  y:475 },
     { id:'fl-grid', x:1200, y:475 },
-    { id:'fl-wb',   x:985,  y:636 },
+    { id:'fl-wb',   x:1280, y:136 },
   ];
   labels.forEach(l => {
     const el = document.getElementById(l.id); if (!el) return;
@@ -349,9 +352,10 @@ function updateFlows() {
     gdEl.setAttribute('fill', gridColor);
   }
 
-  // House → Wallbox (always forward)
+  // Wallbox: Solar → WB (horizontal) + WB → Grid (vertical), both forward when charging
   const wbOn = wbPower > THRESH;
-  setFlow('fp-wb', wbOn, false);
+  setFlow('fp-wb-pv',   wbOn, false);
+  setFlow('fp-wb-grid', wbOn, false);
   setFlowLabel('fl-wb', wbOn ? fmtW(wbPower) : '', wbOn, '#99CCFF');
   setText('vn-wb', wbOn ? fmtW(wbPower) : '–');
   const wbRing = el('wb-ring');
