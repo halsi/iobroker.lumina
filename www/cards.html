@@ -527,7 +527,7 @@ body {
           <div style="display:flex;align-items:center;gap:8px;">
             <span class="lbl">Hochbeet</span>
             <span class="batt-icon" style="vertical-align:middle;">
-              <span class="batt-fill" id="w-batt-fill" style="width:14px;background:#44AA44;"></span>
+              <span class="batt-fill" id="w-batt-fill" style="width:30px;background:#44AA44;"></span>
             </span>
           </div>
           <span class="val" id="w-moisture"><span class="loading">…</span></span>
@@ -802,7 +802,7 @@ function setWasser(elId, val) {
     if (el) el.textContent = isNaN(n)?'–':Math.round(n)+' %';
   } else if (elId==='w-batt') {
     const pct=parseFloat(val), fill=document.getElementById('w-batt-fill');
-    if (!isNaN(pct)&&fill) { const w=Math.max(2,Math.round(pct*14/100)); fill.style.width=w+'px'; fill.style.background=pct<=25?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; }
+    if (!isNaN(pct)&&fill) { const w=Math.max(2,Math.round(pct*30/100)); fill.style.width=w+'px'; fill.style.background=pct<=25?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; }
   } else if (elId==='pool-ph') {
     const el=document.getElementById('pool-ph'), n=parseFloat(val);
     if (!el||isNaN(n)) return;
