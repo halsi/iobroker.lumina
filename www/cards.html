@@ -119,7 +119,7 @@ body {
 .card-header {
   display: flex; align-items: center; gap: 8px;
   padding: 9px 16px;
-  font-size: 10px; font-weight: 700;
+  font-size: 21px; font-weight: 700;
   letter-spacing: 2.5px; text-transform: uppercase;
 }
 .ch-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
@@ -420,13 +420,28 @@ body {
       </div>
     </div>
 
+    <div class="card card-peach">
+      <div class="card-header"><span class="ch-dot"></span>Heizung</div>
+      <div class="card-body">
+        <div class="row"><span class="lbl">Heizkurve</span><span class="val" id="h-heizkurve"><span class="loading">…</span></span></div>
+        <div class="row">
+          <span class="lbl">Sommermodus</span>
+          <button class="h-ctrl-btn" id="h-sommer-btn" onclick="pressEffect(this);toggleSommermodus()">…</button>
+        </div>
+        <div class="row">
+          <span class="lbl">Urlaubsmodus</span>
+          <button class="h-ctrl-btn" id="h-urlaub-btn" onclick="pressEffect(this);toggleUrlaubsmodus()">…</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ── ENERGIE ───────────────────────── -->
   <div class="col">
 
     <div class="card card-yellow">
-      <div class="card-header"><span class="ch-dot"></span>Aktuell</div>
+      <div class="card-header"><span class="ch-dot"></span>Energie Aktuell</div>
       <div class="card-body">
         <div class="row"><span class="lbl">Netzbezug</span><span class="val" id="e-bezug"><span class="loading">…</span></span></div>
         <div class="row double-sep"><span class="lbl">Einspeisung</span><span class="val" id="e-einspeisung"><span class="loading">…</span></span></div>
@@ -438,7 +453,7 @@ body {
     </div>
 
     <div class="card card-orange">
-      <div class="card-header"><span class="ch-dot"></span>Heute</div>
+      <div class="card-header"><span class="ch-dot"></span>Energie Heute</div>
       <div class="card-body">
         <div class="row"><span class="lbl">PV Ertrag</span><span class="val" id="e-pv-day"><span class="loading">…</span></span></div>
         <div class="row"><span class="lbl">Netzbezug</span><span class="val" id="e-bezug-day"><span class="loading">…</span></span></div>
@@ -448,7 +463,7 @@ body {
     </div>
 
     <div class="card card-purple">
-      <div class="card-header"><span class="ch-dot"></span>Batterie</div>
+      <div class="card-header"><span class="ch-dot"></span>Energie Batterie</div>
       <div class="card-body">
         <div class="row">
           <span class="lbl">Ladestand</span>
@@ -522,7 +537,7 @@ body {
     </div>
 
     <div class="card card-teal2">
-      <div class="card-header"><span class="ch-dot"></span>Ventile</div>
+      <div class="card-header"><span class="ch-dot"></span>Wasser</div>
       <div class="valve-grid">
         <button class="valve-btn valve-off" id="v-garten"     onclick="pressEffect(this);toggleValve('v-garten')"    >Garten</button>
         <button class="valve-btn valve-off" id="v-pool"       onclick="pressEffect(this);toggleValve('v-pool')"      >Pool</button>
@@ -534,25 +549,6 @@ body {
 
   </div>
 
-  <!-- ── HEIZUNG ───────────────────────── -->
-  <div class="col">
-
-    <div class="card card-peach">
-      <div class="card-header"><span class="ch-dot"></span>Heizung</div>
-      <div class="card-body">
-        <div class="row"><span class="lbl">Heizkurve</span><span class="val" id="h-heizkurve"><span class="loading">…</span></span></div>
-        <div class="row">
-          <span class="lbl">Sommermodus</span>
-          <button class="h-ctrl-btn" id="h-sommer-btn" onclick="pressEffect(this);toggleSommermodus()">…</button>
-        </div>
-        <div class="row">
-          <span class="lbl">Urlaubsmodus</span>
-          <button class="h-ctrl-btn" id="h-urlaub-btn" onclick="pressEffect(this);toggleUrlaubsmodus()">…</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
 
 </main>
 
