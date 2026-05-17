@@ -204,28 +204,29 @@ body {
 
 /* ── Shield card ─────────────────────────────────────────────────── */
 .shield-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 16px; gap: 10px;
 }
-.shield-center { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 7px; }
 .shield-gif { width: 272px; height: auto; mix-blend-mode: screen; }
+.shield-controls {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; width: 100%;
+}
 .shield-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 2px;
-  padding: 3px 14px; border-radius: 99px;
+  font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  padding: 8px 20px; border-radius: 99px;
 }
 .shield-active   { background: rgba(255,85,85,0.15);  color: #ff5555; border: 1px solid rgba(255,85,85,0.3);  }
 .shield-inactive { background: rgba(68,170,68,0.15);  color: #44AA44; border: 1px solid rgba(68,170,68,0.3);  }
 .shield-night    { background: rgba(68,153,255,0.15); color: #4499ff; border: 1px solid rgba(68,153,255,0.3); }
 .shield-btn {
   display: flex; align-items: center; justify-content: center;
-  padding: 9px 14px;
+  padding: 10px 20px;
   border: 1px solid; cursor: pointer;
-  font-family: inherit; font-size: 11px; font-weight: 700;
+  font-family: inherit; font-size: 14px; font-weight: 700;
   letter-spacing: 1px; text-transform: uppercase;
   border-radius: 12px;
   -webkit-tap-highlight-color: transparent;
-  writing-mode: vertical-rl;
-  min-height: 68px;
 }
 .shield-btn-disable { background: rgba(136,34,0,0.3);  color: #ffaa88; border-color: rgba(200,50,0,0.4); }
 .shield-btn-enable  { background: rgba(0,80,40,0.3);   color: #88ffbb; border-color: rgba(0,130,70,0.4); }
@@ -472,12 +473,12 @@ body {
     <div class="card card-beige">
       <div class="card-header"><span class="ch-dot"></span>Shield</div>
       <div class="shield-row">
-        <button class="shield-btn shield-btn-disable" onclick="pressEffect(this);shieldDisable()">Disable</button>
-        <div class="shield-center">
-          <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif" alt="">
+        <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif" alt="">
+        <div class="shield-controls">
+          <button class="shield-btn shield-btn-disable" onclick="pressEffect(this);shieldDisable()">Disable</button>
           <div id="shield-label" class="shield-label shield-inactive">INACTIVE</div>
+          <button class="shield-btn shield-btn-enable" onclick="pressEffect(this);shieldEnable()">Enable</button>
         </div>
-        <button class="shield-btn shield-btn-enable" onclick="pressEffect(this);shieldEnable()">Enable</button>
       </div>
     </div>
 
