@@ -108,30 +108,28 @@ body {
   gap: 10px; overflow: hidden; min-height: 0;
 }
 
-/* ── Data cascade filler ─────────────────────────────────────────── */
-.dc-filler {
+/* ── LCARS block filler ──────────────────────────────────────────── */
+.lcars-filler {
   flex: 1;
-  overflow: hidden;
-  display: flex;
-  gap: 0;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 8px 8px 4px;
   min-height: 0;
-  opacity: 0.35;
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
-  line-height: 1.45;
-  color: var(--purple);
-  pointer-events: none;
-  animation: dc-cycle 8s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 4px 0 0;
+  overflow: hidden;
 }
-@keyframes dc-cycle {
-  0%,40%  { color: var(--purple); opacity: 0.35; }
-  45%,55% { color: var(--teal);   opacity: 0.55; }
-  60%,100%{ color: var(--purple); opacity: 0.35; }
+.lf-row {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
 }
-.dc-filler .dcc { white-space: pre; text-align: right; flex: 1; }
+.lf-block {
+  border-radius: 6px;
+  opacity: 0.55;
+  height: 22px;
+}
+/* Grow last row to fill remaining space */
+.lcars-filler .lf-grow { flex: 1; border-radius: 6px; opacity: 0.35; margin-top: 2px; }
 
 /* ── Card ────────────────────────────────────────────────────────── */
 .card {
@@ -432,10 +430,11 @@ body {
       </div>
     </div>
 
-    <div class="dc-filler">
-      <div class="dcc">9341&#10;0482&#10;7751&#10;2209&#10;6634&#10;1187&#10;4420&#10;8853&#10;3316&#10;7749&#10;0082&#10;5515</div>
-      <div class="dcc">24109&#10;80531&#10;31987&#10;46204&#10;19835&#10;72460&#10;53921&#10;08374&#10;61508&#10;27943&#10;84176&#10;30529</div>
-      <div class="dcc">319825&#10;462331&#10;053201&#10;748965&#10;213047&#10;896534&#10;127480&#10;654912&#10;389067&#10;241853&#10;706429&#10;835170</div>
+    <div class="lcars-filler">
+      <div class="lf-row"><div class="lf-block" style="flex:2;background:var(--orange);"></div><div class="lf-block" style="flex:1;background:var(--purple);"></div></div>
+      <div class="lf-row"><div class="lf-block" style="flex:1;background:var(--purple);"></div><div class="lf-block" style="flex:3;background:var(--orange);"></div></div>
+      <div class="lf-row"><div class="lf-block" style="flex:3;background:var(--yellow);"></div><div class="lf-block" style="flex:1;background:var(--orange);"></div></div>
+      <div class="lf-grow" style="background:var(--purple);"></div>
     </div>
 
   </div>
@@ -497,10 +496,11 @@ body {
       </div>
     </div>
 
-    <div class="dc-filler">
-      <div class="dcc">5519&#10;8832&#10;2245&#10;6658&#10;0071&#10;3384&#10;7797&#10;1110&#10;4423&#10;8836&#10;2249&#10;6662</div>
-      <div class="dcc">41520&#10;30986&#10;21854&#10;12720&#10;03588&#10;94456&#10;85324&#10;76192&#10;67060&#10;57928&#10;48796&#10;39664</div>
-      <div class="dcc">2107853&#10;1220197&#10;0332541&#10;9445885&#10;8558229&#10;7670573&#10;6782917&#10;5895261&#10;4907605&#10;3019949&#10;2132293&#10;1244637</div>
+    <div class="lcars-filler">
+      <div class="lf-row"><div class="lf-block" style="flex:1;background:var(--yellow);"></div><div class="lf-block" style="flex:2;background:var(--purple);"></div></div>
+      <div class="lf-row"><div class="lf-block" style="flex:2;background:var(--orange);"></div><div class="lf-block" style="flex:1;background:var(--yellow);"></div></div>
+      <div class="lf-row"><div class="lf-block" style="flex:1;background:var(--purple);"></div><div class="lf-block" style="flex:2;background:var(--orange);"></div></div>
+      <div class="lf-grow" style="background:var(--yellow);"></div>
     </div>
 
   </div>
@@ -552,10 +552,11 @@ body {
       </div>
     </div>
 
-    <div class="dc-filler">
-      <div class="dcc">7723&#10;1136&#10;5549&#10;9962&#10;3375&#10;7788&#10;1101&#10;5514&#10;9927&#10;3340&#10;7753&#10;1166</div>
-      <div class="dcc">88417&#10;64233&#10;40049&#10;15865&#10;91681&#10;67497&#10;43313&#10;19129&#10;94945&#10;70761&#10;46577&#10;22393</div>
-      <div class="dcc">534082&#10;206398&#10;878714&#10;551030&#10;223346&#10;895662&#10;567978&#10;240294&#10;912610&#10;584926&#10;257242&#10;929558</div>
+    <div class="lcars-filler">
+      <div class="lf-row"><div class="lf-block" style="flex:3;background:var(--blue);"></div><div class="lf-block" style="flex:1;background:var(--purple);"></div></div>
+      <div class="lf-row"><div class="lf-block" style="flex:1;background:var(--orange);"></div><div class="lf-block" style="flex:2;background:var(--blue);"></div></div>
+      <div class="lf-row"><div class="lf-block" style="flex:2;background:var(--purple);"></div><div class="lf-block" style="flex:1;background:var(--orange);"></div></div>
+      <div class="lf-grow" style="background:var(--blue);"></div>
     </div>
 
   </div>
@@ -603,10 +604,11 @@ body {
       </div>
     </div>
 
-    <div class="dc-filler">
-      <div class="dcc">4408&#10;8821&#10;2234&#10;6647&#10;0060&#10;3373&#10;7786&#10;1199&#10;5512&#10;9925&#10;3338&#10;7751</div>
-      <div class="dcc">15403&#10;31219&#10;47035&#10;62851&#10;78667&#10;94483&#10;10299&#10;26115&#10;41931&#10;57747&#10;73563&#10;89379</div>
-      <div class="dcc">293612&#10;465928&#10;638244&#10;810560&#10;982876&#10;155192&#10;327508&#10;499824&#10;672140&#10;844456&#10;016772&#10;189088</div>
+    <div class="lcars-filler">
+      <div class="lf-row"><div class="lf-block" style="flex:1;background:var(--teal);"></div><div class="lf-block" style="flex:2;background:var(--teal2);"></div></div>
+      <div class="lf-row"><div class="lf-block" style="flex:2;background:var(--teal2);"></div><div class="lf-block" style="flex:1;background:var(--orange);"></div></div>
+      <div class="lf-row"><div class="lf-block" style="flex:1;background:var(--orange);"></div><div class="lf-block" style="flex:3;background:var(--teal);"></div></div>
+      <div class="lf-grow" style="background:var(--teal2);"></div>
     </div>
 
   </div>
