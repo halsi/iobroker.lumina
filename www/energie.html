@@ -32,42 +32,6 @@ body {
   overflow: hidden;
 }
 
-/* ── Header ─────────────────────────────────────────────────── */
-#header {
-  position: relative;
-  display: flex; align-items: center;
-  height: 66px; padding: 0 28px; gap: 16px;
-  background: var(--bg);
-}
-#header::after {
-  content: ''; position: absolute;
-  bottom: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg,
-    var(--orange) 0%, var(--yellow) 30%,
-    var(--teal) 65%, var(--purple) 100%);
-}
-.hdr-logo { font-size: 22px; font-weight: 800; color: var(--orange); flex-shrink: 0; }
-.hdr-pip  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.hdr-sub  { font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); flex: 1; }
-.hdr-div  { width: 1px; height: 28px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
-#hdr-time { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.5px; flex-shrink: 0; }
-#hdr-date { font-size: 12px; color: var(--muted); flex-shrink: 0; }
-
-.conn-pill {
-  display: flex; align-items: center; gap: 5px;
-  padding: 4px 12px; border-radius: 99px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
-}
-#conn-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: #2a2a3a; transition: background 0.3s;
-}
-#conn-dot.on  { background: #44AA44; box-shadow: 0 0 6px #44AA4466; }
-#conn-dot.off { background: #CC2200; }
-
 /* ── Flow path animations ────────────────────────────────────── */
 .flow-line {
   fill: none;
@@ -115,20 +79,6 @@ body {
 </head>
 <body>
 
-<!-- ══ HEADER ═══════════════════════════════════════════════════════════════ -->
-<header id="header">
-  <div class="hdr-logo">Kleinwilfersdorf 92</div>
-  <div class="hdr-pip" style="background:var(--orange)"></div>
-  <div class="hdr-pip" style="background:var(--yellow)"></div>
-  <div class="hdr-pip" style="background:var(--teal)"></div>
-  <div class="hdr-sub">Energie Live</div>
-  <div class="hdr-div"></div>
-  <span id="hdr-time">00:00:00</span>
-  <span id="hdr-date">—</span>
-  <div class="hdr-div"></div>
-  <div class="conn-pill"><div id="conn-dot"></div><span>ioBroker</span></div>
-</header>
-
 <!-- ══ ENERGY FLOW SVG ══════════════════════════════════════════════════════ -->
 <!--
   Layout (1920 × 840):
@@ -137,7 +87,7 @@ body {
                        WB    (960, 730)
   Node radius: 85px
 -->
-<svg width="1920" height="840" viewBox="0 0 1920 840">
+<svg width="1920" height="906" viewBox="0 0 1920 906">
 
   <!-- ── Flow paths ────────────────────────────────────────────── -->
   <!-- PV (960,225) → House (960,365): top-to-bottom -->
@@ -246,17 +196,6 @@ body {
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-// ── Clock ──────────────────────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  document.getElementById('hdr-time').textContent =
-    now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  document.getElementById('hdr-date').textContent =
-    now.toLocaleDateString('de-AT', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-}
-updateClock();
-setInterval(updateClock, 1000);
-
 // ── OIDs ──────────────────────────────────────────────────────────────────
 const OIDs = {
   pv:          'modbus.0.inputRegisters.5016_Total_DC_Power',
@@ -410,12 +349,10 @@ function applyState(oid, val) {
 }
 
 // ── Socket.io ──────────────────────────────────────────────────────────────
-const connDot = el('conn-dot');
 const socket  = io({ path: '/socket.io' });
 const allOids = Object.values(OIDs);
 
 socket.on('connect', () => {
-  connDot.className = 'on';
   allOids.forEach(oid => {
     socket.emit('subscribe', oid, { ack: true }, () => {});
     socket.emit('getStates', [oid], (err, states) => {
@@ -426,7 +363,7 @@ socket.on('connect', () => {
     });
   });
 });
-socket.on('disconnect', () => { connDot.className = 'off'; });
+socket.on('disconnect', () => {});
 socket.on('stateChange', (oid, state) => {
   if (!state || state.val === null || state.val === undefined) return;
   applyState(oid, state.val);
