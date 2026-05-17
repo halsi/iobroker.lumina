@@ -113,17 +113,16 @@ body {
   flex: 1;
   overflow: hidden;
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+  gap: 0;
+  justify-content: space-between;
   align-items: flex-start;
-  padding: 8px 4px 4px;
+  padding: 8px 8px 4px;
   min-height: 0;
   opacity: 0.35;
   font-family: 'Courier New', monospace;
   font-size: 11px;
   line-height: 1.45;
   color: var(--purple);
-  text-align: right;
   pointer-events: none;
   animation: dc-cycle 8s ease-in-out infinite;
 }
@@ -132,7 +131,7 @@ body {
   45%,55% { color: var(--teal);   opacity: 0.55; }
   60%,100%{ color: var(--purple); opacity: 0.35; }
 }
-.dc-filler .dcc { white-space: pre; }
+.dc-filler .dcc { white-space: pre; text-align: right; flex: 1; }
 
 /* ── Card ────────────────────────────────────────────────────────── */
 .card {
