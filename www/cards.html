@@ -191,16 +191,16 @@ body {
 /* ── Battery icon (small) ────────────────────────────────────────── */
 .batt-icon {
   display: inline-flex; align-items: center;
-  border: 1.5px solid #444; border-radius: 2px;
-  padding: 1px 2px; height: 12px; position: relative;
+  border: 2px solid #555; border-radius: 3px;
+  padding: 2px 3px; height: 18px; position: relative;
 }
 .batt-icon::after {
-  content: ''; position: absolute; right: -3px; top: 50%;
+  content: ''; position: absolute; right: -4px; top: 50%;
   transform: translateY(-50%);
-  width: 2px; height: 5px; background: #444; border-radius: 0 1px 1px 0;
+  width: 3px; height: 7px; background: #555; border-radius: 0 2px 2px 0;
 }
-.batt-fill { height: 6px; border-radius: 1px; min-width: 2px; transition: width 0.3s, background 0.3s; }
-.batt-pct  { color: var(--muted); font-size: 12px; }
+.batt-fill { height: 10px; border-radius: 1px; min-width: 2px; transition: width 0.3s, background 0.3s; }
+.batt-pct  { color: #ccc; font-size: 18px; font-weight: 600; }
 
 /* ── Shield card ─────────────────────────────────────────────────── */
 .shield-row {
@@ -362,18 +362,6 @@ body {
   <!-- ── STATUS ────────────────────────── -->
   <div class="col">
 
-    <div class="card card-beige">
-      <div class="card-header"><span class="ch-dot"></span>Shield</div>
-      <div class="shield-row">
-        <button class="shield-btn shield-btn-disable" onclick="pressEffect(this);shieldDisable()">Disable</button>
-        <div class="shield-center">
-          <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif" alt="">
-          <div id="shield-label" class="shield-label shield-inactive">INACTIVE</div>
-        </div>
-        <button class="shield-btn shield-btn-enable" onclick="pressEffect(this);shieldEnable()">Enable</button>
-      </div>
-    </div>
-
     <div class="card card-orange">
       <div class="card-header"><span class="ch-dot"></span>Temperaturen</div>
       <div class="card-body">
@@ -393,7 +381,7 @@ body {
     </div>
 
     <div class="card card-purple">
-      <div class="card-header"><span class="ch-dot"></span>Sensoren</div>
+      <div class="card-header"><span class="ch-dot"></span>Fenster · Türen</div>
       <div class="nuki-row">
         <span class="nuki-label">Haustür</span>
         <span class="nuki-lock" id="nuki-lock">…</span>
@@ -480,6 +468,18 @@ body {
 
   <!-- ── AUTO ──────────────────────────── -->
   <div class="col">
+
+    <div class="card card-beige">
+      <div class="card-header"><span class="ch-dot"></span>Shield</div>
+      <div class="shield-row">
+        <button class="shield-btn shield-btn-disable" onclick="pressEffect(this);shieldDisable()">Disable</button>
+        <div class="shield-center">
+          <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif" alt="">
+          <div id="shield-label" class="shield-label shield-inactive">INACTIVE</div>
+        </div>
+        <button class="shield-btn shield-btn-enable" onclick="pressEffect(this);shieldEnable()">Enable</button>
+      </div>
+    </div>
 
     <div class="card card-blue">
       <div class="card-header"><span class="ch-dot"></span>BYD Sealion 7</div>
