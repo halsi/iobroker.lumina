@@ -302,14 +302,14 @@ body {
 
 /* ── Data panels (left of content) ─────────────────────────────── */
 #data-panels {
-  width: 780px;
+  width: 1060px;
   padding-left: 72px;
   padding-top: 14px;
   padding-right: 10px;
   padding-bottom: 8px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
   gap: 8px;
   position: relative; z-index: 2;
   overflow: hidden;
@@ -329,52 +329,52 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 10px;
-  font-size: 11px;
+  padding: 7px 14px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #000;
 }
-.lcard-header-left  { border-radius: 100vmax 0 0 100vmax; padding-left: 14px; }
-.lcard-header-right { border-radius: 0 100vmax 100vmax 0; padding-right: 14px; justify-content: flex-end; }
+.lcard-header-left  { border-radius: 100vmax 0 0 100vmax; padding-left: 18px; }
+.lcard-header-right { border-radius: 0 100vmax 100vmax 0; padding-right: 18px; justify-content: flex-end; }
 
-.lcard-body { padding: 6px 10px 8px; flex: 1; overflow: hidden; }
+.lcard-body { padding: 10px 16px 12px; flex: 1; overflow: hidden; }
 
 .lrow {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 3px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  font-size: 13px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: 16px;
 }
 .lrow:last-child { border-bottom: none; }
-.llbl { color: var(--african-violet); font-size: 12px; }
-.lval { font-size: 20px; font-weight: 700; color: #fff; }
-.lval .u { font-size: 11px; color: #444; margin-left: 2px; font-weight: 400; }
-.lval.loading { color: #1a1a1a; font-size: 13px; }
+.llbl { color: var(--african-violet); font-size: 15px; }
+.lval { font-size: 28px; font-weight: 700; color: #fff; }
+.lval .u { font-size: 14px; color: #555; margin-left: 3px; font-weight: 400; }
+.lval.loading { color: #1a1a1a; font-size: 16px; }
 
 /* Sensor pills */
-.spill { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 99px; }
+.spill { font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 99px; }
 .spill-open   { background: rgba(204,34,0,0.2);   color: #ee4444; }
 .spill-closed { background: rgba(68,170,68,0.2);  color: #44aa44; }
 .spill-unk    { background: rgba(255,255,255,0.04); color: #333; }
 
 /* Batt bar */
-.bbar-wrap { width: 50px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.07); overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 4px; }
-.bbar-fill { height: 100%; border-radius: 3px; background: #44aa44; transition: width 0.4s, background 0.4s; }
+.bbar-wrap { width: 70px; height: 7px; border-radius: 4px; background: rgba(255,255,255,0.07); overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
+.bbar-fill { height: 100%; border-radius: 4px; background: #44aa44; transition: width 0.4s, background 0.4s; }
 
 /* Nuki */
-.nuki-badge { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.nuki-badge { font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 99px; }
 .nuki-locked   { background: rgba(68,170,68,0.2); color: #44aa44; }
 .nuki-unlocked { background: rgba(204,34,0,0.2);  color: #cc2200; }
 
 /* Valve btn */
 .vbtn {
   font-family: 'Antonio', sans-serif;
-  font-size: 11px; font-weight: 700;
-  padding: 3px 8px;
+  font-size: 13px; font-weight: 700;
+  padding: 5px 12px;
   border: 1px solid; border-radius: 8px; cursor: pointer;
   text-transform: uppercase;
   transition: background 0.2s;
@@ -385,8 +385,8 @@ body {
 /* Heizung btn */
 .hbtn {
   font-family: 'Antonio', sans-serif;
-  font-size: 11px; font-weight: 700;
-  padding: 3px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; font-weight: 700;
+  padding: 5px 14px; border-radius: 8px; cursor: pointer;
   text-transform: uppercase; border: 1px solid;
   background: rgba(255,170,136,0.08);
   color: var(--peach); border-color: rgba(255,170,136,0.2);
@@ -394,16 +394,16 @@ body {
 .hbtn.h-on { background: rgba(255,136,102,0.2); color: var(--butterscotch); border-color: rgba(255,136,102,0.4); }
 
 /* Car presence */
-.cpres { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.cpres { font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 99px; }
 .cpres-yes { background: rgba(68,170,68,0.2); color: #44aa44; }
 .cpres-no  { background: rgba(255,255,255,0.04); color: #333; }
 
 /* Shield */
-.shield-badge { font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.shield-badge { font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 99px; }
 .shield-active   { background: rgba(255,50,50,0.15); color: #ff5555; }
 .shield-inactive { background: rgba(68,170,68,0.15); color: #44aa44; }
 .shield-night    { background: rgba(68,153,255,0.15); color: #4499ff; }
-.shield-gif { width: 36px; mix-blend-mode: screen; }
+.shield-gif { width: 40px; mix-blend-mode: screen; }
 
 /* HWC flame */
 @keyframes flicker { 0%,100%{opacity:1} 50%{opacity:0.5} }
@@ -425,6 +425,7 @@ body {
 /* ── Energie iframe ─────────────────────────────────────────────── */
 #energie-frame-wrap {
   flex: 1;
+  max-width: 620px;
   display: flex;
   flex-direction: column;
   padding-top: 14px;
