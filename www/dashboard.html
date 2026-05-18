@@ -60,9 +60,6 @@ html, body {
 @keyframes dash     { to { stroke-dashoffset: -64; } }
 @keyframes dash-rev { to { stroke-dashoffset:  64; } }
 
-/* ── Battery SOC overlay ──────────────────────────────────────────────── */
-#batt-soc-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
-.batt-blk { fill:transparent; transition:fill 0.8s; }
 
 /* ── Holo nodes ───────────────────────────────────────────────────────── */
 .holo-node {
@@ -277,16 +274,7 @@ html, body {
   </div>
 
   <div id="n-battery" class="holo-node">
-    <img src="img/dashboard/battery.png" alt="Batterie" style="width:160px;">
-    <svg id="batt-soc-svg">
-      <!-- Block 6 = top, Block 1 = bottom; data-i=0 is bottom -->
-      <rect class="batt-blk" data-i="5" x="6%" y="12%" width="54%" height="11%" rx="3"/>
-      <rect class="batt-blk" data-i="4" x="6%" y="25%" width="54%" height="11%" rx="3"/>
-      <rect class="batt-blk" data-i="3" x="6%" y="37%" width="54%" height="11%" rx="3"/>
-      <rect class="batt-blk" data-i="2" x="6%" y="49%" width="54%" height="11%" rx="3"/>
-      <rect class="batt-blk" data-i="1" x="6%" y="62%" width="54%" height="11%" rx="3"/>
-      <rect class="batt-blk" data-i="0" x="6%" y="74%" width="54%" height="11%" rx="3"/>
-    </svg>
+    <img id="battery-img" src="img/dashboard/battery.png" alt="Batterie" style="width:160px;">
     <div class="resize-handle"></div>
   </div>
 
@@ -837,13 +825,9 @@ function updateSolarImg() {
 // ── Battery SOC block visualisation ───────────────────────────────────────
 function updateBattBlocks(soc) {
   const filled = soc == null ? 0 : Math.ceil((soc / 100) * 6);
-  const color = filled <= 1 ? 'rgba(255,60,60,0.7)'
-              : filled <= 2 ? 'rgba(255,200,0,0.7)'
-              : 'rgba(60,255,120,0.7)';
-  document.querySelectorAll('.batt-blk').forEach(r => {
-    const i = parseInt(r.dataset.i);
-    r.style.fill = i < filled ? color : 'transparent';
-  });
+  const img = document.getElementById('battery-img');
+  if (!img) return;
+  img.src = filled > 0 ? `img/dashboard/battery_${filled}.png` : 'img/dashboard/battery.png';
 }
 
 // ── Apply incoming OID value (verbatim from energie.html) ─────────────────
