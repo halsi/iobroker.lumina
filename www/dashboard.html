@@ -374,6 +374,16 @@ html, body {
     <div class="resize-handle"></div>
   </div>
 
+  <div id="n-heizung" class="holo-node">
+    <img src="img/dashboard/heizung.png" alt="Heizung" style="width:160px;">
+    <div class="resize-handle"></div>
+  </div>
+
+  <div id="n-poolheizung" class="holo-node">
+    <img src="img/dashboard/poolheizung.png" alt="Pool-Heizung" style="width:160px;">
+    <div class="resize-handle"></div>
+  </div>
+
   <!-- Independent draggable labels -->
   <div id="lb-solar" class="holo-label" data-size="22">
     <div class="label-controls">
@@ -448,6 +458,22 @@ html, body {
     </div>
     <span class="node-name node-name-orange">POOL</span><br>
     <span class="node-value" id="v-pool">–</span>
+  </div>
+  <div id="lb-poolheizung" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#FF6347;">POOL-HEIZUNG</span><br>
+    <span class="node-value" id="v-poolheizung">–</span>
+  </div>
+  <div id="lb-heizung" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#FF6347;">HEIZUNG</span><br>
+    <span class="node-value" id="v-heizung">–</span>
   </div>
 
   <!-- Flow anchors: 2 per flow (each endpoint independently draggable in edit mode) -->
@@ -546,6 +572,8 @@ const NODE_META = {
   'n-grid':    { w: 140, h: 135 },
   'n-wallbox': { w: 190, h: 260 },
   'n-car':     { w: 220, h: 147 },
+  'n-heizung':     { w: 160, h: 160 },
+  'n-poolheizung': { w: 160, h: 160 },
 };
 
 // Default positions for ~1600×900 viewport
@@ -556,6 +584,8 @@ const DEFAULT_POSITIONS = {
   'n-grid':    { x: 1200, y: 100 },
   'n-wallbox': { x: 1080, y: 420 },
   'n-car':     { x: 1350, y: 560 },
+  'n-heizung':     { x: 780,  y: 570 },
+  'n-poolheizung': { x: 600,  y: 570 },
 };
 
 // ── Load/save positions ────────────────────────────────────────────────────
@@ -787,6 +817,8 @@ const OIDs = {
   poolTemp:    '0_userdata.0.Pool.Pooltemperatur',
   tempOut:     'mqtt.0.ebusd.700.DisplayedOutsideTemp',
   tempIn:      'mqtt.0.ebusd.700.z1RoomTemp',
+  vorlaufTemp:    'mqtt.0.ebusd.700.Hc1FlowTemp',
+  poolHeizTarget: 'tuya.0.72783082e09806145670.2',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -794,7 +826,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -925,6 +957,8 @@ function updateSensors() {
   const pool = document.getElementById('v-pool');    if (pool)    pool.textContent    = fmt(live.poolTemp);
   const tOut = document.getElementById('v-temp-out'); if (tOut)    tOut.textContent    = fmt(live.tempOut);
   const tIn  = document.getElementById('v-temp-in');  if (tIn)     tIn.textContent     = fmt(live.tempIn);
+  const tHz  = document.getElementById('v-heizung');    if (tHz)  tHz.textContent  = fmt(live.vorlaufTemp);
+  const tPH  = document.getElementById('v-poolheizung'); if (tPH)  tPH.textContent  = fmt(live.poolHeizTarget);
 }
 
 // ── Solar / Moon image switcher ───────────────────────────────────────────
@@ -962,6 +996,8 @@ function applyState(oid, val) {
     case OIDs.poolTemp:    live.poolTemp    = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.tempOut:     live.tempOut     = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.tempIn:      live.tempIn      = isNaN(n) ? null : n;       updateSensors();  break;
+    case OIDs.vorlaufTemp:    live.vorlaufTemp    = isNaN(n) ? null : n; updateSensors(); break;
+    case OIDs.poolHeizTarget: live.poolHeizTarget = isNaN(n) ? null : n; updateSensors(); break;
     // remaining OIDs subscribed to keep parity with energie.html
     default: break;
   }
@@ -1043,6 +1079,8 @@ const DEFAULT_LABEL_STATE = {
   'lb-temp-out': { x: 100,  y: 500, size: 22 },
   'lb-temp-in':  { x: 100,  y: 560, size: 22 },
   'lb-pool':     { x: 100,  y: 620, size: 22 },
+  'lb-heizung':     { x: 860,  y: 730, size: 22 },
+  'lb-poolheizung': { x: 680,  y: 730, size: 22 },
 };
 
 function loadLabelState() {
