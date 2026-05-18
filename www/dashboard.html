@@ -389,6 +389,11 @@ html, body {
     <div class="resize-handle"></div>
   </div>
 
+  <div id="n-tomaten" class="holo-node">
+    <img src="img/dashboard/tomaten.png" alt="Tomaten" style="width:160px;">
+    <div class="resize-handle"></div>
+  </div>
+
   <!-- Independent draggable labels -->
   <div id="lb-solar" class="holo-label" data-size="22">
     <div class="label-controls">
@@ -487,6 +492,14 @@ html, body {
     </div>
     <span class="node-name" style="color:#6AAEFF;">BODENFEUCHTE</span><br>
     <span class="node-value" id="v-hochbeet">–</span>
+  </div>
+  <div id="lb-tomaten" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#6AAEFF;">BODENFEUCHTE</span><br>
+    <span class="node-value" id="v-tomaten">–</span>
   </div>
 
   <!-- Flow anchors: 2 per flow (each endpoint independently draggable in edit mode) -->
@@ -588,6 +601,7 @@ const NODE_META = {
   'n-heizung':     { w: 160, h: 160 },
   'n-poolheizung': { w: 160, h: 160 },
   'n-hochbeet':    { w: 160, h: 160 },
+  'n-tomaten':     { w: 160, h: 160 },
 };
 
 // Default positions for ~1600×900 viewport
@@ -601,6 +615,7 @@ const DEFAULT_POSITIONS = {
   'n-heizung':     { x: 780,  y: 570 },
   'n-poolheizung': { x: 600,  y: 570 },
   'n-hochbeet':    { x: 420,  y: 570 },
+  'n-tomaten':     { x: 240,  y: 570 },
 };
 
 // ── Load/save positions ────────────────────────────────────────────────────
@@ -1100,6 +1115,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-heizung':     { x: 860,  y: 730, size: 22 },
   'lb-poolheizung': { x: 680,  y: 730, size: 22 },
   'lb-hochbeet':    { x: 500,  y: 730, size: 22 },
+  'lb-tomaten':     { x: 320,  y: 730, size: 22 },
 };
 
 function loadLabelState() {
