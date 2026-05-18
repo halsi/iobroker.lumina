@@ -240,16 +240,18 @@ html, body {
     <!-- Paths (d attributes set by updatePaths()) -->
     <path id="fp-pv-house"   class="flow-path" stroke="#F5B14C"/>
     <path id="fp-pv-batt"    class="flow-path" stroke="#6AAEFF"/>
+    <path id="fp-pv-wb"      class="flow-path" stroke="#52E5FF"/>
     <path id="fp-batt-house" class="flow-path" stroke="#6AAEFF"/>
     <path id="fp-house-grid" class="flow-path" stroke="#FF9C7A"/>
-    <path id="fp-house-wb"   class="flow-path" stroke="#52E5FF"/>
+    <path id="fp-wb-grid"    class="flow-path" stroke="#FF9C7A"/>
 
     <!-- Flow midpoint value labels -->
     <text id="fl-pv-house"   font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#F5B14C"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-pv-batt"    font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-pv-wb"      font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-batt-house" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-house-grid" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
-    <text id="fl-house-wb"   font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-wb-grid"    font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
   </svg>
 
   <!-- Holo nodes -->
@@ -320,12 +322,25 @@ html, body {
     <span class="node-value" id="v-wallbox">–</span>
   </div>
 
-  <!-- Flow connection anchors (visible + draggable in edit mode) -->
-  <div id="anc-solar"   class="flow-anchor"><span class="anchor-label">Solar</span></div>
-  <div id="anc-house"   class="flow-anchor"><span class="anchor-label">Haus</span></div>
-  <div id="anc-battery" class="flow-anchor"><span class="anchor-label">Batterie</span></div>
-  <div id="anc-grid"    class="flow-anchor"><span class="anchor-label">Netz</span></div>
-  <div id="anc-wallbox" class="flow-anchor"><span class="anchor-label">Wallbox</span></div>
+  <!-- Flow anchors: 2 per flow (each endpoint independently draggable in edit mode) -->
+  <!-- Solar → Haus -->
+  <div id="anc-solar-haus" class="flow-anchor"><span class="anchor-label">Solar→Haus</span></div>
+  <div id="anc-haus-solar" class="flow-anchor"><span class="anchor-label">Haus←Solar</span></div>
+  <!-- Solar → Batterie -->
+  <div id="anc-solar-batt" class="flow-anchor"><span class="anchor-label">Solar→Batt</span></div>
+  <div id="anc-batt-solar" class="flow-anchor"><span class="anchor-label">Batt←Solar</span></div>
+  <!-- Solar → Wallbox -->
+  <div id="anc-solar-wb"   class="flow-anchor"><span class="anchor-label">Solar→WB</span></div>
+  <div id="anc-wb-solar"   class="flow-anchor"><span class="anchor-label">WB←Solar</span></div>
+  <!-- Batterie → Haus -->
+  <div id="anc-batt-haus"  class="flow-anchor"><span class="anchor-label">Batt→Haus</span></div>
+  <div id="anc-haus-batt"  class="flow-anchor"><span class="anchor-label">Haus←Batt</span></div>
+  <!-- Haus → Netz -->
+  <div id="anc-haus-grid"  class="flow-anchor"><span class="anchor-label">Haus→Netz</span></div>
+  <div id="anc-grid-haus"  class="flow-anchor"><span class="anchor-label">Netz←Haus</span></div>
+  <!-- Wallbox → Netz -->
+  <div id="anc-wb-grid"    class="flow-anchor"><span class="anchor-label">WB→Netz</span></div>
+  <div id="anc-grid-wb"    class="flow-anchor"><span class="anchor-label">Netz←WB</span></div>
 
 </div><!-- /#scene -->
 
@@ -436,13 +451,26 @@ function bezierMid(c1, c2) {
   };
 }
 
-// ── Flow anchor state ──────────────────────────────────────────────────────
+// ── Flow anchor state — 2 endpoints per flow ───────────────────────────────
 const DEFAULT_ANCHORS = {
-  'anc-solar':   { x: 270,  y: 207 },
-  'anc-house':   { x: 770,  y: 250 },
-  'anc-battery': { x: 200,  y: 557 },
-  'anc-grid':    { x: 1270, y: 167 },
-  'anc-wallbox': { x: 1175, y: 522 },
+  // Solar → Haus
+  'anc-solar-haus': { x: 290,  y: 200 },
+  'anc-haus-solar': { x: 730,  y: 248 },
+  // Solar → Batterie
+  'anc-solar-batt': { x: 250,  y: 225 },
+  'anc-batt-solar': { x: 190,  y: 530 },
+  // Solar → Wallbox
+  'anc-solar-wb':   { x: 310,  y: 200 },
+  'anc-wb-solar':   { x: 1110, y: 475 },
+  // Batterie → Haus
+  'anc-batt-haus':  { x: 230,  y: 530 },
+  'anc-haus-batt':  { x: 760,  y: 280 },
+  // Haus → Netz
+  'anc-haus-grid':  { x: 820,  y: 220 },
+  'anc-grid-haus':  { x: 1250, y: 178 },
+  // Wallbox → Netz
+  'anc-wb-grid':    { x: 1145, y: 470 },
+  'anc-grid-wb':    { x: 1278, y: 205 },
 };
 
 function loadAnchorState() {
@@ -473,30 +501,27 @@ function anchorCenter(id) {
 }
 
 // ── Update all SVG paths after drag or on load ─────────────────────────────
+const FLOW_DEFS = [
+  { pathId: 'fp-pv-house',   labelId: 'fl-pv-house',   a1: 'anc-solar-haus', a2: 'anc-haus-solar' },
+  { pathId: 'fp-pv-batt',    labelId: 'fl-pv-batt',    a1: 'anc-solar-batt', a2: 'anc-batt-solar' },
+  { pathId: 'fp-pv-wb',      labelId: 'fl-pv-wb',      a1: 'anc-solar-wb',   a2: 'anc-wb-solar'   },
+  { pathId: 'fp-batt-house', labelId: 'fl-batt-house', a1: 'anc-batt-haus',  a2: 'anc-haus-batt'  },
+  { pathId: 'fp-house-grid', labelId: 'fl-house-grid', a1: 'anc-haus-grid',  a2: 'anc-grid-haus'  },
+  { pathId: 'fp-wb-grid',    labelId: 'fl-wb-grid',    a1: 'anc-wb-grid',    a2: 'anc-grid-wb'    },
+];
+
 function updatePaths() {
-  const solar = anchorCenter('anc-solar');
-  const house = anchorCenter('anc-house');
-  const batt  = anchorCenter('anc-battery');
-  const grid  = anchorCenter('anc-grid');
-  const wb    = anchorCenter('anc-wallbox');
-
-  const connections = [
-    { pathId: 'fp-pv-house',   labelId: 'fl-pv-house',   c1: solar, c2: house },
-    { pathId: 'fp-pv-batt',    labelId: 'fl-pv-batt',    c1: solar, c2: batt  },
-    { pathId: 'fp-batt-house', labelId: 'fl-batt-house', c1: batt,  c2: house },
-    { pathId: 'fp-house-grid', labelId: 'fl-house-grid', c1: house, c2: grid  },
-    { pathId: 'fp-house-wb',   labelId: 'fl-house-wb',   c1: house, c2: wb    },
-  ];
-
-  connections.forEach(({ pathId, labelId, c1, c2 }) => {
-    const path  = document.getElementById(pathId);
-    const label = document.getElementById(labelId);
+  FLOW_DEFS.forEach(({ pathId, labelId, a1, a2 }) => {
+    const c1   = anchorCenter(a1);
+    const c2   = anchorCenter(a2);
+    const path = document.getElementById(pathId);
+    const lbl  = document.getElementById(labelId);
     if (!path) return;
     path.setAttribute('d', bezierD(c1, c2));
-    if (label) {
+    if (lbl) {
       const mid = bezierMid(c1, c2);
-      label.setAttribute('x', Math.round(mid.x));
-      label.setAttribute('y', Math.round(mid.y));
+      lbl.setAttribute('x', Math.round(mid.x));
+      lbl.setAttribute('y', Math.round(mid.y));
     }
   });
 }
@@ -532,9 +557,10 @@ function setFlow(id, active, reverse) {
   const el = document.getElementById(id);
   if (!el) return;
   el.classList.remove('flow-active', 'flow-rev');
-  if (active) {
+  const show = editMode || active;
+  if (show) {
     el.classList.add('flow-active');
-    if (reverse) el.classList.add('flow-rev');
+    if (!editMode && reverse) el.classList.add('flow-rev');
   }
 }
 
@@ -620,9 +646,15 @@ function updateFlows() {
   setFlow('fp-house-grid', gridOn, gridImp);
   setFlowLabel('fl-house-grid', gridOn ? fmtW(gridImp ? bezug : einspeisung) : '', gridOn);
 
-  // House → Wallbox
-  setFlow('fp-house-wb', wbOn, false);
-  setFlowLabel('fl-house-wb', wbOn ? fmtW(wbPower) : '', wbOn);
+  // Solar → Wallbox (solar surplus to EV charger)
+  const pvWbOn = pvOn && wbOn;
+  setFlow('fp-pv-wb', pvWbOn, false);
+  setFlowLabel('fl-pv-wb', pvWbOn ? fmtW(wbPower) : '', pvWbOn);
+
+  // Wallbox ← Grid (grid imports when solar insufficient for wallbox)
+  const wbGridOn = wbOn && gridImp;
+  setFlow('fp-wb-grid', wbGridOn, true);
+  setFlowLabel('fl-wb-grid', wbGridOn ? fmtW(wbPower) : '', wbGridOn);
 }
 
 // ── Apply incoming OID value (verbatim from energie.html) ─────────────────
