@@ -156,6 +156,35 @@ html, body {
 }
 .edit-mode .resize-handle { display: block; }
 
+/* ── Flow anchors ─────────────────────────────────────────────────────── */
+.flow-anchor {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: rgba(82,229,255,0.25);
+  border: 2px solid #52E5FF;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+  display: none;
+  cursor: grab;
+}
+.flow-anchor:active { cursor: grabbing; }
+.edit-mode .flow-anchor { display: block; }
+.anchor-label {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #52E5FF;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
 #edit-badge {
   position: fixed;
   top: 14px;
@@ -291,6 +320,13 @@ html, body {
     <span class="node-value" id="v-wallbox">–</span>
   </div>
 
+  <!-- Flow connection anchors (visible + draggable in edit mode) -->
+  <div id="anc-solar"   class="flow-anchor"><span class="anchor-label">Solar</span></div>
+  <div id="anc-house"   class="flow-anchor"><span class="anchor-label">Haus</span></div>
+  <div id="anc-battery" class="flow-anchor"><span class="anchor-label">Batterie</span></div>
+  <div id="anc-grid"    class="flow-anchor"><span class="anchor-label">Netz</span></div>
+  <div id="anc-wallbox" class="flow-anchor"><span class="anchor-label">Wallbox</span></div>
+
 </div><!-- /#scene -->
 
 <!-- Nav button: cycles to energie.html -->
@@ -400,13 +436,49 @@ function bezierMid(c1, c2) {
   };
 }
 
+// ── Flow anchor state ──────────────────────────────────────────────────────
+const DEFAULT_ANCHORS = {
+  'anc-solar':   { x: 270,  y: 207 },
+  'anc-house':   { x: 770,  y: 250 },
+  'anc-battery': { x: 200,  y: 557 },
+  'anc-grid':    { x: 1270, y: 167 },
+  'anc-wallbox': { x: 1175, y: 522 },
+};
+
+function loadAnchorState() {
+  try { const r = localStorage.getItem('holo_anchors'); if (r) return JSON.parse(r); } catch(e) {}
+  return null;
+}
+function saveAnchorState() {
+  const s = {};
+  Object.keys(DEFAULT_ANCHORS).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) s[id] = { x: parseFloat(el.style.left)||0, y: parseFloat(el.style.top)||0 };
+  });
+  try { localStorage.setItem('holo_anchors', JSON.stringify(s)); } catch(e) {}
+}
+function applyAnchorState(state) {
+  Object.keys(DEFAULT_ANCHORS).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const s = (state && state[id]) || DEFAULT_ANCHORS[id];
+    el.style.left = s.x + 'px';
+    el.style.top  = s.y + 'px';
+  });
+}
+function anchorCenter(id) {
+  const el = document.getElementById(id);
+  if (!el) return { x: 0, y: 0 };
+  return { x: parseFloat(el.style.left)||0, y: parseFloat(el.style.top)||0 };
+}
+
 // ── Update all SVG paths after drag or on load ─────────────────────────────
 function updatePaths() {
-  const solar = nodeCenter('n-solar');
-  const house = nodeCenter('n-house');
-  const batt  = nodeCenter('n-battery');
-  const grid  = nodeCenter('n-grid');
-  const wb    = nodeCenter('n-wallbox');
+  const solar = anchorCenter('anc-solar');
+  const house = anchorCenter('anc-house');
+  const batt  = anchorCenter('anc-battery');
+  const grid  = anchorCenter('anc-grid');
+  const wb    = anchorCenter('anc-wallbox');
 
   const connections = [
     { pathId: 'fp-pv-house',   labelId: 'fl-pv-house',   c1: solar, c2: house },
@@ -753,11 +825,36 @@ function initDrag(nodeEl) {
   });
 }
 
+// ── Anchor drag (edit mode) ────────────────────────────────────────────────
+function initAnchorDrag(anchorEl) {
+  let dragging = false, startX, startY, origX, origY;
+  anchorEl.addEventListener('mousedown', e => {
+    if (!editMode) return;
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    origX = parseFloat(anchorEl.style.left) || 0;
+    origY = parseFloat(anchorEl.style.top)  || 0;
+    e.stopPropagation(); e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    anchorEl.style.left = (origX + e.clientX - startX) + 'px';
+    anchorEl.style.top  = (origY + e.clientY - startY) + 'px';
+    updatePaths();
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    saveAnchorState();
+  });
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 (function init() {
   // Apply positions from localStorage or defaults
   applyPositions(loadPositions());
   applyLabelState(loadLabelState());
+  applyAnchorState(loadAnchorState());
 
   // Draw initial SVG paths
   updatePaths();
@@ -773,6 +870,10 @@ function initDrag(nodeEl) {
     Object.keys(DEFAULT_LABEL_STATE).forEach(id => {
       const label = document.getElementById(id);
       if (label) { initLabelDrag(label); initLabelSize(label); }
+    });
+    Object.keys(DEFAULT_ANCHORS).forEach(id => {
+      const anc = document.getElementById(id);
+      if (anc) initAnchorDrag(anc);
     });
   }
 
