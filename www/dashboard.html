@@ -70,18 +70,16 @@ html, body {
 .widget {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 160px;
+  width: 180px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 14px 10px 16px;
-  border-radius: 22px;
-  background: rgba(8, 8, 18, 0.60);
-  border: 1.5px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
+  background: none;
+  border: none;
+  padding: 0;
   cursor: pointer;
   user-select: none;
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease;
 }
 .widget:hover {
   transform: translate(-50%, -50%) scale(1.05);
@@ -92,36 +90,43 @@ html, body {
   transition: none;
 }
 body.edit-mode .widget { cursor: grab; }
-body.edit-mode .widget:hover {
-  outline: 1.5px dashed rgba(255,255,255,0.25);
+body.edit-mode .widget:hover .w-img {
+  filter: drop-shadow(0 0 18px var(--wc)) brightness(1.15);
+  outline: none;
 }
 
 .w-img {
-  width: 110px;
-  height: 110px;
+  width: 150px;
+  height: 150px;
   object-fit: contain;
   pointer-events: none;
-  filter: drop-shadow(0 0 14px var(--wc));
+  filter: drop-shadow(0 0 16px var(--wc));
+  transition: filter 0.2s;
+}
+.widget:hover .w-img {
+  filter: drop-shadow(0 0 28px var(--wc)) brightness(1.1);
 }
 .w-name {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 2.5px;
+  letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--wc);
-  margin-top: 10px;
+  margin-top: 8px;
+  text-shadow: 0 0 10px var(--wc);
 }
 .w-val {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  color: #fff;
-  margin-top: 3px;
+  color: var(--wc);
+  margin-top: 2px;
   line-height: 1.2;
+  text-shadow: 0 0 12px var(--wc);
 }
 .w-val .u {
   font-size: 13px;
   font-weight: 400;
-  color: rgba(255,255,255,0.45);
+  opacity: 0.7;
   margin-left: 2px;
 }
 .w-sub {
@@ -129,24 +134,25 @@ body.edit-mode .widget:hover {
   font-weight: 600;
   margin-top: 1px;
   letter-spacing: 0.5px;
+  text-shadow: 0 0 8px currentColor;
 }
 
 /* Per-widget accent colors */
-#w-solar   { --wc: #FFCC00; border-color: rgba(255,204,0,0.28);   box-shadow: 0 0 28px rgba(255,204,0,0.12); }
-#w-battery { --wc: #CC99FF; border-color: rgba(204,153,255,0.28); box-shadow: 0 0 28px rgba(204,153,255,0.12); }
-#w-house   { --wc: #4488FF; border-color: rgba(68,136,255,0.28);  box-shadow: 0 0 28px rgba(68,136,255,0.12); }
-#w-grid    { --wc: #66CCBB; border-color: rgba(102,204,187,0.28); box-shadow: 0 0 28px rgba(102,204,187,0.12); }
-#w-wallbox { --wc: #99CCFF; border-color: rgba(153,204,255,0.28); box-shadow: 0 0 28px rgba(153,204,255,0.12); }
-#w-pool    { --wc: #00AACC; border-color: rgba(0,170,204,0.28);   box-shadow: 0 0 28px rgba(0,170,204,0.12); }
-#w-car     { --wc: #FF9900; border-color: rgba(255,153,0,0.28);   box-shadow: 0 0 28px rgba(255,153,0,0.12); }
+#w-solar   { --wc: #00EEFF; }
+#w-battery { --wc: #00EEFF; }
+#w-house   { --wc: #00EEFF; }
+#w-grid    { --wc: #00EEFF; }
+#w-wallbox { --wc: #00EEFF; }
+#w-pool    { --wc: #00EEFF; }
+#w-car     { --wc: #00EEFF; }
 
-/* Active glow pulse */
-.widget.w-active {
+/* Active glow pulse on image */
+.widget.w-active .w-img {
   animation: wpulse 2.5s ease-in-out infinite;
 }
 @keyframes wpulse {
-  0%, 100% { box-shadow: 0 0 28px color-mix(in srgb, var(--wc) 12%, transparent); }
-  50%       { box-shadow: 0 0 48px color-mix(in srgb, var(--wc) 35%, transparent); }
+  0%, 100% { filter: drop-shadow(0 0 16px var(--wc)); }
+  50%       { filter: drop-shadow(0 0 36px var(--wc)) brightness(1.15); }
 }
 
 /* ── Fixed controls (outside stage, scale with viewport) ──────── */
