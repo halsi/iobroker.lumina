@@ -28,12 +28,30 @@ html, body {
   overflow: hidden;
 }
 
+/* Layer 1: day/night sky (furthest back) */
+#stage-bg-sky {
+  position: absolute;
+  inset: 0;
+  background: url('img/dashboard/background-day.png') center / cover no-repeat;
+  z-index: 0;
+  transition: opacity 1s ease;
+}
+
+/* Layer 2: grid pylon behind platform */
+#stage-bg-grid {
+  position: absolute;
+  inset: 0;
+  background: url('img/dashboard/grid-active.png') right 80px top 20px / 320px auto no-repeat;
+  z-index: 1;
+}
+
+/* Layer 3: platform (white→transparent via multiply) */
 #stage-bg {
   position: absolute;
   inset: 0;
   background: url('img/dashboard/background.png') center / cover no-repeat;
   mix-blend-mode: multiply;
-  z-index: 0;
+  z-index: 2;
 }
 
 /* ── Flow SVG (sits behind widgets) ───────────────────────────── */
@@ -342,6 +360,8 @@ body.edit-mode #btn-reset { display: flex; }
 <body>
 
 <div id="stage">
+  <div id="stage-bg-sky"></div>
+  <div id="stage-bg-grid"></div>
   <div id="stage-bg"></div>
   <svg id="flow-svg"></svg>
   <div id="widget-layer">
@@ -435,6 +455,7 @@ const OIDs = {
   poolTemp:    '0_userdata.0.Pool.Pooltemperatur',
   carPresent:  '0_userdata.0.Auto.BYD-Sealion7.Anwesenheit',
   carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
+  nacht:       '0_userdata.0.Generic.Nacht',
   autarkie:    '0_userdata.0.Photovoltaik.Autarkie',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
@@ -542,6 +563,14 @@ function fmtW(w) {
   const n = Math.abs(parseFloat(w));
   if (isNaN(n) || n < 1) return '–';
   return n >= 1000 ? (n / 1000).toFixed(2) + ' kW' : Math.round(n) + ' W';
+}
+
+// ── Day / Night background ────────────────────────────────────────────────
+function setNacht(isNight) {
+  const sky = document.getElementById('stage-bg-sky');
+  if (sky) sky.style.backgroundImage = isNight
+    ? "url('img/dashboard/background-night.png')"
+    : "url('img/dashboard/background-day.png')";
 }
 
 // ── Stage scaling ──────────────────────────────────────────────────────────
@@ -758,6 +787,9 @@ function applyState(oid, val) {
     case OIDs.battRem:     live.battRem     = isNaN(n) ? null : n; break;
     case OIDs.poolTemp:    live.poolTemp    = isNaN(n) ? null : n; updateWidgetValues(); break;
     case OIDs.carSoc:      live.carSoc      = isNaN(n) ? null : n; updateWidgetValues(); break;
+    case OIDs.nacht:
+      setNacht(val === true || val === 'true' || val === 1 || val === '1');
+      break;
     case OIDs.carPresent:
       live.carPresent = (val === true || val === 'true' || val === 1 || val === '1');
       updateWidgetValues();
