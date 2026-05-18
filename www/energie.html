@@ -309,8 +309,8 @@ function setFlowLabel(id, text, visible, color) {
 function updateFlows() {
   const { pv, load, bezug, einspeisung, wbPower } = live;
 
-  // Battery net power: positive = charging (house→batt), negative = discharging (batt→house)
-  const battPow = pv + bezug - einspeisung - load;
+  // Battery net power: positive = charging, negative = discharging
+  const battPow = pv + bezug - einspeisung - load - wbPower;
   const battCharge = battPow > THRESH;
   const battDisch  = battPow < -THRESH;
   const battOn     = battCharge || battDisch;
@@ -385,7 +385,7 @@ function applyState(oid, val) {
     case OIDs.load:        live.load        = isNaN(n) ? 0 : n; updateFlows(); break;
     case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n; updateFlows(); break;
     case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n; updateFlows(); break;
-    case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
 
     case OIDs.autarkie:
       setHTML('d-autarkie', isNaN(n) ? '–' : Math.round(n) + '<span class="u">%</span>');

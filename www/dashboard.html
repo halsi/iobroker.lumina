@@ -514,7 +514,7 @@ const POPUP = {
   battery: {
     title: 'Batterie', img: 'assets/battery.png', color: '#CC99FF',
     rows: () => {
-      const battPow = live.pv + live.bezug - live.einspeisung - live.load;
+      const battPow = live.pv + live.bezug - live.einspeisung - live.load - live.wbPower;
       const dir = battPow > THRESH ? 'Laden' : battPow < -THRESH ? 'Entladen' : 'Standby';
       const dirColor = battPow > THRESH ? '#44CC88' : battPow < -THRESH ? '#FF9900' : '#666680';
       return [
@@ -684,7 +684,7 @@ function setFlow(connId, on, reverse, color, label) {
 // ── Flow + widget value updates ────────────────────────────────────────────
 function updateFlows() {
   const { pv, load, bezug, einspeisung, wbPower } = live;
-  const battPow    = pv + bezug - einspeisung - load;
+  const battPow    = pv + bezug - einspeisung - load - wbPower;
   const battCharge = battPow >  THRESH;
   const battDisch  = battPow < -THRESH;
   const pvOn       = pv           > THRESH;
@@ -723,7 +723,7 @@ function updateFlows() {
 
 function updateWidgetValues() {
   const { pv, load, bezug, einspeisung, wbPower, battSoc, battRem, poolTemp, carSoc, carPresent } = live;
-  const battPow = pv + live.bezug - live.einspeisung - load;
+  const battPow = pv + live.bezug - live.einspeisung - load - live.wbPower;
 
   // Solar
   el('wv-solar').innerHTML = pv > THRESH ? fmtW(pv) : '–';
@@ -786,7 +786,7 @@ function applyState(oid, val) {
     case OIDs.load:        live.load        = isNaN(n) ? 0 : n; updateFlows(); break;
     case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n; updateFlows(); break;
     case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n; updateFlows(); break;
-    case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
     case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n; updateWidgetValues(); break;
     case OIDs.battRem:     live.battRem     = isNaN(n) ? null : n; break;
     case OIDs.poolTemp:    live.poolTemp    = isNaN(n) ? null : n; updateWidgetValues(); break;
