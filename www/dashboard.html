@@ -386,19 +386,23 @@ function saveToServer(oid, data) {
 }
 
 function ensureCfgObjects(cb) {
-  const cfgObj = (name) => ({
-    type: 'state',
-    common: { name, type: 'string', role: 'json', read: true, write: true, def: '' },
-    native: {},
-  });
-  const defs = [
-    [CFG_POSITIONS, cfgObj('Lumina Dashboard Positions')],
-    [CFG_LABELS,    cfgObj('Lumina Dashboard Labels')],
-    [CFG_ANCHORS,   cfgObj('Lumina Dashboard Anchors')],
-  ];
+  const names = {
+    [CFG_POSITIONS]: 'Lumina Dashboard Positions',
+    [CFG_LABELS]:    'Lumina Dashboard Labels',
+    [CFG_ANCHORS]:   'Lumina Dashboard Anchors',
+  };
+  const oids = Object.keys(names);
   let done = 0;
-  defs.forEach(([oid, obj]) => {
-    window._dashSocket.emit('extendObject', oid, obj, () => { if (++done === defs.length && cb) cb(); });
+  const finish = () => { if (++done === oids.length && cb) cb(); };
+  oids.forEach(oid => {
+    window._dashSocket.emit('getObject', oid, (err, obj) => {
+      if (obj) { finish(); return; }
+      window._dashSocket.emit('setObject', oid, {
+        type: 'state',
+        common: { name: names[oid], type: 'string', role: 'json', read: true, write: true, def: '' },
+        native: {},
+      }, finish);
+    });
   });
 }
 
