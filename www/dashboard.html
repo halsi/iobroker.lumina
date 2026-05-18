@@ -146,17 +146,21 @@ body.edit-mode .widget:hover .w-img {
 #w-pool    { --wc: #00EEFF; }
 #w-car     { --wc: #00EEFF; }
 
-/* Holographic cyan filter for solar, house, grid images */
+/* Holographic cyan filter for solar and house */
 #w-solar .w-img,
-#w-house .w-img,
-#w-grid  .w-img {
+#w-house .w-img {
   filter: saturate(0.15) brightness(1.5) sepia(0.9) hue-rotate(155deg) saturate(5) drop-shadow(0 0 18px #00EEFF);
 }
 #w-solar:hover .w-img,
-#w-house:hover .w-img,
-#w-grid:hover  .w-img {
+#w-house:hover .w-img {
   filter: saturate(0.15) brightness(1.7) sepia(0.9) hue-rotate(155deg) saturate(6) drop-shadow(0 0 32px #00EEFF);
 }
+
+/* Grid: active = cyan glow, inactive = dim grey */
+#w-grid.grid-on  .w-img { filter: drop-shadow(0 0 22px #00EEFF) brightness(1.1); }
+#w-grid.grid-off .w-img { filter: grayscale(0.85) brightness(0.45) opacity(0.75); }
+#w-grid.grid-on:hover  .w-img { filter: drop-shadow(0 0 38px #00EEFF) brightness(1.25); }
+#w-grid.grid-off:hover .w-img { filter: grayscale(0.85) brightness(0.60) opacity(0.9); }
 
 /* Active glow pulse on image */
 .widget.w-active .w-img {
@@ -354,7 +358,7 @@ body.edit-mode #btn-reset { display: flex; }
     </div>
 
     <div class="widget" id="w-grid" data-key="grid">
-      <img class="w-img" src="img/dashboard/grid.png" alt="Netz">
+      <img class="w-img" src="img/dashboard/grid-active.png" alt="Netz">
       <div class="w-name">Netz</div>
       <div class="w-val" id="wv-grid">–</div>
       <div class="w-sub" id="ws-grid"></div>
@@ -665,6 +669,12 @@ function updateFlows() {
   document.getElementById('w-solar')  .classList.toggle('w-active', pvOn);
   document.getElementById('w-battery').classList.toggle('w-active', battCharge || battDisch);
   document.getElementById('w-wallbox').classList.toggle('w-active', wbOn);
+
+  // Grid active/inactive image state
+  const gridWidget = document.getElementById('w-grid');
+  const gridActive = gridImp || gridExp;
+  gridWidget.classList.toggle('grid-on',  gridActive);
+  gridWidget.classList.toggle('grid-off', !gridActive);
 
   updateWidgetValues();
 }
