@@ -522,16 +522,6 @@ body {
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-// ── Clock ──────────────────────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  document.getElementById('hdr-time').textContent =
-    now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  document.getElementById('hdr-date').textContent =
-    now.toLocaleDateString('de-AT', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-}
-updateClock();
-setInterval(updateClock, 1000);
 
 // ── Auto-reload on background >30s ────────────────────────────────────────
 let _hiddenAt = null;
