@@ -43,7 +43,11 @@ html, body {
   inset: 0;
   background: url('img/dashboard/grid-active.png') right 80px top 20px / 320px auto no-repeat;
   z-index: 1;
+  cursor: pointer;
 }
+
+/* NETZ label widget (no image, same drag/click system as other widgets) */
+#w-grid-label { --wc: #00EEFF; width: 200px; }
 
 /* Layer 3: platform */
 #stage-bg {
@@ -165,7 +169,6 @@ body.edit-mode .widget:hover .w-img {
 #w-solar   { --wc: #00EEFF; }
 #w-battery { --wc: #00EEFF; }
 #w-house   { --wc: #00EEFF; }
-#w-grid    { --wc: #00EEFF; }
 #w-wallbox { --wc: #00EEFF; }
 #w-pool    { --wc: #00EEFF; }
 #w-car     { --wc: #00EEFF; }
@@ -180,19 +183,16 @@ body.edit-mode .widget:hover .w-img {
   filter: saturate(0.15) brightness(1.7) sepia(0.9) hue-rotate(155deg) saturate(6) drop-shadow(0 0 32px #00EEFF);
 }
 
-/* Grid: active = cyan glow, inactive = dim grey */
-#w-grid.grid-on  .w-img { filter: drop-shadow(0 0 22px #00EEFF) brightness(1.1); }
-#w-grid.grid-off .w-img { filter: grayscale(0.85) brightness(0.45) opacity(0.75); }
-#w-grid.grid-on:hover  .w-img { filter: drop-shadow(0 0 38px #00EEFF) brightness(1.25); }
-#w-grid.grid-off:hover .w-img { filter: grayscale(0.85) brightness(0.60) opacity(0.9); }
+/* Grid pylon: active = cyan glow, inactive = dim grey */
+#stage-bg-grid.grid-on  { filter: drop-shadow(0 0 22px #00EEFF) brightness(1.1); }
+#stage-bg-grid.grid-off { filter: grayscale(0.85) brightness(0.45) opacity(0.75); }
 
 /* Active glow pulse on image */
 .widget.w-active .w-img {
   animation: wpulse 2.5s ease-in-out infinite;
 }
 #w-solar.w-active .w-img,
-#w-house.w-active .w-img,
-#w-grid.w-active  .w-img {
+#w-house.w-active .w-img {
   animation: wpulse-holo 2.5s ease-in-out infinite;
 }
 @keyframes wpulse {
@@ -384,12 +384,6 @@ body.edit-mode #btn-reset { display: flex; }
       <div class="w-val" id="wv-house">–</div>
     </div>
 
-    <div class="widget" id="w-grid" data-key="grid">
-      <img class="w-img" src="img/dashboard/grid-active.png" alt="Netz">
-      <div class="w-name">Netz</div>
-      <div class="w-val" id="wv-grid">–</div>
-      <div class="w-sub" id="ws-grid"></div>
-    </div>
 
     <div class="widget" id="w-wallbox" data-key="wallbox">
       <img class="w-img" src="img/dashboard/car.png" alt="Wallbox">
@@ -401,6 +395,12 @@ body.edit-mode #btn-reset { display: flex; }
       <img class="w-img" src="img/dashboard/Pool.png" alt="Pool">
       <div class="w-name">Pool</div>
       <div class="w-val" id="wv-pool">–</div>
+    </div>
+
+    <div class="widget" id="w-grid-label" data-key="grid-label">
+      <div class="w-name">Netz</div>
+      <div class="w-val" id="wv-grid">–</div>
+      <div class="w-sub" id="ws-grid"></div>
     </div>
 
     <div class="widget" id="w-car" data-key="car" style="display:none;">
@@ -472,14 +472,16 @@ const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThresh
 
 // ── Default widget positions (1920×1080 stage coords) ─────────────────────
 const DEFAULT_POS = {
-  solar:   { x: 960,  y: 165 },
-  battery: { x: 295,  y: 560 },
-  house:   { x: 960,  y: 560 },
-  grid:    { x: 1625, y: 560 },
-  wallbox: { x: 1625, y: 165 },
-  pool:    { x: 295,  y: 165 },
-  car:     { x: 1295, y: 370 },
+  solar:      { x: 960,  y: 165 },
+  battery:    { x: 295,  y: 560 },
+  house:      { x: 960,  y: 560 },
+  wallbox:    { x: 1625, y: 165 },
+  pool:       { x: 295,  y: 165 },
+  car:        { x: 1295, y: 370 },
+  'grid-label': { x: 1700, y: 540 },
 };
+// Fixed position for grid pylon (not draggable) — used as flow endpoint
+const GRID_POS = { x: 1700, y: 430 };
 
 let positions = {};
 
@@ -557,6 +559,8 @@ const POPUP = {
   },
 };
 
+POPUP['grid-label'] = POPUP['grid'];
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 function fmtW(w) {
   const n = Math.abs(parseFloat(w));
@@ -598,6 +602,7 @@ function loadPositions() {
   } catch (_) {
     positions = Object.fromEntries(Object.entries(DEFAULT_POS).map(([k, v]) => [k, { ...v }]));
   }
+  positions.grid = { ...GRID_POS }; // always fixed — pylon is not draggable
 }
 
 function savePositions() {
@@ -707,11 +712,11 @@ function updateFlows() {
   document.getElementById('w-battery').classList.toggle('w-active', battCharge || battDisch);
   document.getElementById('w-wallbox').classList.toggle('w-active', wbOn);
 
-  // Grid active/inactive image state
-  const gridWidget = document.getElementById('w-grid');
+  // Grid pylon active/inactive state
+  const gridPylon  = document.getElementById('stage-bg-grid');
   const gridActive = gridImp || gridExp;
-  gridWidget.classList.toggle('grid-on',  gridActive);
-  gridWidget.classList.toggle('grid-off', !gridActive);
+  gridPylon.classList.toggle('grid-on',  gridActive);
+  gridPylon.classList.toggle('grid-off', !gridActive);
 
   updateWidgetValues();
 }
@@ -888,6 +893,11 @@ el('widget-layer').addEventListener('click', e => {
   const widget = e.target.closest('.widget');
   if (!widget || widget.style.display === 'none') return;
   openPopup(widget.dataset.key);
+});
+
+el('stage-bg-grid').addEventListener('click', () => {
+  if (editMode) return;
+  openPopup('grid');
 });
 
 function openPopup(key) {
