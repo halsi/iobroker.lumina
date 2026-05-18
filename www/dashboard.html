@@ -384,6 +384,11 @@ html, body {
     <div class="resize-handle"></div>
   </div>
 
+  <div id="n-hochbeet" class="holo-node">
+    <img src="img/dashboard/hochbeet.png" alt="Hochbeet" style="width:160px;">
+    <div class="resize-handle"></div>
+  </div>
+
   <!-- Independent draggable labels -->
   <div id="lb-solar" class="holo-label" data-size="22">
     <div class="label-controls">
@@ -474,6 +479,14 @@ html, body {
     </div>
     <span class="node-name" style="color:#FF6347;">HEIZUNG</span><br>
     <span class="node-value" id="v-heizung">–</span>
+  </div>
+  <div id="lb-hochbeet" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#6AAEFF;">BODENFEUCHTE</span><br>
+    <span class="node-value" id="v-hochbeet">–</span>
   </div>
 
   <!-- Flow anchors: 2 per flow (each endpoint independently draggable in edit mode) -->
@@ -574,6 +587,7 @@ const NODE_META = {
   'n-car':     { w: 220, h: 147 },
   'n-heizung':     { w: 160, h: 160 },
   'n-poolheizung': { w: 160, h: 160 },
+  'n-hochbeet':    { w: 160, h: 160 },
 };
 
 // Default positions for ~1600×900 viewport
@@ -586,6 +600,7 @@ const DEFAULT_POSITIONS = {
   'n-car':     { x: 1350, y: 560 },
   'n-heizung':     { x: 780,  y: 570 },
   'n-poolheizung': { x: 600,  y: 570 },
+  'n-hochbeet':    { x: 420,  y: 570 },
 };
 
 // ── Load/save positions ────────────────────────────────────────────────────
@@ -819,6 +834,7 @@ const OIDs = {
   tempIn:      'mqtt.0.ebusd.700.z1RoomTemp',
   vorlaufTemp:    'mqtt.0.ebusd.700.Hc1FlowTemp',
   poolHeizTarget: 'tuya.0.72783082e09806145670.2',
+  bodenfeuchte:   '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.moisture',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -826,7 +842,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -959,6 +975,7 @@ function updateSensors() {
   const tIn  = document.getElementById('v-temp-in');  if (tIn)     tIn.textContent     = fmt(live.tempIn);
   const tHz  = document.getElementById('v-heizung');    if (tHz)  tHz.textContent  = fmt(live.vorlaufTemp);
   const tPH  = document.getElementById('v-poolheizung'); if (tPH)  tPH.textContent  = fmt(live.poolHeizTarget);
+  const tBF  = document.getElementById('v-hochbeet');    if (tBF)  tBF.textContent  = live.bodenfeuchte != null ? live.bodenfeuchte.toFixed(0) + ' %' : '–';
 }
 
 // ── Solar / Moon image switcher ───────────────────────────────────────────
@@ -998,6 +1015,7 @@ function applyState(oid, val) {
     case OIDs.tempIn:      live.tempIn      = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.vorlaufTemp:    live.vorlaufTemp    = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.poolHeizTarget: live.poolHeizTarget = isNaN(n) ? null : n; updateSensors(); break;
+    case OIDs.bodenfeuchte:   live.bodenfeuchte   = isNaN(n) ? null : n; updateSensors(); break;
     // remaining OIDs subscribed to keep parity with energie.html
     default: break;
   }
@@ -1081,6 +1099,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-pool':     { x: 100,  y: 620, size: 22 },
   'lb-heizung':     { x: 860,  y: 730, size: 22 },
   'lb-poolheizung': { x: 680,  y: 730, size: 22 },
+  'lb-hochbeet':    { x: 500,  y: 730, size: 22 },
 };
 
 function loadLabelState() {
