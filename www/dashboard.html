@@ -725,18 +725,24 @@ function setFlowLabel(id, text, visible) {
 function updateFlows() {
   const { pv, load, bezug, einspeisung, wbPower, wbPowerGrid, wbPowerPV } = live;
 
+  // Net grid value: positive = importing, negative = exporting
+  // Handles 3-phase smartmeters that report bezug & einspeisung simultaneously
+  const netGrid  = bezug - einspeisung;
+  const effBezug = Math.max(0,  netGrid);
+  const effEinsp = Math.max(0, -netGrid);
+
   // Grid split: how much goes to house vs wallbox
-  const bezugHaus = Math.max(0, bezug - wbPowerGrid);
+  const bezugHaus = Math.max(0, effBezug - wbPowerGrid);
 
   // Battery net power: positive = charging, negative = discharging
-  const battPow    = pv + bezug - einspeisung - load - wbPower;
+  const battPow    = pv + effBezug - effEinsp - load - wbPower;
   const battCharge = battPow >  THRESH;
   const battDisch  = battPow < -THRESH;
 
   // Grid
-  const gridImp    = bezug       > THRESH;
-  const gridExp    = einspeisung > THRESH;
-  const gridOn     = gridImp || gridExp;
+  const gridImp = effBezug > THRESH;
+  const gridExp = effEinsp > THRESH;
+  const gridOn  = gridImp || gridExp;
 
   // PV
   const pvOn = pv > THRESH;
@@ -754,10 +760,10 @@ function updateFlows() {
 
   const gridEl = document.getElementById('v-grid');
   if (gridImp) {
-    gridEl.textContent = fmtW(bezug);
+    gridEl.textContent = fmtW(effBezug);
     gridEl.style.color = '#FF9C7A';
   } else if (gridExp) {
-    gridEl.textContent = '-' + fmtW(einspeisung);
+    gridEl.textContent = '-' + fmtW(effEinsp);
     gridEl.style.color = '#52E5FF';
   } else {
     gridEl.textContent = '0 W';
@@ -790,7 +796,7 @@ function updateFlows() {
   const houseGridImp = bezugHaus > THRESH;
   const houseGridOn  = houseGridImp || gridExp;
   setFlow('fp-house-grid', houseGridOn, houseGridImp);
-  setFlowLabel('fl-house-grid', houseGridOn ? fmtW(houseGridImp ? bezugHaus : einspeisung) : '', houseGridOn);
+  setFlowLabel('fl-house-grid', houseGridOn ? fmtW(houseGridImp ? bezugHaus : effEinsp) : '', houseGridOn);
 
   // PV → Wallbox
   const pvWbOn = wbPowerPV > THRESH;
