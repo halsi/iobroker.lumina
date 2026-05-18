@@ -333,14 +333,11 @@ function updateFlows() {
   setFlow('fp-pv-batt', pvBattOn, false);
   setFlowLabel('fl-pv-batt', pvBattOn ? fmtW(battPow) : '', pvBattOn, '#FFCC00');
 
-  // Battery ↔ House
-  // Path direction: left(Battery) → right(House)
-  // flow-on (fwd) = discharging (batt→house)
-  // flow-rev      = charging    (house→batt)
-  const battColor = battDisch ? '#FF9900' : '#CC99FF';
+  // Battery → House: only when discharging (charging comes via Solar→Battery L-path)
+  const battColor = '#FF9900';
   el('fp-batt').style.stroke = battColor;
-  setFlow('fp-batt', battOn, battCharge);
-  setFlowLabel('fl-batt', battOn ? fmtW(Math.abs(battPow)) : '', battOn, battColor);
+  setFlow('fp-batt', battDisch, false);
+  setFlowLabel('fl-batt', battDisch ? fmtW(Math.abs(battPow)) : '', battDisch, battColor);
   const bdEl = el('vn-batt-dir');
   if (bdEl) {
     bdEl.textContent = battCharge ? 'LADEN' : battDisch ? 'ENTLADEN' : '';

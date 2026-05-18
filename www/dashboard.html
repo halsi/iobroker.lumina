@@ -696,9 +696,9 @@ function updateFlows() {
   setFlow('c-pv-house', pvOn, false, '#00EEFF', pvOn && load > THRESH ? fmtW(load) : null);
   // PV → Battery (only when charging) — label shows charging power
   setFlow('c-pv-batt', pvOn && battCharge, false, '#00EEFF', battCharge ? fmtW(battPow) : null);
-  // Battery ↔ House
-  setFlow('c-batt-house', battCharge || battDisch, battCharge, '#00EEFF',
-    (battCharge || battDisch) ? fmtW(Math.abs(battPow)) : null);
+  // Battery → House: only when discharging (charging comes via Solar→Battery path)
+  setFlow('c-batt-house', battDisch, false, '#00EEFF',
+    battDisch ? fmtW(Math.abs(battPow)) : null);
   // House ↔ Grid
   setFlow('c-house-grid', gridImp || gridExp, gridImp, '#00EEFF',
     (gridImp || gridExp) ? fmtW(gridImp ? bezug : einspeisung) : null);
