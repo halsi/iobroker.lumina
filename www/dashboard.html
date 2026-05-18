@@ -1077,8 +1077,8 @@ function applyState(oid, val) {
     case OIDs.vorlaufTemp:    live.vorlaufTemp    = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.poolHeizTarget: live.poolHeizTarget = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.bodenfeuchte:   live.bodenfeuchte   = isNaN(n) ? null : n; updateSensors(); break;
-    case OIDs.poolPH:  live.poolPH  = isNaN(n) ? null : n; updatePoolPopup(); break;
-    case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; updatePoolPopup(); break;
+    case OIDs.poolPH:  live.poolPH  = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
+    case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
     case OIDs.poolAbdeckung: {
       live.poolAbdeckung = !!val;
       const hi = document.getElementById('haus-img');
@@ -1477,7 +1477,7 @@ function initAnchorDrag(anchorEl) {
   });
 
   // ── Pool popup ─────────────────────────────────────────────────────────────
-  function updatePoolPopup() {
+  window.updatePoolPopup = function updatePoolPopup() {
     const fmtTemp = v => v != null ? v.toFixed(1) + ' °C' : '–';
     const fmtPH   = v => v != null ? v.toFixed(1) + ' pH' : '–';
     const fmtORP  = v => v != null ? Math.round(v) + ' mV' : '–';
