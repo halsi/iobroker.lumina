@@ -413,6 +413,7 @@ body.edit-mode #btn-reset { display: flex; }
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="config.js"></script>
 <script>
 // ── OIDs ──────────────────────────────────────────────────────────────────
 const OIDs = {
@@ -439,7 +440,7 @@ const live = {
   poolTemp: null, carPresent: false, carSoc: null,
   autarkie: null, pvDay: null, bezugDay: null, forecast: null,
 };
-const THRESH = 30;
+const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Default widget positions (1920×1080 stage coords) ─────────────────────
 const DEFAULT_POS = {

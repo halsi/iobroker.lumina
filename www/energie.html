@@ -207,6 +207,7 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="config.js"></script>
 <script>
 // ── Fit SVG viewBox to actual rendered size ────────────────────────────────
 function fitViewBox() {
@@ -276,7 +277,7 @@ const OIDs = {
 
 // ── Live values ────────────────────────────────────────────────────────────
 const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0 };
-const THRESH = 30; // W – minimum to show a flow
+const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function el(id) { return document.getElementById(id); }
