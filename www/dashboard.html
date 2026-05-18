@@ -19,6 +19,16 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
+#bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 1.2s ease;
+  z-index: 0;
+}
+
 #scene {
   position: relative;
   width: 100%;
@@ -239,6 +249,7 @@ html, body {
 
 <div id="edit-badge">EDIT MODE — drag nodes/labels · corner=resize · ±=font</div>
 
+<div id="bg" style="background-image:url('img/dashboard/background-day.png')"></div>
 <div id="scene">
 
   <!-- SVG flow overlay -->
@@ -824,8 +835,11 @@ function updateSensors() {
 // ── Solar / Moon image switcher ───────────────────────────────────────────
 function updateSolarImg() {
   const img = document.getElementById('solar-img');
-  if (!img) return;
-  img.src = live.nacht ? 'img/dashboard/mond.png' : 'img/dashboard/sonne.png';
+  if (img) img.src = live.nacht ? 'img/dashboard/mond.png' : 'img/dashboard/sonne.png';
+  const bg = document.getElementById('bg');
+  if (bg) bg.style.backgroundImage = live.nacht
+    ? "url('img/dashboard/background-night.png')"
+    : "url('img/dashboard/background-day.png')";
 }
 
 // ── Battery SOC block visualisation ───────────────────────────────────────
