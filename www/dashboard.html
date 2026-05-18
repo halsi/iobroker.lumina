@@ -2,9 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1920">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Lumina Dashboard</title>
+<title>Holographic Energy</title>
 <link rel="shortcut icon" href="favicon32.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon32.png">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -14,799 +14,480 @@
 
 html, body {
   width: 100%; height: 100%;
+  background: #05070D;
   overflow: hidden;
-  background: #000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
-/* ── Stage: fixed 1920×1080 coordinate space, scaled to fit ─── */
-#stage {
-  position: absolute;
-  width: 1920px;
-  height: 1080px;
-  transform-origin: top left;
+#scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
-/* Layer 1: day/night sky (furthest back) */
-#stage-bg-sky {
-  position: absolute;
-  inset: 0;
-  background: url('img/dashboard/background-day.png') center / cover no-repeat;
-  z-index: 0;
-  transition: opacity 1s ease;
-}
-
-/* Layer 2: grid pylon behind platform */
-#stage-bg-grid {
-  position: absolute;
-  inset: 0;
-  background: url('img/dashboard/grid-active.png') right 80px top 20px / 320px auto no-repeat;
-  z-index: 1;
-  cursor: pointer;
-}
-
-/* NETZ label widget (no image, same drag/click system as other widgets) */
-#w-grid-label { --wc: #00EEFF; width: 200px; }
-
-/* Layer 3: platform — 110% zooms in ~10% relative to cover */
-/* DISABLED: background: url('img/dashboard/background.png') center / 110% auto no-repeat; */
-#stage-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-}
-
-/* ── Flow SVG (above background layers, below widgets) ────────── */
+/* ── SVG flow overlay ─────────────────────────────────────────────────── */
 #flow-svg {
   position: absolute;
   top: 0; left: 0;
-  width: 1920px; height: 1080px;
+  width: 100%; height: 100%;
   pointer-events: none;
-  z-index: 3;
+  z-index: 2;
 }
 
-.flow-line {
+/* ── Flow path styles ─────────────────────────────────────────────────── */
+.flow-path {
   fill: none;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-dasharray: 10 8;
-  stroke-opacity: 0.12;
-  transition: stroke 0.4s, stroke-opacity 0.4s;
+  stroke-width: 2.5;
+  stroke-dasharray: 10 6;
+  opacity: 0;
+  transition: opacity 0.4s;
 }
-.flow-on  { stroke-opacity: 1 !important; animation: dash-fwd 1.2s linear infinite; }
-.flow-rev { stroke-opacity: 1 !important; animation: dash-rev 1.2s linear infinite; }
-@keyframes dash-fwd { from { stroke-dashoffset: 36; } to { stroke-dashoffset: 0; } }
-@keyframes dash-rev { from { stroke-dashoffset: -36; } to { stroke-dashoffset: 0; } }
-
-.flow-label {
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  text-anchor: middle;
-  pointer-events: none;
+.flow-path.flow-active {
+  opacity: 1;
+  animation: dash 1.2s linear infinite;
+}
+.flow-path.flow-active.flow-rev {
+  animation: dash-rev 1.2s linear infinite;
 }
 
-/* ── Widget layer ─────────────────────────────────────────────── */
-#widget-layer {
+@keyframes dash     { to { stroke-dashoffset: -64; } }
+@keyframes dash-rev { to { stroke-dashoffset:  64; } }
+
+/* ── Holo nodes ───────────────────────────────────────────────────────── */
+.holo-node {
   position: absolute;
-  top: 0; left: 0;
-  width: 1920px; height: 1080px;
-  z-index: 10;
-}
-
-.widget {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: 180px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
+  z-index: 3;
   user-select: none;
-  transition: transform 0.15s ease;
-}
-.widget:hover {
-  transform: translate(-50%, -50%) scale(1.05);
-}
-.widget.dragging {
-  transform: translate(-50%, -50%) scale(1.08);
-  cursor: grabbing;
-  transition: none;
-}
-body.edit-mode .widget { cursor: grab; }
-body.edit-mode .widget:hover .w-img {
-  filter: drop-shadow(0 0 18px var(--wc)) brightness(1.15);
-  outline: none;
+  -webkit-user-select: none;
 }
 
-.w-img {
-  width: 300px;
-  height: 300px;
-  object-fit: contain;
+.holo-node img {
+  display: block;
+  filter: drop-shadow(0 0 14px #6AAEFF) brightness(1.1);
   pointer-events: none;
-  filter: drop-shadow(0 0 16px var(--wc));
-  transition: filter 0.2s;
+  transition: filter 0.3s;
 }
-.widget:hover .w-img {
-  filter: drop-shadow(0 0 28px var(--wc)) brightness(1.1);
+
+.holo-node.node-inactive img {
+  filter: drop-shadow(0 0 6px rgba(106,174,255,0.3)) brightness(0.55);
 }
-.w-name {
-  font-size: 11px;
+
+.node-label {
+  margin-top: 10px;
+  text-align: center;
+  line-height: 1.3;
+}
+.node-name {
+  display: block;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--wc);
-  margin-top: 8px;
-  text-shadow: 0 0 10px var(--wc);
+  letter-spacing: 2px;
+  color: #B59CFF;
 }
-.w-val {
-  font-size: 24px;
+.node-value {
+  display: block;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--wc);
-  margin-top: 2px;
-  line-height: 1.2;
-  text-shadow: 0 0 12px var(--wc);
-}
-.w-val .u {
-  font-size: 13px;
-  font-weight: 400;
-  opacity: 0.7;
-  margin-left: 2px;
-}
-.w-sub {
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 1px;
-  letter-spacing: 0.5px;
-  text-shadow: 0 0 8px currentColor;
+  color: #fff;
+  min-height: 28px;
+  line-height: 1.25;
 }
 
-/* Per-widget accent colors */
-#w-solar   { --wc: #00EEFF; }
-#w-battery { --wc: #00EEFF; }
-#w-house   { --wc: #00EEFF; }
-#w-wallbox { --wc: #00EEFF; }
-#w-pool    { --wc: #00EEFF; }
-#w-car     { --wc: #00EEFF; }
-
-/* Holographic cyan filter for solar and house */
-#w-solar .w-img,
-#w-house .w-img {
-  filter: saturate(0.15) brightness(1.5) sepia(0.9) hue-rotate(155deg) saturate(5) drop-shadow(0 0 18px #00EEFF);
+/* ── Edit mode ────────────────────────────────────────────────────────── */
+.edit-mode .holo-node {
+  cursor: grab;
+  outline: 1px dashed rgba(255,255,255,0.3);
 }
-#w-solar:hover .w-img,
-#w-house:hover .w-img {
-  filter: saturate(0.15) brightness(1.7) sepia(0.9) hue-rotate(155deg) saturate(6) drop-shadow(0 0 32px #00EEFF);
+.edit-mode .holo-node:active {
+  cursor: grabbing;
 }
 
-/* Grid pylon: active = cyan glow, inactive = dim grey */
-#stage-bg-grid.grid-on  { filter: drop-shadow(0 0 22px #00EEFF) brightness(1.1); }
-#stage-bg-grid.grid-off { filter: grayscale(0.85) brightness(0.45) opacity(0.75); }
-
-/* Active glow pulse on image */
-.widget.w-active .w-img {
-  animation: wpulse 2.5s ease-in-out infinite;
-}
-#w-solar.w-active .w-img,
-#w-house.w-active .w-img {
-  animation: wpulse-holo 2.5s ease-in-out infinite;
-}
-@keyframes wpulse {
-  0%, 100% { filter: drop-shadow(0 0 16px var(--wc)); }
-  50%       { filter: drop-shadow(0 0 36px var(--wc)) brightness(1.15); }
-}
-@keyframes wpulse-holo {
-  0%, 100% { filter: saturate(0.15) brightness(1.5) sepia(0.9) hue-rotate(155deg) saturate(5) drop-shadow(0 0 18px #00EEFF); }
-  50%       { filter: saturate(0.15) brightness(1.8) sepia(0.9) hue-rotate(155deg) saturate(7) drop-shadow(0 0 40px #00EEFF); }
-}
-
-/* ── Fixed controls (outside stage, scale with viewport) ──────── */
-#btn-lock {
+#edit-badge {
   position: fixed;
-  bottom: 24px; left: 24px;
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  background: rgba(255,153,0,0.10);
-  border: 1.5px solid rgba(255,153,0,0.35);
-  color: #FF9900;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  z-index: 9000;
-  transition: background 0.2s, transform 0.15s;
-}
-#btn-lock:hover {
-  background: rgba(255,153,0,0.22);
-  transform: scale(1.08);
-}
-#btn-lock.edit-active {
-  border-color: rgba(255,204,0,0.6);
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,200,0,0.12);
+  border: 1px solid rgba(255,200,0,0.4);
   color: #FFCC00;
-  background: rgba(255,204,0,0.12);
-}
-
-#btn-reset {
-  position: fixed;
-  bottom: 24px; left: 88px;
-  padding: 0 20px;
-  height: 52px;
-  border-radius: 26px;
-  background: rgba(255,255,255,0.06);
-  border: 1.5px solid rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.65);
-  font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
-  cursor: pointer;
-  z-index: 9000;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  z-index: 100;
   display: none;
-  align-items: center; gap: 6px;
-  transition: background 0.2s;
 }
-#btn-reset:hover { background: rgba(255,255,255,0.12); color: #fff; }
-body.edit-mode #btn-reset { display: flex; }
 
-#btn-nav {
+/* ── Nav button ───────────────────────────────────────────────────────── */
+#nav-btn {
   position: fixed;
   bottom: 24px; right: 24px;
   width: 52px; height: 52px;
   border-radius: 50%;
-  background: rgba(255,153,0,0.10);
-  border: 1.5px solid rgba(255,153,0,0.35);
-  color: #FF9900;
-  display: flex; align-items: center; justify-content: center;
-  text-decoration: none;
-  z-index: 9000;
-  transition: background 0.2s, transform 0.15s;
-}
-#btn-nav:hover {
-  background: rgba(255,153,0,0.22);
-  transform: scale(1.08);
-}
-
-/* ── Popup ─────────────────────────────────────────────────────── */
-#popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(8px);
+  background: rgba(106,174,255,0.10);
+  border: 1.5px solid rgba(106,174,255,0.35);
+  color: #6AAEFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-#popup-overlay.open {
-  opacity: 1;
-  pointer-events: auto;
-}
-#popup {
-  background: #111120;
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 26px;
-  padding: 36px 32px 28px;
-  min-width: 380px;
-  max-width: 500px;
-  position: relative;
-  transform: scale(0.94);
-  transition: transform 0.2s;
-}
-#popup-overlay.open #popup { transform: scale(1); }
-
-#popup-close {
-  position: absolute;
-  top: 18px; right: 18px;
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.55);
-  font-size: 16px;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  z-index: 999;
+  text-decoration: none;
 }
-#popup-close:hover { background: rgba(255,255,255,0.14); color: #fff; }
-
-#popup-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 28px;
-}
-#popup-icon {
-  width: 64px; height: 64px;
-  object-fit: contain;
-}
-#popup-title {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-
-.popup-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 11px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.popup-row:last-child { border-bottom: none; }
-.popup-lbl {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #55556a;
-}
-.popup-val {
-  font-size: 26px;
-  font-weight: 700;
-  color: #fff;
-}
-.popup-val .u {
-  font-size: 15px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.38);
-  margin-left: 3px;
+#nav-btn:hover {
+  background: rgba(106,174,255,0.22);
+  border-color: rgba(106,174,255,0.7);
+  transform: scale(1.08);
 }
 </style>
 </head>
 <body>
 
-<div id="stage">
-  <div id="stage-bg-sky"></div>
-  <div id="stage-bg-grid"></div>
-  <div id="stage-bg"></div>
-  <svg id="flow-svg"></svg>
-  <div id="widget-layer">
+<div id="edit-badge">EDIT MODE — drag to reposition</div>
 
-    <div class="widget" id="w-solar" data-key="solar">
-      <img class="w-img" src="img/dashboard/huawei.png" alt="Solar">
-      <div class="w-name">Solar</div>
-      <div class="w-val" id="wv-solar">–</div>
-    </div>
+<div id="scene">
 
-    <div class="widget" id="w-battery" data-key="battery">
-      <img class="w-img" src="img/dashboard/battery.png" alt="Batterie">
-      <div class="w-name">Batterie</div>
-      <div class="w-val" id="wv-battery">–</div>
-      <div class="w-sub" id="ws-battery"></div>
-    </div>
+  <!-- SVG flow overlay -->
+  <svg id="flow-svg">
+    <!-- Paths (d attributes set by updatePaths()) -->
+    <path id="fp-pv-house"   class="flow-path" stroke="#F5B14C"/>
+    <path id="fp-pv-batt"    class="flow-path" stroke="#6AAEFF"/>
+    <path id="fp-batt-house" class="flow-path" stroke="#6AAEFF"/>
+    <path id="fp-house-grid" class="flow-path" stroke="#FF9C7A"/>
+    <path id="fp-house-wb"   class="flow-path" stroke="#52E5FF"/>
 
-    <div class="widget" id="w-house" data-key="house">
-      <img class="w-img" src="img/dashboard/home.png" alt="Haus">
-      <div class="w-name">Haus</div>
-      <div class="w-val" id="wv-house">–</div>
-    </div>
-
-
-    <div class="widget" id="w-wallbox" data-key="wallbox">
-      <img class="w-img" src="img/dashboard/car.png" alt="Wallbox">
-      <div class="w-name">Wallbox</div>
-      <div class="w-val" id="wv-wallbox">–</div>
-    </div>
-
-    <div class="widget" id="w-pool" data-key="pool">
-      <img class="w-img" src="img/dashboard/Pool.png" alt="Pool">
-      <div class="w-name">Pool</div>
-      <div class="w-val" id="wv-pool">–</div>
-    </div>
-
-    <div class="widget" id="w-grid-label" data-key="grid-label">
-      <div class="w-name">Netz</div>
-      <div class="w-val" id="wv-grid">–</div>
-      <div class="w-sub" id="ws-grid"></div>
-    </div>
-
-    <div class="widget" id="w-car" data-key="car" style="display:none;">
-      <img class="w-img" src="img/dashboard/car.png" alt="Auto">
-      <div class="w-name">Auto</div>
-      <div class="w-val" id="wv-car">–</div>
-    </div>
-
-  </div>
-</div>
-
-<!-- Controls (fixed, not scaled with stage) -->
-<button id="btn-reset">↺ Reset Layout</button>
-<button id="btn-lock" title="Layout bearbeiten">
-  <svg id="lock-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    <!-- Flow midpoint value labels -->
+    <text id="fl-pv-house"   font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#F5B14C"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-pv-batt"    font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-batt-house" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-house-grid" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-house-wb"   font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
   </svg>
-</button>
-<a href="energie.html" id="btn-nav" title="Energie Live">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-    <polyline points="9 22 9 12 15 12 15 22"/>
+
+  <!-- Holo nodes -->
+  <div id="n-solar" class="holo-node">
+    <img src="img/dashboard/huawei.png" alt="Solar" style="width:180px;">
+    <div class="node-label">
+      <span class="node-name">Solar</span>
+      <span class="node-value" id="v-solar">–</span>
+    </div>
+  </div>
+
+  <div id="n-house" class="holo-node">
+    <img src="img/dashboard/home.png" alt="Haus" style="width:240px;">
+    <div class="node-label">
+      <span class="node-name">Haus</span>
+      <span class="node-value" id="v-house">–</span>
+    </div>
+  </div>
+
+  <div id="n-battery" class="holo-node">
+    <img src="img/dashboard/battery.png" alt="Batterie" style="width:160px;">
+    <div class="node-label">
+      <span class="node-name">Batterie</span>
+      <span class="node-value" id="v-battery">–</span>
+    </div>
+  </div>
+
+  <div id="n-grid" class="holo-node">
+    <img src="img/dashboard/grid.png" alt="Netz" style="width:140px;">
+    <div class="node-label">
+      <span class="node-name">Netz</span>
+      <span class="node-value" id="v-grid">–</span>
+    </div>
+  </div>
+
+  <div id="n-wallbox" class="holo-node">
+    <img src="img/dashboard/car.png" alt="Wallbox" style="width:190px;">
+    <div class="node-label">
+      <span class="node-name">Wallbox</span>
+      <span class="node-value" id="v-wallbox">–</span>
+    </div>
+  </div>
+
+</div><!-- /#scene -->
+
+<!-- Nav button: cycles to energie.html -->
+<a id="nav-btn" href="energie.html" title="Energie Flow">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
   </svg>
 </a>
-
-<!-- Popup -->
-<div id="popup-overlay">
-  <div id="popup">
-    <button id="popup-close">✕</button>
-    <div id="popup-header">
-      <img id="popup-icon" src="" alt="">
-      <div id="popup-title"></div>
-    </div>
-    <div id="popup-rows"></div>
-  </div>
-</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="config.js"></script>
 <script>
-// ── OIDs ──────────────────────────────────────────────────────────────────
+// ── Edit mode ──────────────────────────────────────────────────────────────
+const editMode = new URLSearchParams(location.search).has('edit');
+
+// ── Node metadata: id, image pixel width ──────────────────────────────────
+// Heights are approximate render heights used for center calculation.
+const NODE_META = {
+  'n-solar':   { w: 180, h: 175 },
+  'n-house':   { w: 240, h: 215 },
+  'n-battery': { w: 160, h: 155 },
+  'n-grid':    { w: 140, h: 135 },
+  'n-wallbox': { w: 190, h: 165 },
+};
+
+// Default positions for ~1600×900 viewport
+const DEFAULT_POSITIONS = {
+  'n-solar':   { x: 180,  y: 120 },
+  'n-house':   { x: 650,  y: 140 },
+  'n-battery': { x: 120,  y: 480 },
+  'n-grid':    { x: 1200, y: 100 },
+  'n-wallbox': { x: 1080, y: 440 },
+};
+
+// ── Load/save positions from localStorage ─────────────────────────────────
+function loadPositions() {
+  try {
+    const raw = localStorage.getItem('holo_positions');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // Validate: must have all node keys
+      if (Object.keys(NODE_META).every(k => saved[k] && saved[k].x != null)) {
+        return saved;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+function savePositions() {
+  const pos = {};
+  Object.keys(NODE_META).forEach(id => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    pos[id] = {
+      x: parseFloat(node.style.left) || 0,
+      y: parseFloat(node.style.top)  || 0,
+    };
+  });
+  try { localStorage.setItem('holo_positions', JSON.stringify(pos)); } catch (e) {}
+}
+
+// ── Apply position object to DOM nodes ────────────────────────────────────
+function applyPositions(positions) {
+  Object.keys(NODE_META).forEach(id => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    const p = (positions && positions[id]) || DEFAULT_POSITIONS[id] || { x: 0, y: 0 };
+    node.style.left = p.x + 'px';
+    node.style.top  = p.y + 'px';
+  });
+}
+
+// ── Get center of a node (top-left position + half image dimensions) ───────
+function nodeCenter(id) {
+  const node = document.getElementById(id);
+  const meta = NODE_META[id];
+  if (!node || !meta) return { x: 0, y: 0 };
+  return {
+    x: (parseFloat(node.style.left) || 0) + meta.w / 2,
+    y: (parseFloat(node.style.top)  || 0) + meta.h / 2,
+  };
+}
+
+// ── Build a smooth cubic bezier path string between two centers ────────────
+function bezierD(c1, c2) {
+  const mx = (c1.x + c2.x) / 2;
+  return `M ${c1.x},${c1.y} C ${mx},${c1.y} ${mx},${c2.y} ${c2.x},${c2.y}`;
+}
+
+// ── Midpoint of cubic bezier at t=0.5 ─────────────────────────────────────
+function bezierMid(c1, c2) {
+  const mx = (c1.x + c2.x) / 2;
+  const t  = 0.5;
+  function b(a, b2, c, d) {
+    return Math.pow(1-t,3)*a + 3*Math.pow(1-t,2)*t*b2 + 3*(1-t)*t*t*c + t*t*t*d;
+  }
+  return {
+    x: b(c1.x, mx,   mx,   c2.x),
+    y: b(c1.y, c1.y, c2.y, c2.y),
+  };
+}
+
+// ── Update all SVG paths after drag or on load ─────────────────────────────
+function updatePaths() {
+  const solar = nodeCenter('n-solar');
+  const house = nodeCenter('n-house');
+  const batt  = nodeCenter('n-battery');
+  const grid  = nodeCenter('n-grid');
+  const wb    = nodeCenter('n-wallbox');
+
+  const connections = [
+    { pathId: 'fp-pv-house',   labelId: 'fl-pv-house',   c1: solar, c2: house },
+    { pathId: 'fp-pv-batt',    labelId: 'fl-pv-batt',    c1: solar, c2: batt  },
+    { pathId: 'fp-batt-house', labelId: 'fl-batt-house', c1: batt,  c2: house },
+    { pathId: 'fp-house-grid', labelId: 'fl-house-grid', c1: house, c2: grid  },
+    { pathId: 'fp-house-wb',   labelId: 'fl-house-wb',   c1: house, c2: wb    },
+  ];
+
+  connections.forEach(({ pathId, labelId, c1, c2 }) => {
+    const path  = document.getElementById(pathId);
+    const label = document.getElementById(labelId);
+    if (!path) return;
+    path.setAttribute('d', bezierD(c1, c2));
+    if (label) {
+      const mid = bezierMid(c1, c2);
+      label.setAttribute('x', Math.round(mid.x));
+      label.setAttribute('y', Math.round(mid.y));
+    }
+  });
+}
+
+// ── OIDs (verbatim from energie.html) ─────────────────────────────────────
 const OIDs = {
   pv:          'modbus.0.inputRegisters.5016_Total_DC_Power',
   load:        'modbus.0.inputRegisters.13007_Load_power_',
   bezug:       '0_userdata.0.Photovoltaik.Smartmeter-EVN.SmartMeter-EVN-Bezug',
   einspeisung: '0_userdata.0.Photovoltaik.Smartmeter-EVN.SmartMeter-EVN-Einspeisung',
+  autarkie:    '0_userdata.0.Photovoltaik.Autarkie',
   battSoc:     'bydhvs.0.State.SOC',
   battRem:     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
   wbPower:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
-  poolTemp:    '0_userdata.0.Pool.Pooltemperatur',
-  carPresent:  '0_userdata.0.Auto.BYD-Sealion7.Anwesenheit',
-  carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
-  nacht:       '0_userdata.0.Generic.Nacht',
-  autarkie:    '0_userdata.0.Photovoltaik.Autarkie',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
+  loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
   forecast:    '0_userdata.0.Photovoltaik.PV-Forecast',
 };
 
-// ── Live state ────────────────────────────────────────────────────────────
-const live = {
-  pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0,
-  battSoc: null, battRem: null,
-  poolTemp: null, carPresent: false, carSoc: null,
-  autarkie: null, pvDay: null, bezugDay: null, forecast: null,
-};
+// ── Live state (verbatim from energie.html) ────────────────────────────────
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0 };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
-
-// ── Default widget positions (1920×1080 stage coords) ─────────────────────
-const DEFAULT_POS = {
-  solar:      { x: 960,  y: 165 },
-  battery:    { x: 295,  y: 560 },
-  house:      { x: 960,  y: 560 },
-  wallbox:    { x: 1625, y: 165 },
-  pool:       { x: 295,  y: 165 },
-  car:        { x: 1295, y: 370 },
-  'grid-label': { x: 1700, y: 540 },
-};
-// Fixed position for grid pylon (not draggable) — used as flow endpoint
-const GRID_POS = { x: 1700, y: 430 };
-
-let positions = {};
-
-// ── Flow connections ──────────────────────────────────────────────────────
-const CONNS = [
-  { id: 'c-pv-house',   from: 'solar',   to: 'house',   color: '#00EEFF' },
-  { id: 'c-pv-batt',    from: 'solar',   to: 'battery', color: '#00EEFF' },
-  { id: 'c-batt-house', from: 'battery', to: 'house',   color: '#00EEFF' },
-  { id: 'c-house-grid', from: 'house',   to: 'grid',    color: '#00EEFF' },
-  { id: 'c-pv-wb',      from: 'solar',   to: 'wallbox', color: '#00EEFF' },
-  { id: 'c-wb-car',     from: 'wallbox', to: 'car',     color: '#00EEFF' },
-];
-
-// SVG element references
-const pathEls  = {};
-const labelEls = {};
-const svg = document.getElementById('flow-svg');
-
-// ── Popup config ──────────────────────────────────────────────────────────
-const POPUP = {
-  solar: {
-    title: 'Solar', img: 'assets/huawei.png', color: '#FFCC00',
-    rows: () => [
-      { lbl: 'Leistung',   val: live.pv > THRESH ? fmtW(live.pv) : '– W' },
-      { lbl: 'PV Heute',   val: live.pvDay   != null ? live.pvDay.toFixed(1)   + ' kWh' : '–' },
-      { lbl: 'Forecast',   val: live.forecast != null ? live.forecast.toFixed(1) + ' kWh' : '–' },
-      { lbl: 'Autarkie',   val: live.autarkie != null ? Math.round(live.autarkie) + ' %' : '–' },
-    ],
-  },
-  battery: {
-    title: 'Batterie', img: 'assets/battery.png', color: '#CC99FF',
-    rows: () => {
-      const battPow = live.pv + live.bezug - live.einspeisung - live.load - live.wbPower;
-      const dir = battPow > THRESH ? 'Laden' : battPow < -THRESH ? 'Entladen' : 'Standby';
-      const dirColor = battPow > THRESH ? '#44CC88' : battPow < -THRESH ? '#FF9900' : '#666680';
-      return [
-        { lbl: 'Ladestand',     val: live.battSoc != null ? Math.round(live.battSoc) + ' %' : '–',
-          color: live.battSoc != null ? (live.battSoc <= 20 ? '#FF5555' : live.battSoc <= 40 ? '#FFAA00' : '#CC99FF') : undefined },
-        { lbl: 'Restkapazität', val: live.battRem != null ? live.battRem.toFixed(1) + ' kWh' : '–' },
-        { lbl: 'Status',        val: dir, color: dirColor },
-      ];
-    },
-  },
-  house: {
-    title: 'Haus', img: 'assets/home.png', color: '#4488FF',
-    rows: () => [
-      { lbl: 'Verbrauch', val: live.load > THRESH ? fmtW(live.load) : '–' },
-    ],
-  },
-  grid: {
-    title: 'Netz', img: 'assets/grid.png', color: '#66CCBB',
-    rows: () => [
-      { lbl: 'Bezug',       val: fmtW(live.bezug),       color: live.bezug > THRESH ? '#FF5555' : undefined },
-      { lbl: 'Einspeisung', val: fmtW(live.einspeisung), color: live.einspeisung > THRESH ? '#44CC88' : undefined },
-      { lbl: 'Bezug Heute', val: live.bezugDay != null ? live.bezugDay.toFixed(1) + ' kWh' : '–' },
-    ],
-  },
-  wallbox: {
-    title: 'Wallbox', img: 'assets/car.png', color: '#99CCFF',
-    rows: () => [
-      { lbl: 'Ladeleistung', val: live.wbPower > THRESH ? fmtW(live.wbPower) : '– W' },
-    ],
-  },
-  pool: {
-    title: 'Pool', img: 'assets/Pool.png', color: '#00AACC',
-    rows: () => [
-      { lbl: 'Temperatur', val: live.poolTemp != null ? live.poolTemp.toFixed(1) + ' °C' : '–' },
-    ],
-  },
-  car: {
-    title: 'Auto', img: 'assets/car.png', color: '#FF9900',
-    rows: () => [
-      { lbl: 'Ladestand', val: live.carSoc != null ? Math.round(live.carSoc) + ' %' : '–' },
-    ],
-  },
-};
-
-POPUP['grid-label'] = POPUP['grid'];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function fmtW(w) {
   const n = Math.abs(parseFloat(w));
-  if (isNaN(n) || n < 1) return '–';
+  if (isNaN(n)) return '–';
   return n >= 1000 ? (n / 1000).toFixed(2) + ' kW' : Math.round(n) + ' W';
 }
 
-// ── Day / Night background ────────────────────────────────────────────────
-function setNacht(isNight) {
-  const sky = document.getElementById('stage-bg-sky');
-  if (sky) sky.style.backgroundImage = isNight
-    ? "url('img/dashboard/background-night.png')"
-    : "url('img/dashboard/background-day.png')";
-}
-
-// ── Stage scaling ──────────────────────────────────────────────────────────
-const stage = document.getElementById('stage');
-let stageScale = 1;
-
-function scaleStage() {
-  const sx = window.innerWidth  / 1920;
-  const sy = window.innerHeight / 1080;
-  stageScale = Math.min(sx, sy);
-  const ox = (window.innerWidth  - 1920 * stageScale) / 2;
-  const oy = (window.innerHeight - 1080 * stageScale) / 2;
-  stage.style.transform = `scale(${stageScale})`;
-  stage.style.left = ox + 'px';
-  stage.style.top  = oy + 'px';
-}
-
-// ── Position persistence ───────────────────────────────────────────────────
-function loadPositions() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('lumina-dashboard-layout') || '{}');
-    positions = {};
-    for (const k of Object.keys(DEFAULT_POS)) {
-      positions[k] = (saved[k] && saved[k].x != null) ? saved[k] : { ...DEFAULT_POS[k] };
-    }
-  } catch (_) {
-    positions = Object.fromEntries(Object.entries(DEFAULT_POS).map(([k, v]) => [k, { ...v }]));
-  }
-  positions.grid = { ...GRID_POS }; // always fixed — pylon is not draggable
-}
-
-function savePositions() {
-  localStorage.setItem('lumina-dashboard-layout', JSON.stringify(positions));
-}
-
-function applyPositions() {
-  for (const [key, pos] of Object.entries(positions)) {
-    const el = document.getElementById('w-' + key);
-    if (el) { el.style.left = pos.x + 'px'; el.style.top = pos.y + 'px'; }
+function setFlow(id, active, reverse) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('flow-active', 'flow-rev');
+  if (active) {
+    el.classList.add('flow-active');
+    if (reverse) el.classList.add('flow-rev');
   }
 }
 
-// ── SVG path management ────────────────────────────────────────────────────
-function ensureConn(conn) {
-  if (!pathEls[conn.id]) {
-    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    p.id = conn.id;
-    p.setAttribute('class', 'flow-line');
-    p.setAttribute('stroke', conn.color);
-    svg.appendChild(p);
-    pathEls[conn.id] = p;
-  }
-  if (!labelEls[conn.id]) {
-    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    t.setAttribute('class', 'flow-label');
-    t.setAttribute('fill', conn.color);
-    t.setAttribute('opacity', '0');
-    svg.appendChild(t);
-    labelEls[conn.id] = t;
-  }
+function setFlowLabel(id, text, visible) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.setAttribute('opacity', visible ? '1' : '0');
 }
 
-function calcEdge(fromKey, toKey, margin) {
-  const f = positions[fromKey], t = positions[toKey];
-  if (!f || !t) return null;
-  const dx = t.x - f.x, dy = t.y - f.y;
-  const d = Math.sqrt(dx * dx + dy * dy);
-  if (d < 2) return null;
-  const nx = dx / d, ny = dy / d;
-  return {
-    x1: f.x + nx * margin, y1: f.y + ny * margin,
-    x2: t.x - nx * margin, y2: t.y - ny * margin,
-    lx: (f.x + t.x) / 2 - ny * 18,
-    ly: (f.y + t.y) / 2 + nx * 5,
-  };
-}
-
-function rebuildPaths() {
-  for (const conn of CONNS) {
-    ensureConn(conn);
-    const pt = calcEdge(conn.from, conn.to, 88);
-    if (pt) {
-      pathEls[conn.id].setAttribute('d', `M ${pt.x1},${pt.y1} L ${pt.x2},${pt.y2}`);
-      labelEls[conn.id].setAttribute('x', pt.lx);
-      labelEls[conn.id].setAttribute('y', pt.ly);
-    }
-  }
-}
-
-function setFlow(connId, on, reverse, color, label) {
-  const p = pathEls[connId], l = labelEls[connId];
-  if (!p) return;
-  p.classList.remove('flow-on', 'flow-rev');
-  const baseColor = CONNS.find(c => c.id === connId)?.color || '#fff';
-  if (on) {
-    p.classList.add(reverse ? 'flow-rev' : 'flow-on');
-    if (color) p.setAttribute('stroke', color);
-  } else {
-    p.setAttribute('stroke', baseColor);
-  }
-  if (l) {
-    l.textContent = (on && label) ? label : '';
-    l.setAttribute('opacity', (on && label) ? '1' : '0');
-    if (color) l.setAttribute('fill', color);
-  }
-}
-
-// ── Flow + widget value updates ────────────────────────────────────────────
+// ── Update node labels and flow animations from live state ─────────────────
 function updateFlows() {
   const { pv, load, bezug, einspeisung, wbPower } = live;
+
+  // Battery net power: positive = charging, negative = discharging
   const battPow    = pv + bezug - einspeisung - load - wbPower;
   const battCharge = battPow >  THRESH;
   const battDisch  = battPow < -THRESH;
-  const pvOn       = pv           > THRESH;
-  const wbOn       = wbPower      > THRESH;
-  const gridImp    = bezug        > THRESH;
-  const gridExp    = einspeisung  > THRESH;
-
-  // PV → House — label shows house load, not total PV
-  setFlow('c-pv-house', pvOn, false, '#00EEFF', pvOn && load > THRESH ? fmtW(load) : null);
-  // PV → Battery (only when charging) — label shows charging power
-  setFlow('c-pv-batt', pvOn && battCharge, false, '#00EEFF', battCharge ? fmtW(battPow) : null);
-  // Battery → House: only when discharging (charging comes via Solar→Battery path)
-  setFlow('c-batt-house', battDisch, false, '#00EEFF',
-    battDisch ? fmtW(Math.abs(battPow)) : null);
-  // House ↔ Grid
-  setFlow('c-house-grid', gridImp || gridExp, gridImp, '#00EEFF',
-    (gridImp || gridExp) ? fmtW(gridImp ? bezug : einspeisung) : null);
-  // Solar → Wallbox
-  setFlow('c-pv-wb', wbOn, false, '#00EEFF', wbOn ? fmtW(wbPower) : null);
-  // Wallbox → Car (only when car present + charging)
-  setFlow('c-wb-car', wbOn && live.carPresent, false, '#00EEFF', null);
-
-  // Active glow on relevant widgets
-  document.getElementById('w-solar')  .classList.toggle('w-active', pvOn);
-  document.getElementById('w-battery').classList.toggle('w-active', battCharge || battDisch);
-  document.getElementById('w-wallbox').classList.toggle('w-active', wbOn);
-
-  // Grid pylon active/inactive state
-  const gridPylon  = document.getElementById('stage-bg-grid');
-  const gridActive = gridImp || gridExp;
-  gridPylon.classList.toggle('grid-on',  gridActive);
-  gridPylon.classList.toggle('grid-off', !gridActive);
-
-  updateWidgetValues();
-}
-
-function updateWidgetValues() {
-  const { pv, load, bezug, einspeisung, wbPower, battSoc, battRem, poolTemp, carSoc, carPresent } = live;
-  const battPow = pv + live.bezug - live.einspeisung - load - live.wbPower;
-
-  // Solar
-  el('wv-solar').innerHTML = pv > THRESH ? fmtW(pv) : '–';
-
-  // Battery
-  if (battSoc != null) {
-    const c = battSoc <= 20 ? '#FF5555' : battSoc <= 40 ? '#FFAA00' : '#CC99FF';
-    el('wv-battery').innerHTML = `<span style="color:${c}">${Math.round(battSoc)}<span class="u">%</span></span>`;
-    const sub = battPow > THRESH ? 'Laden' : battPow < -THRESH ? 'Entladen' : '';
-    const sc  = battPow > THRESH ? '#44CC88' : '#FF9900';
-    el('ws-battery').textContent = sub;
-    el('ws-battery').style.color = sub ? sc : 'transparent';
-  }
-
-  // House
-  el('wv-house').innerHTML = load > THRESH ? fmtW(load) : '–';
+  const battOn     = battCharge || battDisch;
 
   // Grid
-  if (bezug > THRESH) {
-    el('wv-grid').innerHTML = `<span style="color:#FF5555">${fmtW(bezug)}</span>`;
-    el('ws-grid').textContent = 'Bezug';
-    el('ws-grid').style.color = '#FF5555';
-  } else if (einspeisung > THRESH) {
-    el('wv-grid').innerHTML = `<span style="color:#44CC88">${fmtW(einspeisung)}</span>`;
-    el('ws-grid').textContent = 'Einspeisung';
-    el('ws-grid').style.color = '#44CC88';
-  } else {
-    el('wv-grid').innerHTML = '–';
-    el('ws-grid').textContent = '';
-  }
+  const gridImp = bezug       > THRESH;
+  const gridExp = einspeisung > THRESH;
+  const gridOn  = gridImp || gridExp;
+
+  // PV
+  const pvOn = pv > THRESH;
 
   // Wallbox
-  el('wv-wallbox').innerHTML = wbPower > THRESH ? fmtW(wbPower) : '–';
+  const wbOn = wbPower > THRESH;
 
-  // Pool
-  el('wv-pool').innerHTML = poolTemp != null
-    ? poolTemp.toFixed(1) + '<span class="u"> °C</span>'
-    : '–';
+  // ── Node value spans ───────────────────────────────────────────────────
+  // v-solar
+  document.getElementById('v-solar').textContent = pvOn ? fmtW(pv) : '–';
 
-  // Car
-  el('wv-car').innerHTML = carSoc != null
-    ? Math.round(carSoc) + '<span class="u">%</span>'
-    : '–';
+  // v-house
+  document.getElementById('v-house').textContent = fmtW(load);
 
-  // Car visibility + wb-car path
-  const carWidget = document.getElementById('w-car');
-  const showCar   = !!carPresent;
-  carWidget.style.display = showCar ? '' : 'none';
-  if (pathEls['c-wb-car'])  pathEls['c-wb-car'].style.display  = showCar ? '' : 'none';
-  if (labelEls['c-wb-car']) labelEls['c-wb-car'].style.display = showCar ? '' : 'none';
+  // v-battery
+  if (battOn) {
+    document.getElementById('v-battery').textContent =
+      (battCharge ? '↑' : '↓') + ' ' + fmtW(Math.abs(battPow));
+  } else {
+    document.getElementById('v-battery').textContent = '–';
+  }
+
+  // v-grid
+  const gridEl = document.getElementById('v-grid');
+  if (gridImp) {
+    gridEl.textContent = fmtW(bezug);
+    gridEl.style.color = '#FF9C7A';
+  } else if (gridExp) {
+    gridEl.textContent = '-' + fmtW(einspeisung);
+    gridEl.style.color = '#52E5FF';
+  } else {
+    gridEl.textContent = '0 W';
+    gridEl.style.color = '#fff';
+  }
+
+  // v-wallbox
+  document.getElementById('v-wallbox').textContent = wbOn ? fmtW(wbPower) : '–';
+
+  // ── Node inactive dimming ──────────────────────────────────────────────
+  document.getElementById('n-solar').classList.toggle('node-inactive',   !pvOn);
+  document.getElementById('n-battery').classList.toggle('node-inactive', !battOn);
+  document.getElementById('n-wallbox').classList.toggle('node-inactive', !wbOn);
+
+  // ── Flow paths ─────────────────────────────────────────────────────────
+  // Solar → House
+  setFlow('fp-pv-house', pvOn, false);
+  setFlowLabel('fl-pv-house', pvOn && load > THRESH ? fmtW(load) : '', pvOn && load > THRESH);
+
+  // Solar → Battery (only when charging)
+  const pvBattOn = pvOn && battCharge;
+  setFlow('fp-pv-batt', pvBattOn, false);
+  setFlowLabel('fl-pv-batt', pvBattOn ? fmtW(battPow) : '', pvBattOn);
+
+  // Battery → House (only when discharging)
+  setFlow('fp-batt-house', battDisch, false);
+  setFlowLabel('fl-batt-house', battDisch ? fmtW(Math.abs(battPow)) : '', battDisch);
+
+  // House ↔ Grid: forward = export (house→grid), reverse = import (grid→house)
+  setFlow('fp-house-grid', gridOn, gridImp);
+  setFlowLabel('fl-house-grid', gridOn ? fmtW(gridImp ? bezug : einspeisung) : '', gridOn);
+
+  // House → Wallbox
+  setFlow('fp-house-wb', wbOn, false);
+  setFlowLabel('fl-house-wb', wbOn ? fmtW(wbPower) : '', wbOn);
 }
 
-function el(id) { return document.getElementById(id); }
-
-// ── Socket.io ──────────────────────────────────────────────────────────────
+// ── Apply incoming OID value (verbatim from energie.html) ─────────────────
 function applyState(oid, val) {
   const n = parseFloat(val);
   switch (oid) {
-    case OIDs.pv:          live.pv          = isNaN(n) ? 0 : n; updateFlows(); break;
-    case OIDs.load:        live.load        = isNaN(n) ? 0 : n; updateFlows(); break;
-    case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n; updateFlows(); break;
-    case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.pv:          live.pv          = isNaN(n) ? 0 : n;        updateFlows(); break;
+    case OIDs.load:        live.load        = isNaN(n) ? 0 : n;        updateFlows(); break;
+    case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n;        updateFlows(); break;
+    case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n;        updateFlows(); break;
     case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n; updateWidgetValues(); break;
-    case OIDs.battRem:     live.battRem     = isNaN(n) ? null : n; break;
-    case OIDs.poolTemp:    live.poolTemp    = isNaN(n) ? null : n; updateWidgetValues(); break;
-    case OIDs.carSoc:      live.carSoc      = isNaN(n) ? null : n; updateWidgetValues(); break;
-    case OIDs.nacht:
-      setNacht(val === true || val === 'true' || val === 1 || val === '1');
-      break;
-    case OIDs.carPresent:
-      live.carPresent = (val === true || val === 'true' || val === 1 || val === '1');
-      updateWidgetValues();
-      break;
-    case OIDs.autarkie:  live.autarkie  = isNaN(n) ? null : n; break;
-    case OIDs.pvDay:     live.pvDay     = isNaN(n) ? null : n; break;
-    case OIDs.bezugDay:  live.bezugDay  = isNaN(n) ? null : n; break;
-    case OIDs.forecast:  live.forecast  = isNaN(n) ? null : n; break;
+    // remaining OIDs subscribed to keep parity with energie.html
+    default: break;
   }
 }
 
-const socket   = io({ path: '/socket.io' });
-const allOids  = Object.values(OIDs);
+// ── Socket.io (verbatim connection pattern from energie.html) ─────────────
+const socket  = io({ path: '/socket.io' });
+const allOids = Object.values(OIDs);
 
 socket.on('connect', () => {
   allOids.forEach(oid => {
@@ -814,122 +495,81 @@ socket.on('connect', () => {
     socket.emit('getStates', [oid], (err, states) => {
       if (!states) return;
       const e = states[oid];
-      if (!e || e.val == null) return;
+      if (!e || e.val === null || e.val === undefined) return;
       applyState(oid, e.val);
     });
   });
 });
+socket.on('disconnect', () => {});
 socket.on('stateChange', (oid, state) => {
-  if (!state || state.val == null) return;
+  if (!state || state.val === null || state.val === undefined) return;
   applyState(oid, state.val);
 });
+
+// Periodic refresh every 5 minutes
 setInterval(() => {
-  if (!socket?.connected) return;
+  if (!socket || !socket.connected) return;
   allOids.forEach(oid => socket.emit('getStates', [oid], (err, states) => {
     if (!states) return;
     const e = states[oid];
-    if (!e || e.val == null) return;
+    if (!e || e.val === null || e.val === undefined) return;
     applyState(oid, e.val);
   }));
 }, 300000);
 
-// ── Drag & drop ────────────────────────────────────────────────────────────
-let editMode = false;
-let dragging = null, dragOffX = 0, dragOffY = 0;
+// ── Drag handlers (edit mode only) ────────────────────────────────────────
+function initDrag(nodeEl) {
+  let dragging = false;
+  let startX, startY, origX, origY;
 
-const LOCK_CLOSED = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
-const LOCK_OPEN   = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+  nodeEl.addEventListener('mousedown', e => {
+    if (!editMode) return;
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    origX  = parseFloat(nodeEl.style.left) || 0;
+    origY  = parseFloat(nodeEl.style.top)  || 0;
+    nodeEl.style.zIndex = '10';
+    e.preventDefault();
+  });
 
-el('btn-lock').addEventListener('click', () => {
-  editMode = !editMode;
-  document.body.classList.toggle('edit-mode', editMode);
-  el('btn-lock').innerHTML   = editMode ? LOCK_OPEN : LOCK_CLOSED;
-  el('btn-lock').classList.toggle('edit-active', editMode);
-});
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    nodeEl.style.left = (origX + e.clientX - startX) + 'px';
+    nodeEl.style.top  = (origY + e.clientY - startY) + 'px';
+    updatePaths();
+  });
 
-el('btn-reset').addEventListener('click', () => {
-  for (const k of Object.keys(DEFAULT_POS)) positions[k] = { ...DEFAULT_POS[k] };
-  savePositions();
-  applyPositions();
-  rebuildPaths();
-});
-
-el('widget-layer').addEventListener('mousedown', e => {
-  if (!editMode) return;
-  const widget = e.target.closest('.widget');
-  if (!widget || widget.style.display === 'none') return;
-  e.preventDefault();
-  const key = widget.dataset.key;
-  const r   = stage.getBoundingClientRect();
-  dragOffX  = (e.clientX - r.left) / stageScale - positions[key].x;
-  dragOffY  = (e.clientY - r.top)  / stageScale - positions[key].y;
-  dragging  = { key, widget };
-  widget.classList.add('dragging');
-});
-
-window.addEventListener('mousemove', e => {
-  if (!dragging) return;
-  const r = stage.getBoundingClientRect();
-  const x = Math.max(90, Math.min(1830, (e.clientX - r.left) / stageScale - dragOffX));
-  const y = Math.max(90, Math.min(990,  (e.clientY - r.top)  / stageScale - dragOffY));
-  positions[dragging.key] = { x, y };
-  dragging.widget.style.left = x + 'px';
-  dragging.widget.style.top  = y + 'px';
-  rebuildPaths();
-});
-
-window.addEventListener('mouseup', () => {
-  if (!dragging) return;
-  dragging.widget.classList.remove('dragging');
-  savePositions();
-  dragging = null;
-});
-
-// ── Popup ──────────────────────────────────────────────────────────────────
-const overlay = el('popup-overlay');
-
-el('widget-layer').addEventListener('click', e => {
-  if (editMode) return;
-  const widget = e.target.closest('.widget');
-  if (!widget || widget.style.display === 'none') return;
-  openPopup(widget.dataset.key);
-});
-
-el('stage-bg-grid').addEventListener('click', () => {
-  if (editMode) return;
-  openPopup('grid');
-});
-
-function openPopup(key) {
-  const cfg = POPUP[key];
-  if (!cfg) return;
-  el('popup-icon').src          = cfg.img;
-  el('popup-title').textContent = cfg.title;
-  el('popup-title').style.color = cfg.color;
-  el('popup').style.borderColor = cfg.color + '44';
-  el('popup').style.boxShadow   = `0 0 60px ${cfg.color}1a`;
-
-  const rows = cfg.rows();
-  el('popup-rows').innerHTML = rows.map(r => `
-    <div class="popup-row">
-      <span class="popup-lbl">${r.lbl}</span>
-      <span class="popup-val"${r.color ? ` style="color:${r.color}"` : ''}>${r.val}</span>
-    </div>`).join('');
-
-  overlay.classList.add('open');
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    nodeEl.style.zIndex = '3';
+    savePositions();
+  });
 }
 
-function closePopup() { overlay.classList.remove('open'); }
-el('popup-close').addEventListener('click', closePopup);
-overlay.addEventListener('click', e => { if (e.target === overlay) closePopup(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
-
 // ── Init ───────────────────────────────────────────────────────────────────
-loadPositions();
-applyPositions();
-scaleStage();
-rebuildPaths();
-window.addEventListener('resize', () => { scaleStage(); rebuildPaths(); });
+(function init() {
+  // Apply positions from localStorage or defaults
+  applyPositions(loadPositions());
+
+  // Draw initial SVG paths
+  updatePaths();
+
+  // Edit mode setup
+  if (editMode) {
+    document.getElementById('edit-badge').style.display = 'block';
+    document.getElementById('scene').classList.add('edit-mode');
+    Object.keys(NODE_META).forEach(id => {
+      const node = document.getElementById(id);
+      if (node) initDrag(node);
+    });
+  }
+
+  // Redraw paths on viewport resize
+  window.addEventListener('resize', updatePaths);
+})();
 </script>
+
 </body>
 </html>
