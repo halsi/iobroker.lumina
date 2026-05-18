@@ -57,13 +57,13 @@ html, body {
   z-index: 2;
 }
 
-/* ── Flow SVG (sits behind widgets) ───────────────────────────── */
+/* ── Flow SVG (above background layers, below widgets) ────────── */
 #flow-svg {
   position: absolute;
   top: 0; left: 0;
   width: 1920px; height: 1080px;
   pointer-events: none;
-  z-index: 1;
+  z-index: 3;
 }
 
 .flow-line {

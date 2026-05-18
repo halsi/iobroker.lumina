@@ -365,10 +365,11 @@ function updateFlows() {
     gdEl.setAttribute('fill', gridColor);
   }
 
-  // Wallbox: Solar → WB (horizontal) + WB → Grid (vertical), both forward when charging
+  // Wallbox: Solar → WB (horizontal) always when charging
+  // WB → Grid (vertical) only when grid is also importing (wallbox draws from grid)
   const wbOn = wbPower > THRESH;
   setFlow('fp-wb-pv',   wbOn, false);
-  setFlow('fp-wb-grid', wbOn, false);
+  setFlow('fp-wb-grid', wbOn && gridImp, false);
   setFlowLabel('fl-wb', wbOn ? fmtW(wbPower) : '', wbOn, '#99CCFF');
   setText('vn-wb', wbOn ? fmtW(wbPower) : '–');
   const wbRing = el('wb-ring');
