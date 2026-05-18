@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Lumina Dashboard</title>
+<link rel="shortcut icon" href="favicon32.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon32.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── Stage: fixed 1920×1080 coordinate space, scaled to fit ─── */
+#stage {
+  position: absolute;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  background: url('assets/lumina_background1.png') center / cover no-repeat;
+  overflow: hidden;
+}
+
+/* ── Flow SVG (sits behind widgets) ───────────────────────────── */
+#flow-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1920px; height: 1080px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.flow-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 10 8;
+  stroke-opacity: 0.12;
+  transition: stroke 0.4s, stroke-opacity 0.4s;
+}
+.flow-on  { stroke-opacity: 1 !important; animation: dash-fwd 1.2s linear infinite; }
+.flow-rev { stroke-opacity: 1 !important; animation: dash-rev 1.2s linear infinite; }
+@keyframes dash-fwd { from { stroke-dashoffset: 36; } to { stroke-dashoffset: 0; } }
+@keyframes dash-rev { from { stroke-dashoffset: -36; } to { stroke-dashoffset: 0; } }
+
+.flow-label {
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* ── Widget layer ─────────────────────────────────────────────── */
+#widget-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1920px; height: 1080px;
+  z-index: 10;
+}
+
+.widget {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 10px 16px;
+  border-radius: 22px;
+  background: rgba(8, 8, 18, 0.60);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.widget:hover {
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.widget.dragging {
+  transform: translate(-50%, -50%) scale(1.08);
+  cursor: grabbing;
+  transition: none;
+}
+body.edit-mode .widget { cursor: grab; }
+body.edit-mode .widget:hover {
+  outline: 1.5px dashed rgba(255,255,255,0.25);
+}
+
+.w-img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 0 14px var(--wc));
+}
+.w-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--wc);
+  margin-top: 10px;
+}
+.w-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 3px;
+  line-height: 1.2;
+}
+.w-val .u {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.45);
+  margin-left: 2px;
+}
+.w-sub {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 1px;
+  letter-spacing: 0.5px;
+}
+
+/* Per-widget accent colors */
+#w-solar   { --wc: #FFCC00; border-color: rgba(255,204,0,0.28);   box-shadow: 0 0 28px rgba(255,204,0,0.12); }
+#w-battery { --wc: #CC99FF; border-color: rgba(204,153,255,0.28); box-shadow: 0 0 28px rgba(204,153,255,0.12); }
+#w-house   { --wc: #4488FF; border-color: rgba(68,136,255,0.28);  box-shadow: 0 0 28px rgba(68,136,255,0.12); }
+#w-grid    { --wc: #66CCBB; border-color: rgba(102,204,187,0.28); box-shadow: 0 0 28px rgba(102,204,187,0.12); }
+#w-wallbox { --wc: #99CCFF; border-color: rgba(153,204,255,0.28); box-shadow: 0 0 28px rgba(153,204,255,0.12); }
+#w-pool    { --wc: #00AACC; border-color: rgba(0,170,204,0.28);   box-shadow: 0 0 28px rgba(0,170,204,0.12); }
+#w-car     { --wc: #FF9900; border-color: rgba(255,153,0,0.28);   box-shadow: 0 0 28px rgba(255,153,0,0.12); }
+
+/* Active glow pulse */
+.widget.w-active {
+  animation: wpulse 2.5s ease-in-out infinite;
+}
+@keyframes wpulse {
+  0%, 100% { box-shadow: 0 0 28px color-mix(in srgb, var(--wc) 12%, transparent); }
+  50%       { box-shadow: 0 0 48px color-mix(in srgb, var(--wc) 35%, transparent); }
+}
+
+/* ── Fixed controls (outside stage, scale with viewport) ──────── */
+#btn-lock {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(255,153,0,0.10);
+  border: 1.5px solid rgba(255,153,0,0.35);
+  color: #FF9900;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 9000;
+  transition: background 0.2s, transform 0.15s;
+}
+#btn-lock:hover {
+  background: rgba(255,153,0,0.22);
+  transform: scale(1.08);
+}
+#btn-lock.edit-active {
+  border-color: rgba(255,204,0,0.6);
+  color: #FFCC00;
+  background: rgba(255,204,0,0.12);
+}
+
+#btn-reset {
+  position: fixed;
+  bottom: 24px; right: 88px;
+  padding: 0 20px;
+  height: 52px;
+  border-radius: 26px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.65);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+  cursor: pointer;
+  z-index: 9000;
+  display: none;
+  align-items: center; gap: 6px;
+  transition: background 0.2s;
+}
+#btn-reset:hover { background: rgba(255,255,255,0.12); color: #fff; }
+body.edit-mode #btn-reset { display: flex; }
+
+#btn-nav {
+  position: fixed;
+  bottom: 24px; left: 24px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(255,153,0,0.10);
+  border: 1.5px solid rgba(255,153,0,0.35);
+  color: #FF9900;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+  z-index: 9000;
+  transition: background 0.2s, transform 0.15s;
+}
+#btn-nav:hover {
+  background: rgba(255,153,0,0.22);
+  transform: scale(1.08);
+}
+
+/* ── Popup ─────────────────────────────────────────────────────── */
+#popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+#popup-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+#popup {
+  background: #111120;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 26px;
+  padding: 36px 32px 28px;
+  min-width: 380px;
+  max-width: 500px;
+  position: relative;
+  transform: scale(0.94);
+  transition: transform 0.2s;
+}
+#popup-overlay.open #popup { transform: scale(1); }
+
+#popup-close {
+  position: absolute;
+  top: 18px; right: 18px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.55);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+#popup-close:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+#popup-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+#popup-icon {
+  width: 64px; height: 64px;
+  object-fit: contain;
+}
+#popup-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.popup-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.popup-row:last-child { border-bottom: none; }
+.popup-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #55556a;
+}
+.popup-val {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+}
+.popup-val .u {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.38);
+  margin-left: 3px;
+}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <svg id="flow-svg"></svg>
+  <div id="widget-layer">
+
+    <div class="widget" id="w-solar" data-key="solar">
+      <img class="w-img" src="assets/huawei.png" alt="Solar">
+      <div class="w-name">Solar</div>
+      <div class="w-val" id="wv-solar">–</div>
+    </div>
+
+    <div class="widget" id="w-battery" data-key="battery">
+      <img class="w-img" src="assets/battery.png" alt="Batterie">
+      <div class="w-name">Batterie</div>
+      <div class="w-val" id="wv-battery">–</div>
+      <div class="w-sub" id="ws-battery"></div>
+    </div>
+
+    <div class="widget" id="w-house" data-key="house">
+      <img class="w-img" src="assets/home.png" alt="Haus">
+      <div class="w-name">Haus</div>
+      <div class="w-val" id="wv-house">–</div>
+    </div>
+
+    <div class="widget" id="w-grid" data-key="grid">
+      <img class="w-img" src="assets/grid.png" alt="Netz">
+      <div class="w-name">Netz</div>
+      <div class="w-val" id="wv-grid">–</div>
+      <div class="w-sub" id="ws-grid"></div>
+    </div>
+
+    <div class="widget" id="w-wallbox" data-key="wallbox">
+      <img class="w-img" src="assets/car.png" alt="Wallbox">
+      <div class="w-name">Wallbox</div>
+      <div class="w-val" id="wv-wallbox">–</div>
+    </div>
+
+    <div class="widget" id="w-pool" data-key="pool">
+      <img class="w-img" src="assets/Pool.png" alt="Pool">
+      <div class="w-name">Pool</div>
+      <div class="w-val" id="wv-pool">–</div>
+    </div>
+
+    <div class="widget" id="w-car" data-key="car" style="display:none;">
+      <img class="w-img" src="assets/car.png" alt="Auto">
+      <div class="w-name">Auto</div>
+      <div class="w-val" id="wv-car">–</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Controls (fixed, not scaled with stage) -->
+<button id="btn-reset">↺ Reset Layout</button>
+<button id="btn-lock" title="Layout bearbeiten">
+  <svg id="lock-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+</button>
+<a href="cards.html" id="btn-nav" title="Cards Dashboard">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+</a>
+
+<!-- Popup -->
+<div id="popup-overlay">
+  <div id="popup">
+    <button id="popup-close">✕</button>
+    <div id="popup-header">
+      <img id="popup-icon" src="" alt="">
+      <div id="popup-title"></div>
+    </div>
+    <div id="popup-rows"></div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ── OIDs ──────────────────────────────────────────────────────────────────
+const OIDs = {
+  pv:          'modbus.0.inputRegisters.5016_Total_DC_Power',
+  load:        'modbus.0.inputRegisters.13007_Load_power_',
+  bezug:       '0_userdata.0.Photovoltaik.Smartmeter-EVN.SmartMeter-EVN-Bezug',
+  einspeisung: '0_userdata.0.Photovoltaik.Smartmeter-EVN.SmartMeter-EVN-Einspeisung',
+  battSoc:     'bydhvs.0.State.SOC',
+  battRem:     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
+  wbPower:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
+  poolTemp:    '0_userdata.0.Pool.Pooltemperatur',
+  carPresent:  '0_userdata.0.Auto.BYD-Sealion7.Anwesenheit',
+  carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
+  autarkie:    '0_userdata.0.Photovoltaik.Autarkie',
+  pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
+  bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
+  forecast:    '0_userdata.0.Photovoltaik.PV-Forecast',
+};
+
+// ── Live state ────────────────────────────────────────────────────────────
+const live = {
+  pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0,
+  battSoc: null, battRem: null,
+  poolTemp: null, carPresent: false, carSoc: null,
+  autarkie: null, pvDay: null, bezugDay: null, forecast: null,
+};
+const THRESH = 30;
+
+// ── Default widget positions (1920×1080 stage coords) ─────────────────────
+const DEFAULT_POS = {
+  solar:   { x: 960,  y: 165 },
+  battery: { x: 295,  y: 560 },
+  house:   { x: 960,  y: 560 },
+  grid:    { x: 1625, y: 560 },
+  wallbox: { x: 1625, y: 165 },
+  pool:    { x: 295,  y: 165 },
+  car:     { x: 1295, y: 370 },
+};
+
+let positions = {};
+
+// ── Flow connections ──────────────────────────────────────────────────────
+const CONNS = [
+  { id: 'c-pv-house',   from: 'solar',   to: 'house',   color: '#FFCC00' },
+  { id: 'c-pv-batt',    from: 'solar',   to: 'battery', color: '#FFCC00' },
+  { id: 'c-batt-house', from: 'battery', to: 'house',   color: '#CC99FF' },
+  { id: 'c-house-grid', from: 'house',   to: 'grid',    color: '#66CCBB' },
+  { id: 'c-pv-wb',      from: 'solar',   to: 'wallbox', color: '#99CCFF' },
+  { id: 'c-wb-car',     from: 'wallbox', to: 'car',     color: '#FF9900' },
+];
+
+// SVG element references
+const pathEls  = {};
+const labelEls = {};
+const svg = document.getElementById('flow-svg');
+
+// ── Popup config ──────────────────────────────────────────────────────────
+const POPUP = {
+  solar: {
+    title: 'Solar', img: 'assets/huawei.png', color: '#FFCC00',
+    rows: () => [
+      { lbl: 'Leistung',   val: live.pv > THRESH ? fmtW(live.pv) : '– W' },
+      { lbl: 'PV Heute',   val: live.pvDay   != null ? live.pvDay.toFixed(1)   + ' kWh' : '–' },
+      { lbl: 'Forecast',   val: live.forecast != null ? live.forecast.toFixed(1) + ' kWh' : '–' },
+      { lbl: 'Autarkie',   val: live.autarkie != null ? Math.round(live.autarkie) + ' %' : '–' },
+    ],
+  },
+  battery: {
+    title: 'Batterie', img: 'assets/battery.png', color: '#CC99FF',
+    rows: () => {
+      const battPow = live.pv + live.bezug - live.einspeisung - live.load;
+      const dir = battPow > THRESH ? 'Laden' : battPow < -THRESH ? 'Entladen' : 'Standby';
+      const dirColor = battPow > THRESH ? '#44CC88' : battPow < -THRESH ? '#FF9900' : '#666680';
+      return [
+        { lbl: 'Ladestand',     val: live.battSoc != null ? Math.round(live.battSoc) + ' %' : '–',
+          color: live.battSoc != null ? (live.battSoc <= 20 ? '#FF5555' : live.battSoc <= 40 ? '#FFAA00' : '#CC99FF') : undefined },
+        { lbl: 'Restkapazität', val: live.battRem != null ? live.battRem.toFixed(1) + ' kWh' : '–' },
+        { lbl: 'Status',        val: dir, color: dirColor },
+      ];
+    },
+  },
+  house: {
+    title: 'Haus', img: 'assets/home.png', color: '#4488FF',
+    rows: () => [
+      { lbl: 'Verbrauch', val: live.load > THRESH ? fmtW(live.load) : '–' },
+    ],
+  },
+  grid: {
+    title: 'Netz', img: 'assets/grid.png', color: '#66CCBB',
+    rows: () => [
+      { lbl: 'Bezug',       val: fmtW(live.bezug),       color: live.bezug > THRESH ? '#FF5555' : undefined },
+      { lbl: 'Einspeisung', val: fmtW(live.einspeisung), color: live.einspeisung > THRESH ? '#44CC88' : undefined },
+      { lbl: 'Bezug Heute', val: live.bezugDay != null ? live.bezugDay.toFixed(1) + ' kWh' : '–' },
+    ],
+  },
+  wallbox: {
+    title: 'Wallbox', img: 'assets/car.png', color: '#99CCFF',
+    rows: () => [
+      { lbl: 'Ladeleistung', val: live.wbPower > THRESH ? fmtW(live.wbPower) : '– W' },
+    ],
+  },
+  pool: {
+    title: 'Pool', img: 'assets/Pool.png', color: '#00AACC',
+    rows: () => [
+      { lbl: 'Temperatur', val: live.poolTemp != null ? live.poolTemp.toFixed(1) + ' °C' : '–' },
+    ],
+  },
+  car: {
+    title: 'Auto', img: 'assets/car.png', color: '#FF9900',
+    rows: () => [
+      { lbl: 'Ladestand', val: live.carSoc != null ? Math.round(live.carSoc) + ' %' : '–' },
+    ],
+  },
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function fmtW(w) {
+  const n = Math.abs(parseFloat(w));
+  if (isNaN(n) || n < 1) return '–';
+  return n >= 1000 ? (n / 1000).toFixed(2) + ' kW' : Math.round(n) + ' W';
+}
+
+// ── Stage scaling ──────────────────────────────────────────────────────────
+const stage = document.getElementById('stage');
+let stageScale = 1;
+
+function scaleStage() {
+  const sx = window.innerWidth  / 1920;
+  const sy = window.innerHeight / 1080;
+  stageScale = Math.min(sx, sy);
+  const ox = (window.innerWidth  - 1920 * stageScale) / 2;
+  const oy = (window.innerHeight - 1080 * stageScale) / 2;
+  stage.style.transform = `scale(${stageScale})`;
+  stage.style.left = ox + 'px';
+  stage.style.top  = oy + 'px';
+}
+
+// ── Position persistence ───────────────────────────────────────────────────
+function loadPositions() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('lumina-dashboard-layout') || '{}');
+    positions = {};
+    for (const k of Object.keys(DEFAULT_POS)) {
+      positions[k] = (saved[k] && saved[k].x != null) ? saved[k] : { ...DEFAULT_POS[k] };
+    }
+  } catch (_) {
+    positions = Object.fromEntries(Object.entries(DEFAULT_POS).map(([k, v]) => [k, { ...v }]));
+  }
+}
+
+function savePositions() {
+  localStorage.setItem('lumina-dashboard-layout', JSON.stringify(positions));
+}
+
+function applyPositions() {
+  for (const [key, pos] of Object.entries(positions)) {
+    const el = document.getElementById('w-' + key);
+    if (el) { el.style.left = pos.x + 'px'; el.style.top = pos.y + 'px'; }
+  }
+}
+
+// ── SVG path management ────────────────────────────────────────────────────
+function ensureConn(conn) {
+  if (!pathEls[conn.id]) {
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.id = conn.id;
+    p.setAttribute('class', 'flow-line');
+    p.setAttribute('stroke', conn.color);
+    svg.appendChild(p);
+    pathEls[conn.id] = p;
+  }
+  if (!labelEls[conn.id]) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('class', 'flow-label');
+    t.setAttribute('fill', conn.color);
+    t.setAttribute('opacity', '0');
+    svg.appendChild(t);
+    labelEls[conn.id] = t;
+  }
+}
+
+function calcEdge(fromKey, toKey, margin) {
+  const f = positions[fromKey], t = positions[toKey];
+  if (!f || !t) return null;
+  const dx = t.x - f.x, dy = t.y - f.y;
+  const d = Math.sqrt(dx * dx + dy * dy);
+  if (d < 2) return null;
+  const nx = dx / d, ny = dy / d;
+  return {
+    x1: f.x + nx * margin, y1: f.y + ny * margin,
+    x2: t.x - nx * margin, y2: t.y - ny * margin,
+    lx: (f.x + t.x) / 2 - ny * 18,
+    ly: (f.y + t.y) / 2 + nx * 5,
+  };
+}
+
+function rebuildPaths() {
+  for (const conn of CONNS) {
+    ensureConn(conn);
+    const pt = calcEdge(conn.from, conn.to, 88);
+    if (pt) {
+      pathEls[conn.id].setAttribute('d', `M ${pt.x1},${pt.y1} L ${pt.x2},${pt.y2}`);
+      labelEls[conn.id].setAttribute('x', pt.lx);
+      labelEls[conn.id].setAttribute('y', pt.ly);
+    }
+  }
+}
+
+function setFlow(connId, on, reverse, color, label) {
+  const p = pathEls[connId], l = labelEls[connId];
+  if (!p) return;
+  p.classList.remove('flow-on', 'flow-rev');
+  const baseColor = CONNS.find(c => c.id === connId)?.color || '#fff';
+  if (on) {
+    p.classList.add(reverse ? 'flow-rev' : 'flow-on');
+    if (color) p.setAttribute('stroke', color);
+  } else {
+    p.setAttribute('stroke', baseColor);
+  }
+  if (l) {
+    l.textContent = (on && label) ? label : '';
+    l.setAttribute('opacity', (on && label) ? '1' : '0');
+    if (color) l.setAttribute('fill', color);
+  }
+}
+
+// ── Flow + widget value updates ────────────────────────────────────────────
+function updateFlows() {
+  const { pv, load, bezug, einspeisung, wbPower } = live;
+  const battPow    = pv + bezug - einspeisung - load;
+  const battCharge = battPow >  THRESH;
+  const battDisch  = battPow < -THRESH;
+  const pvOn       = pv           > THRESH;
+  const wbOn       = wbPower      > THRESH;
+  const gridImp    = bezug        > THRESH;
+  const gridExp    = einspeisung  > THRESH;
+
+  // PV → House
+  setFlow('c-pv-house', pvOn, false, '#FFCC00', pvOn ? fmtW(pv) : null);
+  // PV → Battery (only when charging)
+  setFlow('c-pv-batt', pvOn && battCharge, false, '#FFCC00', null);
+  // Battery ↔ House
+  const battColor = battDisch ? '#FF9900' : '#CC99FF';
+  setFlow('c-batt-house', battCharge || battDisch, battCharge, battColor,
+    (battCharge || battDisch) ? fmtW(Math.abs(battPow)) : null);
+  // House ↔ Grid
+  const gridColor = gridImp ? '#FF5555' : '#66CCBB';
+  setFlow('c-house-grid', gridImp || gridExp, gridImp, gridColor,
+    (gridImp || gridExp) ? fmtW(gridImp ? bezug : einspeisung) : null);
+  // Solar → Wallbox
+  setFlow('c-pv-wb', wbOn, false, '#99CCFF', wbOn ? fmtW(wbPower) : null);
+  // Wallbox → Car (only when car present + charging)
+  setFlow('c-wb-car', wbOn && live.carPresent, false, '#FF9900', null);
+
+  // Active glow on relevant widgets
+  document.getElementById('w-solar')  .classList.toggle('w-active', pvOn);
+  document.getElementById('w-battery').classList.toggle('w-active', battCharge || battDisch);
+  document.getElementById('w-wallbox').classList.toggle('w-active', wbOn);
+
+  updateWidgetValues();
+}
+
+function updateWidgetValues() {
+  const { pv, load, bezug, einspeisung, wbPower, battSoc, battRem, poolTemp, carSoc, carPresent } = live;
+  const battPow = pv + live.bezug - live.einspeisung - load;
+
+  // Solar
+  el('wv-solar').innerHTML = pv > THRESH ? fmtW(pv) : '–';
+
+  // Battery
+  if (battSoc != null) {
+    const c = battSoc <= 20 ? '#FF5555' : battSoc <= 40 ? '#FFAA00' : '#CC99FF';
+    el('wv-battery').innerHTML = `<span style="color:${c}">${Math.round(battSoc)}<span class="u">%</span></span>`;
+    const sub = battPow > THRESH ? 'Laden' : battPow < -THRESH ? 'Entladen' : '';
+    const sc  = battPow > THRESH ? '#44CC88' : '#FF9900';
+    el('ws-battery').textContent = sub;
+    el('ws-battery').style.color = sub ? sc : 'transparent';
+  }
+
+  // House
+  el('wv-house').innerHTML = load > THRESH ? fmtW(load) : '–';
+
+  // Grid
+  if (bezug > THRESH) {
+    el('wv-grid').innerHTML = `<span style="color:#FF5555">${fmtW(bezug)}</span>`;
+    el('ws-grid').textContent = 'Bezug';
+    el('ws-grid').style.color = '#FF5555';
+  } else if (einspeisung > THRESH) {
+    el('wv-grid').innerHTML = `<span style="color:#44CC88">${fmtW(einspeisung)}</span>`;
+    el('ws-grid').textContent = 'Einspeisung';
+    el('ws-grid').style.color = '#44CC88';
+  } else {
+    el('wv-grid').innerHTML = '–';
+    el('ws-grid').textContent = '';
+  }
+
+  // Wallbox
+  el('wv-wallbox').innerHTML = wbPower > THRESH ? fmtW(wbPower) : '–';
+
+  // Pool
+  el('wv-pool').innerHTML = poolTemp != null
+    ? poolTemp.toFixed(1) + '<span class="u"> °C</span>'
+    : '–';
+
+  // Car
+  el('wv-car').innerHTML = carSoc != null
+    ? Math.round(carSoc) + '<span class="u">%</span>'
+    : '–';
+
+  // Car visibility + wb-car path
+  const carWidget = document.getElementById('w-car');
+  const showCar   = !!carPresent;
+  carWidget.style.display = showCar ? '' : 'none';
+  if (pathEls['c-wb-car'])  pathEls['c-wb-car'].style.display  = showCar ? '' : 'none';
+  if (labelEls['c-wb-car']) labelEls['c-wb-car'].style.display = showCar ? '' : 'none';
+}
+
+function el(id) { return document.getElementById(id); }
+
+// ── Socket.io ──────────────────────────────────────────────────────────────
+function applyState(oid, val) {
+  const n = parseFloat(val);
+  switch (oid) {
+    case OIDs.pv:          live.pv          = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.load:        live.load        = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n; updateWidgetValues(); break;
+    case OIDs.battRem:     live.battRem     = isNaN(n) ? null : n; break;
+    case OIDs.poolTemp:    live.poolTemp    = isNaN(n) ? null : n; updateWidgetValues(); break;
+    case OIDs.carSoc:      live.carSoc      = isNaN(n) ? null : n; updateWidgetValues(); break;
+    case OIDs.carPresent:
+      live.carPresent = (val === true || val === 'true' || val === 1 || val === '1');
+      updateWidgetValues();
+      break;
+    case OIDs.autarkie:  live.autarkie  = isNaN(n) ? null : n; break;
+    case OIDs.pvDay:     live.pvDay     = isNaN(n) ? null : n; break;
+    case OIDs.bezugDay:  live.bezugDay  = isNaN(n) ? null : n; break;
+    case OIDs.forecast:  live.forecast  = isNaN(n) ? null : n; break;
+  }
+}
+
+const socket   = io({ path: '/socket.io' });
+const allOids  = Object.values(OIDs);
+
+socket.on('connect', () => {
+  allOids.forEach(oid => {
+    socket.emit('subscribe', oid, { ack: true }, () => {});
+    socket.emit('getStates', [oid], (err, states) => {
+      if (!states) return;
+      const e = states[oid];
+      if (!e || e.val == null) return;
+      applyState(oid, e.val);
+    });
+  });
+});
+socket.on('stateChange', (oid, state) => {
+  if (!state || state.val == null) return;
+  applyState(oid, state.val);
+});
+setInterval(() => {
+  if (!socket?.connected) return;
+  allOids.forEach(oid => socket.emit('getStates', [oid], (err, states) => {
+    if (!states) return;
+    const e = states[oid];
+    if (!e || e.val == null) return;
+    applyState(oid, e.val);
+  }));
+}, 300000);
+
+// ── Drag & drop ────────────────────────────────────────────────────────────
+let editMode = false;
+let dragging = null, dragOffX = 0, dragOffY = 0;
+
+const LOCK_CLOSED = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+const LOCK_OPEN   = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+
+el('btn-lock').addEventListener('click', () => {
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  el('btn-lock').innerHTML   = editMode ? LOCK_OPEN : LOCK_CLOSED;
+  el('btn-lock').classList.toggle('edit-active', editMode);
+});
+
+el('btn-reset').addEventListener('click', () => {
+  for (const k of Object.keys(DEFAULT_POS)) positions[k] = { ...DEFAULT_POS[k] };
+  savePositions();
+  applyPositions();
+  rebuildPaths();
+});
+
+el('widget-layer').addEventListener('mousedown', e => {
+  if (!editMode) return;
+  const widget = e.target.closest('.widget');
+  if (!widget || widget.style.display === 'none') return;
+  e.preventDefault();
+  const key = widget.dataset.key;
+  const r   = stage.getBoundingClientRect();
+  dragOffX  = (e.clientX - r.left) / stageScale - positions[key].x;
+  dragOffY  = (e.clientY - r.top)  / stageScale - positions[key].y;
+  dragging  = { key, widget };
+  widget.classList.add('dragging');
+});
+
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const r = stage.getBoundingClientRect();
+  const x = Math.max(90, Math.min(1830, (e.clientX - r.left) / stageScale - dragOffX));
+  const y = Math.max(90, Math.min(990,  (e.clientY - r.top)  / stageScale - dragOffY));
+  positions[dragging.key] = { x, y };
+  dragging.widget.style.left = x + 'px';
+  dragging.widget.style.top  = y + 'px';
+  rebuildPaths();
+});
+
+window.addEventListener('mouseup', () => {
+  if (!dragging) return;
+  dragging.widget.classList.remove('dragging');
+  savePositions();
+  dragging = null;
+});
+
+// ── Popup ──────────────────────────────────────────────────────────────────
+const overlay = el('popup-overlay');
+
+el('widget-layer').addEventListener('click', e => {
+  if (editMode) return;
+  const widget = e.target.closest('.widget');
+  if (!widget || widget.style.display === 'none') return;
+  openPopup(widget.dataset.key);
+});
+
+function openPopup(key) {
+  const cfg = POPUP[key];
+  if (!cfg) return;
+  el('popup-icon').src          = cfg.img;
+  el('popup-title').textContent = cfg.title;
+  el('popup-title').style.color = cfg.color;
+  el('popup').style.borderColor = cfg.color + '44';
+  el('popup').style.boxShadow   = `0 0 60px ${cfg.color}1a`;
+
+  const rows = cfg.rows();
+  el('popup-rows').innerHTML = rows.map(r => `
+    <div class="popup-row">
+      <span class="popup-lbl">${r.lbl}</span>
+      <span class="popup-val"${r.color ? ` style="color:${r.color}"` : ''}>${r.val}</span>
+    </div>`).join('');
+
+  overlay.classList.add('open');
+}
+
+function closePopup() { overlay.classList.remove('open'); }
+el('popup-close').addEventListener('click', closePopup);
+overlay.addEventListener('click', e => { if (e.target === overlay) closePopup(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadPositions();
+applyPositions();
+scaleStage();
+rebuildPaths();
+window.addEventListener('resize', () => { scaleStage(); rebuildPaths(); });
+</script>
+</body>
+</html>
