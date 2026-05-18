@@ -100,6 +100,8 @@ html, body {
   transition: opacity 0.3s;
 }
 
+#n-car:active { opacity: 1 !important; outline: none; -webkit-tap-highlight-color: transparent; }
+
 
 .holo-label {
   position: absolute;
@@ -1323,6 +1325,8 @@ function initAnchorDrag(anchorEl) {
   const carNode = document.getElementById('n-car');
   if (carNode) {
     carNode.style.cursor = 'pointer';
+    carNode.style.webkitTapHighlightColor = 'transparent';
+    carNode.style.outline = 'none';
     carNode.addEventListener('click', () => {
       if (editMode) return;
       openCarPopup();
