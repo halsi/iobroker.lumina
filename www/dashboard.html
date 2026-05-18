@@ -49,11 +49,11 @@ html, body {
 /* NETZ label widget (no image, same drag/click system as other widgets) */
 #w-grid-label { --wc: #00EEFF; width: 200px; }
 
-/* Layer 3: platform */
+/* Layer 3: platform — 110% zooms in ~10% relative to cover */
 #stage-bg {
   position: absolute;
   inset: 0;
-  background: url('img/dashboard/background.png') center / cover no-repeat;
+  background: url('img/dashboard/background.png') center / 110% auto no-repeat;
   z-index: 2;
 }
 
