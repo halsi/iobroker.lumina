@@ -316,8 +316,8 @@ html, body {
 
 
     <div id="elbow-bottom">
-      <div class="conn-dot"></div>
-      <div>Online</div>
+      <div class="conn-dot" id="sb-conn-dot"></div>
+      <div id="sb-conn-text">Offline</div>
       <span class="sb-hop" style="opacity:0.45;">LC · 47-1287</span>
     </div>
 
@@ -391,6 +391,17 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 10000);
+</script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function() {
+  const dot  = document.getElementById('sb-conn-dot');
+  const text = document.getElementById('sb-conn-text');
+  const sock = io({ path: '/socket.io' });
+  sock.on('connect',    () => { dot.style.background = ''; dot.style.boxShadow = ''; text.textContent = 'Online';  });
+  sock.on('disconnect', () => { dot.style.background = '#CC2200'; dot.style.boxShadow = 'none'; text.textContent = 'Offline'; });
+})();
 </script>
 
 </body>

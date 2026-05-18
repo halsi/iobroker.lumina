@@ -834,8 +834,7 @@ function applyState(oid, val) {
 }
 
 // ── Socket.io ──────────────────────────────────────────────────────────────
-const connDot = document.getElementById('conn-dot');
-const socket  = io({ path: '/socket.io' });
+const socket = io({ path: '/socket.io' });
 
 function refreshAll() {
   if (!socket||!socket.connected) return;
@@ -849,7 +848,6 @@ function refreshAll() {
 }
 
 socket.on('connect', () => {
-  connDot.className = 'on';
   allOids.forEach(oid => {
     socket.emit('subscribe', oid, { ack:true }, ()=>{});
     socket.emit('getStates', [oid], (err,states) => {
@@ -859,7 +857,6 @@ socket.on('connect', () => {
     });
   });
 });
-socket.on('disconnect', () => { connDot.className = 'off'; });
 socket.on('stateChange', (oid, state) => {
   if (!state||state.val===null||state.val===undefined) return;
   applyState(oid, state.val);
