@@ -44,7 +44,7 @@ html, body {
   fill: none;
   stroke-width: 1.5;
   stroke-dasharray: none;
-  opacity: 0.08;
+  opacity: 0.18;
   transition: opacity 0.4s;
 }
 .flow-path.flow-active {
@@ -356,6 +356,22 @@ html, body {
   </div>
 
   <!-- Sensor labels -->
+  <div id="lb-temp-out" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name node-name-orange">OUTSIDE</span><br>
+    <span class="node-value" id="v-temp-out">–</span>
+  </div>
+  <div id="lb-temp-in" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name node-name-orange">INSIDE</span><br>
+    <span class="node-value" id="v-temp-in">–</span>
+  </div>
   <div id="lb-pool" class="holo-label" data-size="22">
     <div class="label-controls">
       <button class="lbl-btn lbl-minus">−</button>
@@ -675,6 +691,8 @@ const OIDs = {
   carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
   nacht:       '0_userdata.0.Generic.Nacht',
   poolTemp:    '0_userdata.0.Pool.Pooltemperatur',
+  tempOut:     'mqtt.0.ebusd.700.DisplayedOutsideTemp',
+  tempIn:      'mqtt.0.ebusd.700.z1RoomTemp',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -682,7 +700,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -706,8 +724,13 @@ function setFlow(id, active, reverse) {
 function setFlowLabel(id, text, visible) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.textContent = text;
-  el.setAttribute('opacity', visible ? '1' : '0');
+  if (editMode) {
+    el.textContent = text || '0 W';
+    el.setAttribute('opacity', '0.5');
+  } else {
+    el.textContent = text;
+    el.setAttribute('opacity', visible ? '1' : '0');
+  }
 }
 
 // ── Update node labels and flow animations from live state ─────────────────
@@ -798,8 +821,10 @@ function updateFlows() {
 
 // ── Sensor label updates ───────────────────────────────────────────────────
 function updateSensors() {
-  const el = document.getElementById('v-pool');
-  if (el) el.textContent = live.poolTemp != null ? live.poolTemp.toFixed(1) + ' °C' : '–';
+  const fmt = v => v != null ? v.toFixed(1) + ' °C' : '–';
+  const pool = document.getElementById('v-pool');    if (pool)    pool.textContent    = fmt(live.poolTemp);
+  const tOut = document.getElementById('v-temp-out'); if (tOut)    tOut.textContent    = fmt(live.tempOut);
+  const tIn  = document.getElementById('v-temp-in');  if (tIn)     tIn.textContent     = fmt(live.tempIn);
 }
 
 // ── Solar / Moon image switcher ───────────────────────────────────────────
@@ -836,6 +861,8 @@ function applyState(oid, val) {
     case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n;      updateFlows(); break;
     case OIDs.nacht:       live.nacht       = !!val;                     updateSolarImg(); break;
     case OIDs.poolTemp:    live.poolTemp    = isNaN(n) ? null : n;       updateSensors();  break;
+    case OIDs.tempOut:     live.tempOut     = isNaN(n) ? null : n;       updateSensors();  break;
+    case OIDs.tempIn:      live.tempIn      = isNaN(n) ? null : n;       updateSensors();  break;
     // remaining OIDs subscribed to keep parity with energie.html
     default: break;
   }
@@ -914,7 +941,9 @@ const DEFAULT_LABEL_STATE = {
   'lb-grid':    { x: 1270, y: 245, size: 22 },
   'lb-wallbox': { x: 1175, y: 700, size: 22 },
   'lb-car':     { x: 1460, y: 620, size: 22 },
-  'lb-pool':    { x: 100,  y: 500, size: 22 },
+  'lb-temp-out': { x: 100,  y: 500, size: 22 },
+  'lb-temp-in':  { x: 100,  y: 560, size: 22 },
+  'lb-pool':     { x: 100,  y: 620, size: 22 },
 };
 
 function loadLabelState() {
