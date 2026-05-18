@@ -375,6 +375,30 @@ html, body {
 // ── Edit mode ──────────────────────────────────────────────────────────────
 const editMode = new URLSearchParams(location.search).has('edit');
 
+// ── Server-side config OIDs (ioBroker userdata) ────────────────────────────
+const CFG_POSITIONS = '0_userdata.0.Lumina.Dashboard-Positions';
+const CFG_LABELS    = '0_userdata.0.Lumina.Dashboard-Labels';
+const CFG_ANCHORS   = '0_userdata.0.Lumina.Dashboard-Anchors';
+
+function saveToServer(oid, data) {
+  if (!window._dashSocket || !window._dashSocket.connected) return;
+  window._dashSocket.emit('setState', oid, { val: JSON.stringify(data), ack: false }, () => {});
+}
+
+function loadFromServer() {
+  const tasks = [
+    { oid: CFG_POSITIONS, fn: d => { applyPositions(d); try { localStorage.setItem('holo_positions', JSON.stringify(d)); } catch(e){} } },
+    { oid: CFG_LABELS,    fn: d => { applyLabelState(d); try { localStorage.setItem('holo_labels',    JSON.stringify(d)); } catch(e){} } },
+    { oid: CFG_ANCHORS,   fn: d => { applyAnchorState(d); updatePaths(); try { localStorage.setItem('holo_anchors', JSON.stringify(d)); } catch(e){} } },
+  ];
+  tasks.forEach(({ oid, fn }) => {
+    window._dashSocket.emit('getStates', [oid], (err, states) => {
+      if (!states || !states[oid] || states[oid].val == null) return;
+      try { fn(JSON.parse(states[oid].val)); } catch(e) {}
+    });
+  });
+}
+
 // ── Node metadata: id, image pixel width ──────────────────────────────────
 // Heights are approximate render heights used for center calculation.
 const NODE_META = {
@@ -396,16 +420,18 @@ const DEFAULT_POSITIONS = {
   'n-car':     { x: 1350, y: 560 },
 };
 
-// ── Load/save positions from localStorage ─────────────────────────────────
+// ── Load/save positions ────────────────────────────────────────────────────
 function loadPositions() {
   try {
     const raw = localStorage.getItem('holo_positions');
     if (raw) {
       const saved = JSON.parse(raw);
-      // Validate: must have all node keys
-      if (Object.keys(NODE_META).every(k => saved[k] && saved[k].x != null)) {
-        return saved;
-      }
+      // Merge: existing keys from save, defaults for any new nodes
+      const merged = {};
+      Object.keys(NODE_META).forEach(k => {
+        merged[k] = (saved[k] && saved[k].x != null) ? saved[k] : DEFAULT_POSITIONS[k];
+      });
+      return merged;
     }
   } catch (e) {}
   return null;
@@ -424,6 +450,7 @@ function savePositions() {
     };
   });
   try { localStorage.setItem('holo_positions', JSON.stringify(pos)); } catch (e) {}
+  saveToServer(CFG_POSITIONS, pos);
 }
 
 // ── Apply position object to DOM nodes ────────────────────────────────────
@@ -497,7 +524,17 @@ const DEFAULT_ANCHORS = {
 };
 
 function loadAnchorState() {
-  try { const r = localStorage.getItem('holo_anchors'); if (r) return JSON.parse(r); } catch(e) {}
+  try {
+    const r = localStorage.getItem('holo_anchors');
+    if (r) {
+      const saved = JSON.parse(r);
+      const merged = {};
+      Object.keys(DEFAULT_ANCHORS).forEach(k => {
+        merged[k] = saved[k] || DEFAULT_ANCHORS[k];
+      });
+      return merged;
+    }
+  } catch(e) {}
   return null;
 }
 function saveAnchorState() {
@@ -507,6 +544,7 @@ function saveAnchorState() {
     if (el) s[id] = { x: parseFloat(el.style.left)||0, y: parseFloat(el.style.top)||0 };
   });
   try { localStorage.setItem('holo_anchors', JSON.stringify(s)); } catch(e) {}
+  saveToServer(CFG_ANCHORS, s);
 }
 function applyAnchorState(state) {
   Object.keys(DEFAULT_ANCHORS).forEach(id => {
@@ -706,11 +744,13 @@ function applyState(oid, val) {
   }
 }
 
-// ── Socket.io (verbatim connection pattern from energie.html) ─────────────
+// ── Socket.io ──────────────────────────────────────────────────────────────
 const socket  = io({ path: '/socket.io' });
+window._dashSocket = socket;
 const allOids = Object.values(OIDs);
 
 socket.on('connect', () => {
+  loadFromServer();
   allOids.forEach(oid => {
     socket.emit('subscribe', oid, { ack: true }, () => {});
     socket.emit('getStates', [oid], (err, states) => {
@@ -782,7 +822,14 @@ const DEFAULT_LABEL_STATE = {
 function loadLabelState() {
   try {
     const raw = localStorage.getItem('holo_labels');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      const merged = {};
+      Object.keys(DEFAULT_LABEL_STATE).forEach(k => {
+        merged[k] = saved[k] || DEFAULT_LABEL_STATE[k];
+      });
+      return merged;
+    }
   } catch (e) {}
   return null;
 }
@@ -799,6 +846,7 @@ function saveLabelState() {
     };
   });
   try { localStorage.setItem('holo_labels', JSON.stringify(state)); } catch (e) {}
+  saveToServer(CFG_LABELS, state);
 }
 
 function applyLabelSize(labelEl, size) {
