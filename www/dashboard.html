@@ -244,6 +244,7 @@ html, body {
     <path id="fp-batt-house" class="flow-path" stroke="#6AAEFF"/>
     <path id="fp-house-grid" class="flow-path" stroke="#FF9C7A"/>
     <path id="fp-wb-grid"    class="flow-path" stroke="#FF9C7A"/>
+    <path id="fp-wb-car"     class="flow-path" stroke="#52E5FF"/>
 
     <!-- Flow midpoint value labels -->
     <text id="fl-pv-house"   font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#F5B14C"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
@@ -252,6 +253,7 @@ html, body {
     <text id="fl-batt-house" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-house-grid" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-wb-grid"    font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-wb-car"     font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
   </svg>
 
   <!-- Holo nodes -->
@@ -276,7 +278,12 @@ html, body {
   </div>
 
   <div id="n-wallbox" class="holo-node">
-    <img src="img/dashboard/car.png" alt="Wallbox" style="width:190px;">
+    <img src="img/dashboard/wallbox.png" alt="Wallbox" style="width:190px;">
+    <div class="resize-handle"></div>
+  </div>
+
+  <div id="n-car" class="holo-node">
+    <img src="img/dashboard/car.png" alt="Auto" style="width:220px;">
     <div class="resize-handle"></div>
   </div>
 
@@ -321,6 +328,14 @@ html, body {
     <span class="node-name">WALLBOX</span><br>
     <span class="node-value" id="v-wallbox">–</span>
   </div>
+  <div id="lb-car" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name">AUTO</span><br>
+    <span class="node-value" id="v-car">–</span>
+  </div>
 
   <!-- Flow anchors: 2 per flow (each endpoint independently draggable in edit mode) -->
   <!-- Solar → Haus -->
@@ -341,6 +356,9 @@ html, body {
   <!-- Wallbox → Netz -->
   <div id="anc-wb-grid"    class="flow-anchor"><span class="anchor-label">WB→Netz</span></div>
   <div id="anc-grid-wb"    class="flow-anchor"><span class="anchor-label">Netz←WB</span></div>
+  <!-- Wallbox → Auto -->
+  <div id="anc-wb-car"     class="flow-anchor"><span class="anchor-label">WB→Auto</span></div>
+  <div id="anc-car-wb"     class="flow-anchor"><span class="anchor-label">Auto←WB</span></div>
 
 </div><!-- /#scene -->
 
@@ -364,7 +382,8 @@ const NODE_META = {
   'n-house':   { w: 240, h: 215 },
   'n-battery': { w: 160, h: 155 },
   'n-grid':    { w: 140, h: 135 },
-  'n-wallbox': { w: 190, h: 165 },
+  'n-wallbox': { w: 190, h: 260 },
+  'n-car':     { w: 220, h: 147 },
 };
 
 // Default positions for ~1600×900 viewport
@@ -373,7 +392,8 @@ const DEFAULT_POSITIONS = {
   'n-house':   { x: 650,  y: 140 },
   'n-battery': { x: 120,  y: 480 },
   'n-grid':    { x: 1200, y: 100 },
-  'n-wallbox': { x: 1080, y: 440 },
+  'n-wallbox': { x: 1080, y: 420 },
+  'n-car':     { x: 1350, y: 560 },
 };
 
 // ── Load/save positions from localStorage ─────────────────────────────────
@@ -471,6 +491,9 @@ const DEFAULT_ANCHORS = {
   // Wallbox → Netz
   'anc-wb-grid':    { x: 1145, y: 470 },
   'anc-grid-wb':    { x: 1278, y: 205 },
+  // Wallbox → Auto
+  'anc-wb-car':     { x: 1175, y: 580 },
+  'anc-car-wb':     { x: 1390, y: 575 },
 };
 
 function loadAnchorState() {
@@ -508,6 +531,7 @@ const FLOW_DEFS = [
   { pathId: 'fp-batt-house', labelId: 'fl-batt-house', a1: 'anc-batt-haus',  a2: 'anc-haus-batt'  },
   { pathId: 'fp-house-grid', labelId: 'fl-house-grid', a1: 'anc-haus-grid',  a2: 'anc-grid-haus'  },
   { pathId: 'fp-wb-grid',    labelId: 'fl-wb-grid',    a1: 'anc-wb-grid',    a2: 'anc-grid-wb'    },
+  { pathId: 'fp-wb-car',     labelId: 'fl-wb-car',     a1: 'anc-wb-car',     a2: 'anc-car-wb'     },
 ];
 
 function updatePaths() {
@@ -536,6 +560,7 @@ const OIDs = {
   battSoc:     'bydhvs.0.State.SOC',
   battRem:     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
   wbPower:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
+  carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -543,7 +568,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0 };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, carSoc: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -623,10 +648,15 @@ function updateFlows() {
   // v-wallbox
   document.getElementById('v-wallbox').textContent = wbOn ? fmtW(wbPower) : '–';
 
+  // v-car (SOC %)
+  const { carSoc } = live;
+  document.getElementById('v-car').textContent = carSoc != null ? Math.round(carSoc) + ' %' : '–';
+
   // ── Node inactive dimming ──────────────────────────────────────────────
   document.getElementById('n-solar').classList.toggle('node-inactive',   !pvOn);
   document.getElementById('n-battery').classList.toggle('node-inactive', !battOn);
   document.getElementById('n-wallbox').classList.toggle('node-inactive', !wbOn);
+  document.getElementById('n-car').classList.toggle('node-inactive',     !wbOn);
 
   // ── Flow paths ─────────────────────────────────────────────────────────
   // Solar → House
@@ -655,6 +685,10 @@ function updateFlows() {
   const wbGridOn = wbOn && gridImp;
   setFlow('fp-wb-grid', wbGridOn, true);
   setFlowLabel('fl-wb-grid', wbGridOn ? fmtW(wbPower) : '', wbGridOn);
+
+  // Wallbox → Auto
+  setFlow('fp-wb-car', wbOn, false);
+  setFlowLabel('fl-wb-car', wbOn ? fmtW(wbPower) : '', wbOn);
 }
 
 // ── Apply incoming OID value (verbatim from energie.html) ─────────────────
@@ -666,6 +700,7 @@ function applyState(oid, val) {
     case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n;        updateFlows(); break;
     case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n;        updateFlows(); break;
     case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.carSoc:      live.carSoc      = isNaN(n) ? null : n;      updateFlows(); break;
     // remaining OIDs subscribed to keep parity with energie.html
     default: break;
   }
@@ -740,7 +775,8 @@ const DEFAULT_LABEL_STATE = {
   'lb-house':   { x: 770,  y: 370, size: 22 },
   'lb-battery': { x: 200,  y: 645, size: 22 },
   'lb-grid':    { x: 1270, y: 245, size: 22 },
-  'lb-wallbox': { x: 1175, y: 610, size: 22 },
+  'lb-wallbox': { x: 1175, y: 700, size: 22 },
+  'lb-car':     { x: 1460, y: 620, size: 22 },
 };
 
 function loadLabelState() {
