@@ -25,8 +25,15 @@ html, body {
   width: 1920px;
   height: 1080px;
   transform-origin: top left;
-  background: url('img/dashboard/background-day.png') center / cover no-repeat;
   overflow: hidden;
+}
+
+#stage-bg {
+  position: absolute;
+  inset: 0;
+  background: url('img/dashboard/background.png') center / cover no-repeat;
+  mix-blend-mode: multiply;
+  z-index: 0;
 }
 
 /* ── Flow SVG (sits behind widgets) ───────────────────────────── */
@@ -155,6 +162,9 @@ body.edit-mode .widget:hover .w-img {
 #w-house:hover .w-img {
   filter: saturate(0.15) brightness(1.7) sepia(0.9) hue-rotate(155deg) saturate(6) drop-shadow(0 0 32px #00EEFF);
 }
+
+/* Grid: transparent background via screen blend */
+#w-grid .w-img { mix-blend-mode: screen; }
 
 /* Grid: active = cyan glow, inactive = dim grey */
 #w-grid.grid-on  .w-img { filter: drop-shadow(0 0 22px #00EEFF) brightness(1.1); }
@@ -335,6 +345,7 @@ body.edit-mode #btn-reset { display: flex; }
 <body>
 
 <div id="stage">
+  <div id="stage-bg"></div>
   <svg id="flow-svg"></svg>
   <div id="widget-layer">
 
