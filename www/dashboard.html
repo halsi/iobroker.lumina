@@ -842,7 +842,7 @@ function updateBattBlocks(soc) {
               : 'rgba(60,255,120,0.7)';
   document.querySelectorAll('.batt-blk').forEach(r => {
     const i = parseInt(r.dataset.i);
-    r.setAttribute('fill', i < filled ? color : 'transparent');
+    r.style.fill = i < filled ? color : 'transparent';
   });
 }
 
