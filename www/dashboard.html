@@ -692,10 +692,10 @@ function updateFlows() {
   const gridImp    = bezug        > THRESH;
   const gridExp    = einspeisung  > THRESH;
 
-  // PV → House
-  setFlow('c-pv-house', pvOn, false, '#00EEFF', pvOn ? fmtW(pv) : null);
-  // PV → Battery (only when charging)
-  setFlow('c-pv-batt', pvOn && battCharge, false, '#00EEFF', null);
+  // PV → House — label shows house load, not total PV
+  setFlow('c-pv-house', pvOn, false, '#00EEFF', pvOn && load > THRESH ? fmtW(load) : null);
+  // PV → Battery (only when charging) — label shows charging power
+  setFlow('c-pv-batt', pvOn && battCharge, false, '#00EEFF', battCharge ? fmtW(battPow) : null);
   // Battery ↔ House
   setFlow('c-batt-house', battCharge || battDisch, battCharge, '#00EEFF',
     (battCharge || battDisch) ? fmtW(Math.abs(battPow)) : null);

@@ -113,6 +113,7 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
 
   <!-- ── Flow power labels (shown on active paths) ─────────────── -->
   <text id="fl-pv"      x="990"  y="318" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#FFCC00" opacity="0"/>
+  <text id="fl-pv-batt" x="560" y="136" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#FFCC00" opacity="0"/>
   <text id="fl-batt"    x="590"  y="475" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#CC99FF" opacity="0"/>
   <text id="fl-grid"    x="1200" y="475" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#66CCBB" opacity="0"/>
   <text id="fl-wb"      x="1280" y="136" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#99CCFF" opacity="0"/>
@@ -245,10 +246,11 @@ function fitViewBox() {
     );
   }
   const labels = [
-    { id:'fl-pv',   x:990,  y:318 },
-    { id:'fl-batt', x:590,  y:475 },
-    { id:'fl-grid', x:1200, y:475 },
-    { id:'fl-wb',   x:1280, y:136 },
+    { id:'fl-pv',      x:990,  y:318 },
+    { id:'fl-pv-batt', x:560,  y:136 },
+    { id:'fl-batt',    x:590,  y:475 },
+    { id:'fl-grid',    x:1200, y:475 },
+    { id:'fl-wb',      x:1280, y:136 },
   ];
   labels.forEach(l => {
     const el = document.getElementById(l.id); if (!el) return;
@@ -321,13 +323,15 @@ function updateFlows() {
   const gridOn  = gridImp || gridExp;
   const gridPow = gridImp ? bezug : einspeisung;
 
-  // PV → House (always forward when active)
+  // PV → House (always forward when active) — label shows house load, not total PV
   const pvOn = pv > THRESH;
   setFlow('fp-pv', pvOn, false);
-  setFlowLabel('fl-pv', pvOn ? fmtW(pv) : '', pvOn, '#FFCC00');
+  setFlowLabel('fl-pv', pvOn && load > THRESH ? fmtW(load) : '', pvOn && load > THRESH, '#FFCC00');
   setText('vn-pv', pvOn ? fmtW(pv) : '–');
   // PV → Battery (L-shape, only when battery is charging)
-  setFlow('fp-pv-batt', pvOn && battCharge, false);
+  const pvBattOn = pvOn && battCharge;
+  setFlow('fp-pv-batt', pvBattOn, false);
+  setFlowLabel('fl-pv-batt', pvBattOn ? fmtW(battPow) : '', pvBattOn, '#FFCC00');
 
   // Battery ↔ House
   // Path direction: left(Battery) → right(House)
