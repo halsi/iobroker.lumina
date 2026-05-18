@@ -51,6 +51,45 @@
         "def": false
       },
       "native": {}
+    },
+    {
+      "_id": "Dashboard-Positions",
+      "type": "state",
+      "common": {
+        "name": "Lumina Dashboard Positions",
+        "type": "string",
+        "role": "json",
+        "read": true,
+        "write": true,
+        "def": ""
+      },
+      "native": {}
+    },
+    {
+      "_id": "Dashboard-Labels",
+      "type": "state",
+      "common": {
+        "name": "Lumina Dashboard Labels",
+        "type": "string",
+        "role": "json",
+        "read": true,
+        "write": true,
+        "def": ""
+      },
+      "native": {}
+    },
+    {
+      "_id": "Dashboard-Anchors",
+      "type": "state",
+      "common": {
+        "name": "Lumina Dashboard Anchors",
+        "type": "string",
+        "role": "json",
+        "read": true,
+        "write": true,
+        "def": ""
+      },
+      "native": {}
     }
   ]
 }

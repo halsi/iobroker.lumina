@@ -375,35 +375,14 @@ html, body {
 // ── Edit mode ──────────────────────────────────────────────────────────────
 const editMode = new URLSearchParams(location.search).has('edit');
 
-// ── Server-side config OIDs (ioBroker userdata) ────────────────────────────
-const CFG_POSITIONS = '0_userdata.0.Lumina.Dashboard-Positions';
-const CFG_LABELS    = '0_userdata.0.Lumina.Dashboard-Labels';
-const CFG_ANCHORS   = '0_userdata.0.Lumina.Dashboard-Anchors';
+// ── Server-side config OIDs (adapter namespace, created by io-package.json) ─
+const CFG_POSITIONS = 'lumina.0.Dashboard-Positions';
+const CFG_LABELS    = 'lumina.0.Dashboard-Labels';
+const CFG_ANCHORS   = 'lumina.0.Dashboard-Anchors';
 
 function saveToServer(oid, data) {
   if (!window._dashSocket || !window._dashSocket.connected) return;
   window._dashSocket.emit('setState', oid, { val: JSON.stringify(data), ack: false }, () => {});
-}
-
-function ensureCfgObjects(cb) {
-  const names = {
-    [CFG_POSITIONS]: 'Lumina Dashboard Positions',
-    [CFG_LABELS]:    'Lumina Dashboard Labels',
-    [CFG_ANCHORS]:   'Lumina Dashboard Anchors',
-  };
-  const oids = Object.keys(names);
-  let done = 0;
-  const finish = () => { if (++done === oids.length && cb) cb(); };
-  oids.forEach(oid => {
-    window._dashSocket.emit('getObject', oid, (err, obj) => {
-      if (obj) { finish(); return; }
-      window._dashSocket.emit('setObject', oid, {
-        type: 'state',
-        common: { name: names[oid], type: 'string', role: 'json', read: true, write: true, def: '' },
-        native: {},
-      }, finish);
-    });
-  });
 }
 
 function loadFromServer() {
@@ -412,12 +391,10 @@ function loadFromServer() {
     { oid: CFG_LABELS,    fn: d => { applyLabelState(d); try { localStorage.setItem('holo_labels',    JSON.stringify(d)); } catch(e){} } },
     { oid: CFG_ANCHORS,   fn: d => { applyAnchorState(d); updatePaths(); try { localStorage.setItem('holo_anchors', JSON.stringify(d)); } catch(e){} } },
   ];
-  ensureCfgObjects(() => {
-    tasks.forEach(({ oid, fn }) => {
-      window._dashSocket.emit('getStates', [oid], (err, states) => {
-        if (!states || !states[oid] || states[oid].val == null) return;
-        try { fn(JSON.parse(states[oid].val)); } catch(e) {}
-      });
+  tasks.forEach(({ oid, fn }) => {
+    window._dashSocket.emit('getStates', [oid], (err, states) => {
+      if (!states || !states[oid] || !states[oid].val) return;
+      try { fn(JSON.parse(states[oid].val)); } catch(e) {}
     });
   });
 }
