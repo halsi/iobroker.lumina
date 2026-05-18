@@ -146,13 +146,34 @@ body.edit-mode .widget:hover .w-img {
 #w-pool    { --wc: #00EEFF; }
 #w-car     { --wc: #00EEFF; }
 
+/* Holographic cyan filter for solar, house, grid images */
+#w-solar .w-img,
+#w-house .w-img,
+#w-grid  .w-img {
+  filter: saturate(0.15) brightness(1.5) sepia(0.9) hue-rotate(155deg) saturate(5) drop-shadow(0 0 18px #00EEFF);
+}
+#w-solar:hover .w-img,
+#w-house:hover .w-img,
+#w-grid:hover  .w-img {
+  filter: saturate(0.15) brightness(1.7) sepia(0.9) hue-rotate(155deg) saturate(6) drop-shadow(0 0 32px #00EEFF);
+}
+
 /* Active glow pulse on image */
 .widget.w-active .w-img {
   animation: wpulse 2.5s ease-in-out infinite;
 }
+#w-solar.w-active .w-img,
+#w-house.w-active .w-img,
+#w-grid.w-active  .w-img {
+  animation: wpulse-holo 2.5s ease-in-out infinite;
+}
 @keyframes wpulse {
   0%, 100% { filter: drop-shadow(0 0 16px var(--wc)); }
   50%       { filter: drop-shadow(0 0 36px var(--wc)) brightness(1.15); }
+}
+@keyframes wpulse-holo {
+  0%, 100% { filter: saturate(0.15) brightness(1.5) sepia(0.9) hue-rotate(155deg) saturate(5) drop-shadow(0 0 18px #00EEFF); }
+  50%       { filter: saturate(0.15) brightness(1.8) sepia(0.9) hue-rotate(155deg) saturate(7) drop-shadow(0 0 40px #00EEFF); }
 }
 
 /* ── Fixed controls (outside stage, scale with viewport) ──────── */
@@ -431,12 +452,12 @@ let positions = {};
 
 // ── Flow connections ──────────────────────────────────────────────────────
 const CONNS = [
-  { id: 'c-pv-house',   from: 'solar',   to: 'house',   color: '#FFCC00' },
-  { id: 'c-pv-batt',    from: 'solar',   to: 'battery', color: '#FFCC00' },
-  { id: 'c-batt-house', from: 'battery', to: 'house',   color: '#CC99FF' },
-  { id: 'c-house-grid', from: 'house',   to: 'grid',    color: '#66CCBB' },
-  { id: 'c-pv-wb',      from: 'solar',   to: 'wallbox', color: '#99CCFF' },
-  { id: 'c-wb-car',     from: 'wallbox', to: 'car',     color: '#FF9900' },
+  { id: 'c-pv-house',   from: 'solar',   to: 'house',   color: '#00EEFF' },
+  { id: 'c-pv-batt',    from: 'solar',   to: 'battery', color: '#00EEFF' },
+  { id: 'c-batt-house', from: 'battery', to: 'house',   color: '#00EEFF' },
+  { id: 'c-house-grid', from: 'house',   to: 'grid',    color: '#00EEFF' },
+  { id: 'c-pv-wb',      from: 'solar',   to: 'wallbox', color: '#00EEFF' },
+  { id: 'c-wb-car',     from: 'wallbox', to: 'car',     color: '#00EEFF' },
 ];
 
 // SVG element references
@@ -626,21 +647,19 @@ function updateFlows() {
   const gridExp    = einspeisung  > THRESH;
 
   // PV → House
-  setFlow('c-pv-house', pvOn, false, '#FFCC00', pvOn ? fmtW(pv) : null);
+  setFlow('c-pv-house', pvOn, false, '#00EEFF', pvOn ? fmtW(pv) : null);
   // PV → Battery (only when charging)
-  setFlow('c-pv-batt', pvOn && battCharge, false, '#FFCC00', null);
+  setFlow('c-pv-batt', pvOn && battCharge, false, '#00EEFF', null);
   // Battery ↔ House
-  const battColor = battDisch ? '#FF9900' : '#CC99FF';
-  setFlow('c-batt-house', battCharge || battDisch, battCharge, battColor,
+  setFlow('c-batt-house', battCharge || battDisch, battCharge, '#00EEFF',
     (battCharge || battDisch) ? fmtW(Math.abs(battPow)) : null);
   // House ↔ Grid
-  const gridColor = gridImp ? '#FF5555' : '#66CCBB';
-  setFlow('c-house-grid', gridImp || gridExp, gridImp, gridColor,
+  setFlow('c-house-grid', gridImp || gridExp, gridImp, '#00EEFF',
     (gridImp || gridExp) ? fmtW(gridImp ? bezug : einspeisung) : null);
   // Solar → Wallbox
-  setFlow('c-pv-wb', wbOn, false, '#99CCFF', wbOn ? fmtW(wbPower) : null);
+  setFlow('c-pv-wb', wbOn, false, '#00EEFF', wbOn ? fmtW(wbPower) : null);
   // Wallbox → Car (only when car present + charging)
-  setFlow('c-wb-car', wbOn && live.carPresent, false, '#FF9900', null);
+  setFlow('c-wb-car', wbOn && live.carPresent, false, '#00EEFF', null);
 
   // Active glow on relevant widgets
   document.getElementById('w-solar')  .classList.toggle('w-active', pvOn);
