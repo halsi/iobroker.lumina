@@ -609,6 +609,8 @@ const OIDs = {
   battSoc:     'bydhvs.0.State.SOC',
   battRem:     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
   wbPower:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
+  wbPowerGrid: '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Grid',
+  wbPowerPV:   '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
   carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
   nacht:       '0_userdata.0.Generic.Nacht',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
@@ -618,7 +620,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, carSoc: null, battSoc: null, nacht: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -648,18 +650,20 @@ function setFlowLabel(id, text, visible) {
 
 // ── Update node labels and flow animations from live state ─────────────────
 function updateFlows() {
-  const { pv, load, bezug, einspeisung, wbPower } = live;
+  const { pv, load, bezug, einspeisung, wbPower, wbPowerGrid, wbPowerPV } = live;
+
+  // Grid split: how much goes to house vs wallbox
+  const bezugHaus = Math.max(0, bezug - wbPowerGrid);
 
   // Battery net power: positive = charging, negative = discharging
   const battPow    = pv + bezug - einspeisung - load - wbPower;
   const battCharge = battPow >  THRESH;
   const battDisch  = battPow < -THRESH;
-  const battOn     = battCharge || battDisch;
 
   // Grid
-  const gridImp = bezug       > THRESH;
-  const gridExp = einspeisung > THRESH;
-  const gridOn  = gridImp || gridExp;
+  const gridImp    = bezug       > THRESH;
+  const gridExp    = einspeisung > THRESH;
+  const gridOn     = gridImp || gridExp;
 
   // PV
   const pvOn = pv > THRESH;
@@ -668,18 +672,13 @@ function updateFlows() {
   const wbOn = wbPower > THRESH;
 
   // ── Node value spans ───────────────────────────────────────────────────
-  // v-solar
   document.getElementById('v-solar').textContent = pvOn ? fmtW(pv) : '–';
-
-  // v-house
   document.getElementById('v-house').textContent = fmtW(load);
 
-  // v-battery
   const { battSoc } = live;
   document.getElementById('v-battery').textContent = battSoc != null ? Math.round(battSoc) + ' %' : '–';
   updateBattBlocks(battSoc);
 
-  // v-grid
   const gridEl = document.getElementById('v-grid');
   if (gridImp) {
     gridEl.textContent = fmtW(bezug);
@@ -692,40 +691,43 @@ function updateFlows() {
     gridEl.style.color = '#fff';
   }
 
-  // v-wallbox
   document.getElementById('v-wallbox').textContent = wbOn ? fmtW(wbPower) : '–';
 
-  // v-car (SOC %)
   const { carSoc } = live;
   document.getElementById('v-car').textContent = carSoc != null ? Math.round(carSoc) + ' %' : '–';
 
   // ── Flow paths ─────────────────────────────────────────────────────────
-  // Solar → House
-  setFlow('fp-pv-house', pvOn, false);
-  setFlowLabel('fl-pv-house', pvOn && load > THRESH ? fmtW(load) : '', pvOn && load > THRESH);
+  // PV → House (PV share of house load)
+  const pvToHouse = Math.max(0, load - bezugHaus);
+  const pvHouseOn = pvOn && pvToHouse > THRESH;
+  setFlow('fp-pv-house', pvHouseOn, false);
+  setFlowLabel('fl-pv-house', pvHouseOn ? fmtW(pvToHouse) : '', pvHouseOn);
 
-  // Solar → Battery (only when charging)
+  // PV → Battery (only when charging)
   const pvBattOn = pvOn && battCharge;
   setFlow('fp-pv-batt', pvBattOn, false);
   setFlowLabel('fl-pv-batt', pvBattOn ? fmtW(battPow) : '', pvBattOn);
 
   // Battery → House (only when discharging)
-  setFlow('fp-batt-house', battDisch, false);
-  setFlowLabel('fl-batt-house', battDisch ? fmtW(Math.abs(battPow)) : '', battDisch);
+  const battDisch2 = battPow < -THRESH;
+  setFlow('fp-batt-house', battDisch2, false);
+  setFlowLabel('fl-batt-house', battDisch2 ? fmtW(Math.abs(battPow)) : '', battDisch2);
 
-  // House ↔ Grid: forward = export (house→grid), reverse = import (grid→house)
-  setFlow('fp-house-grid', gridOn, gridImp);
-  setFlowLabel('fl-house-grid', gridOn ? fmtW(gridImp ? bezug : einspeisung) : '', gridOn);
+  // Grid ↔ House: import = bezug minus what goes to wallbox; export = einspeisung
+  const houseGridImp = bezugHaus > THRESH;
+  const houseGridOn  = houseGridImp || gridExp;
+  setFlow('fp-house-grid', houseGridOn, houseGridImp);
+  setFlowLabel('fl-house-grid', houseGridOn ? fmtW(houseGridImp ? bezugHaus : einspeisung) : '', houseGridOn);
 
-  // Solar → Wallbox (solar surplus to EV charger)
-  const pvWbOn = pvOn && wbOn;
+  // PV → Wallbox
+  const pvWbOn = wbPowerPV > THRESH;
   setFlow('fp-pv-wb', pvWbOn, false);
-  setFlowLabel('fl-pv-wb', pvWbOn ? fmtW(wbPower) : '', pvWbOn);
+  setFlowLabel('fl-pv-wb', pvWbOn ? fmtW(wbPowerPV) : '', pvWbOn);
 
-  // Wallbox ← Grid (grid imports when solar insufficient for wallbox)
-  const wbGridOn = wbOn && gridImp;
+  // Grid → Wallbox
+  const wbGridOn = wbPowerGrid > THRESH;
   setFlow('fp-wb-grid', wbGridOn, true);
-  setFlowLabel('fl-wb-grid', wbGridOn ? fmtW(wbPower) : '', wbGridOn);
+  setFlowLabel('fl-wb-grid', wbGridOn ? fmtW(wbPowerGrid) : '', wbGridOn);
 
   // Wallbox → Auto
   setFlow('fp-wb-car', wbOn, false);
@@ -760,6 +762,8 @@ function applyState(oid, val) {
     case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n;        updateFlows(); break;
     case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n;        updateFlows(); break;
     case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.wbPowerGrid: live.wbPowerGrid = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.wbPowerPV:   live.wbPowerPV   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
     case OIDs.carSoc:      live.carSoc      = isNaN(n) ? null : n;      updateFlows(); break;
     case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n;      updateFlows(); break;
     case OIDs.nacht:       live.nacht       = !!val;                     updateSolarImg(); break;
