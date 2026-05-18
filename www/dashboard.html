@@ -71,9 +71,6 @@ html, body {
   transition: opacity 0.3s;
 }
 
-.holo-node.node-inactive img {
-  opacity: 0.45;
-}
 
 .holo-label {
   position: absolute;
@@ -689,12 +686,6 @@ function updateFlows() {
   // v-car (SOC %)
   const { carSoc } = live;
   document.getElementById('v-car').textContent = carSoc != null ? Math.round(carSoc) + ' %' : '–';
-
-  // ── Node inactive dimming ──────────────────────────────────────────────
-  document.getElementById('n-solar').classList.toggle('node-inactive',   !pvOn);
-  document.getElementById('n-battery').classList.toggle('node-inactive', !battOn);
-  document.getElementById('n-wallbox').classList.toggle('node-inactive', !wbOn);
-  document.getElementById('n-car').classList.toggle('node-inactive',     !wbOn);
 
   // ── Flow paths ─────────────────────────────────────────────────────────
   // Solar → House
