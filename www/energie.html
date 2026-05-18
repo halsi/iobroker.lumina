@@ -271,6 +271,8 @@ const OIDs = {
   battSoc:     'bydhvs.0.State.SOC',
   battRem:     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
   wbPower:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
+  wbPowerGrid: '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Grid',
+  wbPowerPV:   '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -278,7 +280,7 @@ const OIDs = {
 };
 
 // ── Live values ────────────────────────────────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0 };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0 };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -309,19 +311,24 @@ function setFlowLabel(id, text, visible, color) {
 
 // ── Update flows from live state ───────────────────────────────────────────
 function updateFlows() {
-  const { pv, load, bezug, einspeisung, wbPower } = live;
+  const { pv, load, bezug, einspeisung, wbPower, wbPowerGrid, wbPowerPV } = live;
+
+  // Net grid: positive = importing, negative = exporting (3-phase meter fix)
+  const netGrid  = bezug - einspeisung;
+  const effBezug = Math.max(0,  netGrid);
+  const effEinsp = Math.max(0, -netGrid);
 
   // Battery net power: positive = charging, negative = discharging
-  const battPow = pv + bezug - einspeisung - load - wbPower;
+  const battPow = pv + effBezug - effEinsp - load - wbPower;
   const battCharge = battPow > THRESH;
   const battDisch  = battPow < -THRESH;
   const battOn     = battCharge || battDisch;
 
   // Grid
-  const gridImp = bezug       > THRESH;
-  const gridExp = einspeisung > THRESH;
+  const gridImp = effBezug > THRESH;
+  const gridExp = effEinsp > THRESH;
   const gridOn  = gridImp || gridExp;
-  const gridPow = gridImp ? bezug : einspeisung;
+  const gridPow = gridImp ? effBezug : effEinsp;
 
   // PV → House (always forward when active) — label shows house load, not total PV
   const pvOn = pv > THRESH;
@@ -366,10 +373,11 @@ function updateFlows() {
   }
 
   // Wallbox: Solar → WB (horizontal) always when charging
-  // WB → Grid (vertical) only when grid is also importing (wallbox draws from grid)
+  // WB → Grid (vertical) only when wallbox draws from grid
   const wbOn = wbPower > THRESH;
+  const wbFromGrid = wbPowerGrid > THRESH;
   setFlow('fp-wb-pv',   wbOn, false);
-  setFlow('fp-wb-grid', wbOn && gridImp, false);
+  setFlow('fp-wb-grid', wbFromGrid, false);
   setFlowLabel('fl-wb', wbOn ? fmtW(wbPower) : '', wbOn, '#99CCFF');
   setText('vn-wb', wbOn ? fmtW(wbPower) : '–');
   const wbRing = el('wb-ring');
@@ -388,6 +396,8 @@ function applyState(oid, val) {
     case OIDs.bezug:       live.bezug       = isNaN(n) ? 0 : n; updateFlows(); break;
     case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n; updateFlows(); break;
     case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.wbPowerGrid: live.wbPowerGrid = isNaN(n) ? 0 : n;        updateFlows(); break;
+    case OIDs.wbPowerPV:   live.wbPowerPV   = isNaN(n) ? 0 : n;        updateFlows(); break;
 
     case OIDs.autarkie:
       setHTML('d-autarkie', isNaN(n) ? '–' : Math.round(n) + '<span class="u">%</span>');

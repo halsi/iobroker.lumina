@@ -29,6 +29,18 @@ html, body {
   z-index: 0;
 }
 
+#bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(5,7,13,0.45) 0%,
+    rgba(5,7,13,0.30) 40%,
+    rgba(5,7,13,0.55) 100%
+  );
+  z-index: 1;
+}
+
 #scene {
   position: relative;
   width: 100%;
@@ -250,6 +262,7 @@ html, body {
 <div id="edit-badge">EDIT MODE — drag nodes/labels · corner=resize · ±=font</div>
 
 <div id="bg" style="background-image:url('img/dashboard/background-day.png')"></div>
+<div id="bg-overlay"></div>
 <div id="scene">
 
   <!-- SVG flow overlay -->
