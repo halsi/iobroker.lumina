@@ -67,13 +67,12 @@ html, body {
 
 .holo-node img {
   display: block;
-  filter: drop-shadow(0 0 14px #6AAEFF) brightness(1.1);
   pointer-events: none;
-  transition: filter 0.3s;
+  transition: opacity 0.3s;
 }
 
 .holo-node.node-inactive img {
-  filter: drop-shadow(0 0 6px rgba(106,174,255,0.3)) brightness(0.55);
+  opacity: 0.45;
 }
 
 .node-label {
