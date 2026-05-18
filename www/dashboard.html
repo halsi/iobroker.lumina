@@ -385,16 +385,35 @@ function saveToServer(oid, data) {
   window._dashSocket.emit('setState', oid, { val: JSON.stringify(data), ack: false }, () => {});
 }
 
+function ensureCfgObjects(cb) {
+  const cfgObj = (name) => ({
+    type: 'state',
+    common: { name, type: 'string', role: 'json', read: true, write: true, def: '' },
+    native: {},
+  });
+  const defs = [
+    [CFG_POSITIONS, cfgObj('Lumina Dashboard Positions')],
+    [CFG_LABELS,    cfgObj('Lumina Dashboard Labels')],
+    [CFG_ANCHORS,   cfgObj('Lumina Dashboard Anchors')],
+  ];
+  let done = 0;
+  defs.forEach(([oid, obj]) => {
+    window._dashSocket.emit('extendObject', oid, obj, () => { if (++done === defs.length && cb) cb(); });
+  });
+}
+
 function loadFromServer() {
   const tasks = [
     { oid: CFG_POSITIONS, fn: d => { applyPositions(d); try { localStorage.setItem('holo_positions', JSON.stringify(d)); } catch(e){} } },
     { oid: CFG_LABELS,    fn: d => { applyLabelState(d); try { localStorage.setItem('holo_labels',    JSON.stringify(d)); } catch(e){} } },
     { oid: CFG_ANCHORS,   fn: d => { applyAnchorState(d); updatePaths(); try { localStorage.setItem('holo_anchors', JSON.stringify(d)); } catch(e){} } },
   ];
-  tasks.forEach(({ oid, fn }) => {
-    window._dashSocket.emit('getStates', [oid], (err, states) => {
-      if (!states || !states[oid] || states[oid].val == null) return;
-      try { fn(JSON.parse(states[oid].val)); } catch(e) {}
+  ensureCfgObjects(() => {
+    tasks.forEach(({ oid, fn }) => {
+      window._dashSocket.emit('getStates', [oid], (err, states) => {
+        if (!states || !states[oid] || states[oid].val == null) return;
+        try { fn(JSON.parse(states[oid].val)); } catch(e) {}
+      });
     });
   });
 }
