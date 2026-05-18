@@ -54,6 +54,10 @@ html, body {
 @keyframes dash     { to { stroke-dashoffset: -64; } }
 @keyframes dash-rev { to { stroke-dashoffset:  64; } }
 
+/* ── Battery SOC overlay ──────────────────────────────────────────────── */
+#batt-soc-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+.batt-blk { fill:transparent; mix-blend-mode:screen; transition:fill 0.8s; }
+
 /* ── Holo nodes ───────────────────────────────────────────────────────── */
 .holo-node {
   position: absolute;
@@ -128,6 +132,7 @@ html, body {
   color: #fff;
   min-height: 28px;
   line-height: 1.25;
+  margin-top: -0.6em;
 }
 
 /* ── Edit mode ────────────────────────────────────────────────────────── */
@@ -244,18 +249,18 @@ html, body {
     <path id="fp-wb-car"     class="flow-path" stroke="#52E5FF"/>
 
     <!-- Flow midpoint value labels -->
-    <text id="fl-pv-house"   font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#F5B14C"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
-    <text id="fl-pv-batt"    font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
-    <text id="fl-pv-wb"      font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
-    <text id="fl-batt-house" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
-    <text id="fl-house-grid" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
-    <text id="fl-wb-grid"    font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
-    <text id="fl-wb-car"     font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-pv-house"   font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#F5B14C"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-pv-batt"    font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-pv-wb"      font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-batt-house" font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-house-grid" font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-wb-grid"    font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-wb-car"     font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
   </svg>
 
   <!-- Holo nodes -->
   <div id="n-solar" class="holo-node">
-    <img src="img/dashboard/huawei.png" alt="Solar" style="width:180px;">
+    <img id="solar-img" src="img/dashboard/sonne.png" alt="Solar" style="width:180px;">
     <div class="resize-handle"></div>
   </div>
 
@@ -266,6 +271,15 @@ html, body {
 
   <div id="n-battery" class="holo-node">
     <img src="img/dashboard/battery.png" alt="Batterie" style="width:160px;">
+    <svg id="batt-soc-svg">
+      <!-- Block 6 = top, Block 1 = bottom; data-i=0 is bottom -->
+      <rect class="batt-blk" data-i="5" x="6%" y="12%" width="54%" height="11%" rx="3"/>
+      <rect class="batt-blk" data-i="4" x="6%" y="25%" width="54%" height="11%" rx="3"/>
+      <rect class="batt-blk" data-i="3" x="6%" y="37%" width="54%" height="11%" rx="3"/>
+      <rect class="batt-blk" data-i="2" x="6%" y="49%" width="54%" height="11%" rx="3"/>
+      <rect class="batt-blk" data-i="1" x="6%" y="62%" width="54%" height="11%" rx="3"/>
+      <rect class="batt-blk" data-i="0" x="6%" y="74%" width="54%" height="11%" rx="3"/>
+    </svg>
     <div class="resize-handle"></div>
   </div>
 
@@ -290,7 +304,7 @@ html, body {
       <button class="lbl-btn lbl-minus">−</button>
       <button class="lbl-btn lbl-plus">+</button>
     </div>
-    <span class="node-name">SOLAR</span><br>
+    <span class="node-name">PHOTOVOLTAIK</span><br>
     <span class="node-value" id="v-solar">–</span>
   </div>
   <div id="lb-house" class="holo-label" data-size="22">
@@ -580,7 +594,7 @@ function updatePaths() {
     if (lbl) {
       const mid = bezierMid(c1, c2);
       lbl.setAttribute('x', Math.round(mid.x));
-      lbl.setAttribute('y', Math.round(mid.y));
+      lbl.setAttribute('y', Math.round(mid.y) - 14);
     }
   });
 }
@@ -596,6 +610,7 @@ const OIDs = {
   battRem:     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
   wbPower:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
   carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
+  nacht:       '0_userdata.0.Generic.Nacht',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -603,7 +618,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, carSoc: null };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, carSoc: null, battSoc: null, nacht: false };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -660,12 +675,9 @@ function updateFlows() {
   document.getElementById('v-house').textContent = fmtW(load);
 
   // v-battery
-  if (battOn) {
-    document.getElementById('v-battery').textContent =
-      (battCharge ? '↑' : '↓') + ' ' + fmtW(Math.abs(battPow));
-  } else {
-    document.getElementById('v-battery').textContent = '–';
-  }
+  const { battSoc } = live;
+  document.getElementById('v-battery').textContent = battSoc != null ? Math.round(battSoc) + ' %' : '–';
+  updateBattBlocks(battSoc);
 
   // v-grid
   const gridEl = document.getElementById('v-grid');
@@ -720,6 +732,25 @@ function updateFlows() {
   setFlowLabel('fl-wb-car', wbOn ? fmtW(wbPower) : '', wbOn);
 }
 
+// ── Solar / Moon image switcher ───────────────────────────────────────────
+function updateSolarImg() {
+  const img = document.getElementById('solar-img');
+  if (!img) return;
+  img.src = live.nacht ? 'img/dashboard/mond.png' : 'img/dashboard/sonne.png';
+}
+
+// ── Battery SOC block visualisation ───────────────────────────────────────
+function updateBattBlocks(soc) {
+  const filled = soc == null ? 0 : Math.ceil((soc / 100) * 6);
+  const color = filled <= 1 ? 'rgba(255,60,60,0.45)'
+              : filled <= 2 ? 'rgba(255,200,0,0.45)'
+              : 'rgba(60,255,120,0.45)';
+  document.querySelectorAll('.batt-blk').forEach(r => {
+    const i = parseInt(r.dataset.i);
+    r.setAttribute('fill', i < filled ? color : 'transparent');
+  });
+}
+
 // ── Apply incoming OID value (verbatim from energie.html) ─────────────────
 function applyState(oid, val) {
   const n = parseFloat(val);
@@ -730,6 +761,8 @@ function applyState(oid, val) {
     case OIDs.einspeisung: live.einspeisung = isNaN(n) ? 0 : n;        updateFlows(); break;
     case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
     case OIDs.carSoc:      live.carSoc      = isNaN(n) ? null : n;      updateFlows(); break;
+    case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n;      updateFlows(); break;
+    case OIDs.nacht:       live.nacht       = !!val;                     updateSolarImg(); break;
     // remaining OIDs subscribed to keep parity with energie.html
     default: break;
   }
