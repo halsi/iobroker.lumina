@@ -66,7 +66,7 @@ html, body {
   fill: none;
   stroke-width: 1.5;
   stroke-dasharray: none;
-  opacity: 0.18;
+  opacity: 0.23;
   transition: opacity 0.4s;
 }
 .flow-path.flow-active {
@@ -350,7 +350,7 @@ html, body {
   </div>
 
   <div id="n-house" class="holo-node">
-    <img src="img/dashboard/home.png" alt="Haus" style="width:240px;">
+    <img id="haus-img" src="img/dashboard/haus.png" alt="Haus" style="width:240px;">
     <div class="resize-handle"></div>
   </div>
 
@@ -374,11 +374,6 @@ html, body {
     <div class="resize-handle"></div>
   </div>
 
-  <div id="n-haus" class="holo-node">
-    <img id="haus-img" src="img/dashboard/haus.png" alt="Haus" style="width:480px;">
-    <div class="resize-handle"></div>
-  </div>
-
   <div id="n-heizung" class="holo-node">
     <img src="img/dashboard/heizung.png" alt="Heizung" style="width:160px;">
     <div class="resize-handle"></div>
@@ -396,6 +391,11 @@ html, body {
 
   <div id="n-tomaten" class="holo-node">
     <img src="img/dashboard/tomaten.png" alt="Tomaten" style="width:160px;">
+    <div class="resize-handle"></div>
+  </div>
+
+  <div id="n-gurken" class="holo-node">
+    <img src="img/dashboard/gurken.png" alt="Gurken" style="width:120px;">
     <div class="resize-handle"></div>
   </div>
 
@@ -506,6 +506,14 @@ html, body {
     <span class="node-name" style="color:#6AAEFF;">BODENFEUCHTE</span><br>
     <span class="node-value" id="v-tomaten">–</span>
   </div>
+  <div id="lb-gurken" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#6AAEFF;">BODENFEUCHTE</span><br>
+    <span class="node-value" id="v-gurken">–</span>
+  </div>
 
   <!-- Flow anchors: 2 per flow (each endpoint independently draggable in edit mode) -->
   <!-- Solar → Haus -->
@@ -603,11 +611,11 @@ const NODE_META = {
   'n-grid':    { w: 140, h: 135 },
   'n-wallbox': { w: 190, h: 260 },
   'n-car':     { w: 220, h: 147 },
-  'n-haus':        { w: 480, h: 320 },
   'n-heizung':     { w: 160, h: 160 },
   'n-poolheizung': { w: 160, h: 160 },
   'n-hochbeet':    { w: 160, h: 160 },
   'n-tomaten':     { w: 160, h: 160 },
+  'n-gurken':      { w: 120, h: 180 },
 };
 
 // Default positions for ~1600×900 viewport
@@ -618,11 +626,11 @@ const DEFAULT_POSITIONS = {
   'n-grid':    { x: 1200, y: 100 },
   'n-wallbox': { x: 1080, y: 420 },
   'n-car':     { x: 1350, y: 560 },
-  'n-haus':        { x: 200,  y: 200 },
   'n-heizung':     { x: 780,  y: 570 },
   'n-poolheizung': { x: 600,  y: 570 },
   'n-hochbeet':    { x: 420,  y: 570 },
   'n-tomaten':     { x: 240,  y: 570 },
+  'n-gurken':      { x:  80,  y: 570 },
 };
 
 // ── Load/save positions ────────────────────────────────────────────────────
@@ -1130,6 +1138,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-poolheizung': { x: 680,  y: 730, size: 22 },
   'lb-hochbeet':    { x: 500,  y: 730, size: 22 },
   'lb-tomaten':     { x: 320,  y: 730, size: 22 },
+  'lb-gurken':      { x: 140,  y: 730, size: 22 },
 };
 
 function loadLabelState() {
