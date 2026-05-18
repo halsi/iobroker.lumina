@@ -259,7 +259,7 @@ html, body {
 }
 
 /* ── Car popup modal ──────────────────────────────────────────────────── */
-#car-popup-backdrop {
+#car-popup-backdrop, #pool-popup-backdrop {
   display: none;
   position: fixed;
   inset: 0;
@@ -269,7 +269,17 @@ html, body {
   align-items: center;
   justify-content: center;
 }
-#car-popup-backdrop.open { display: flex; }
+#car-popup-backdrop.open, #pool-popup-backdrop.open { display: flex; }
+
+#pool-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(68,136,255,0.45);
+  border-radius: 18px;
+  width: 320px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(68,136,255,0.18), 0 0 80px rgba(68,136,255,0.08);
+  animation: cpp-in 0.18s ease;
+}
 
 #car-popup-card {
   background: rgba(10,16,32,0.97);
@@ -352,7 +362,11 @@ html, body {
   </div>
 
   <div id="n-house" class="holo-node">
-    <img id="haus-img" src="img/dashboard/haus.png" alt="Haus" style="width:240px;">
+    <div style="position:relative;display:inline-block;line-height:0;">
+      <img id="haus-img" src="img/dashboard/haus.png" alt="Haus" style="width:240px;">
+      <!-- Transparent pool click zone: pool occupies ~7.5-25.6% left, 61.5-76.9% top of the image -->
+      <div id="pool-clickzone" style="position:absolute;left:7.5%;top:61.5%;width:18.1%;height:15.4%;cursor:pointer;-webkit-tap-highlight-color:transparent;"></div>
+    </div>
     <div class="resize-handle"></div>
   </div>
 
@@ -563,6 +577,18 @@ html, body {
       <div class="cpp-row"><span class="cpp-lbl">KM-Stand</span><span class="cpp-val" id="cpp-km">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">EUR / 100 km</span><span class="cpp-val" id="cpp-cost">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">Wallbox verbunden</span><span class="cpp-val" id="cpp-wb">–</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Pool popup modal ─────────────────────────────────────────────── -->
+<div id="pool-popup-backdrop" onclick="closePoolPopup()">
+  <div id="pool-popup-card" onclick="event.stopPropagation()">
+    <div class="cpp-header"><span class="cpp-dot"></span>Pool</div>
+    <div class="cpp-body">
+      <div class="cpp-row"><span class="cpp-lbl">Wassertemperatur</span><span class="cpp-val" id="ppp-temp">–</span></div>
+      <div class="cpp-row"><span class="cpp-lbl">pH-Wert</span><span class="cpp-val" id="ppp-ph">–</span></div>
+      <div class="cpp-row"><span class="cpp-lbl">ORP</span><span class="cpp-val" id="ppp-orp">–</span></div>
     </div>
   </div>
 </div>
@@ -868,6 +894,8 @@ const OIDs = {
   poolHeizTarget: 'tuya.0.72783082e09806145670.2',
   bodenfeuchte:   '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.moisture',
   poolAbdeckung:  '0_userdata.0.Pool.Abdeckung',
+  poolPH:         '0_userdata.0.Pool.Pool-PH-Wert',
+  poolORP:        '0_userdata.0.Pool.PoolORP',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -875,7 +903,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1049,6 +1077,8 @@ function applyState(oid, val) {
     case OIDs.vorlaufTemp:    live.vorlaufTemp    = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.poolHeizTarget: live.poolHeizTarget = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.bodenfeuchte:   live.bodenfeuchte   = isNaN(n) ? null : n; updateSensors(); break;
+    case OIDs.poolPH:  live.poolPH  = isNaN(n) ? null : n; updatePoolPopup(); break;
+    case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; updatePoolPopup(); break;
     case OIDs.poolAbdeckung: {
       live.poolAbdeckung = !!val;
       const hi = document.getElementById('haus-img');
@@ -1443,8 +1473,44 @@ function initAnchorDrag(anchorEl) {
 
   // Close on Escape key
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') window.closeCarPopup();
+    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); }
   });
+
+  // ── Pool popup ─────────────────────────────────────────────────────────────
+  function updatePoolPopup() {
+    const fmtTemp = v => v != null ? v.toFixed(1) + ' °C' : '–';
+    const fmtPH   = v => v != null ? v.toFixed(1) + ' pH' : '–';
+    const fmtORP  = v => v != null ? Math.round(v) + ' mV' : '–';
+    const t = document.getElementById('ppp-temp'); if (t) t.textContent = fmtTemp(live.poolTemp);
+    const p = document.getElementById('ppp-ph');   if (p) p.textContent = fmtPH(live.poolPH);
+    const o = document.getElementById('ppp-orp');  if (o) o.textContent = fmtORP(live.poolORP);
+  }
+
+  window.openPoolPopup = function() {
+    updatePoolPopup();
+    document.getElementById('pool-popup-backdrop').classList.add('open');
+  };
+
+  window.closePoolPopup = function() {
+    document.getElementById('pool-popup-backdrop').classList.remove('open');
+  };
+
+  // Pool clickzone — works on both haus.png states
+  const poolZone = document.getElementById('pool-clickzone');
+  if (poolZone) {
+    poolZone.addEventListener('click', e => {
+      if (editMode) return;
+      e.stopPropagation();
+      openPoolPopup();
+    });
+  }
+  // Also make lb-pool label clickable
+  const poolLabel = document.getElementById('lb-pool');
+  if (poolLabel) {
+    poolLabel.style.cursor = 'pointer';
+    poolLabel.style.webkitTapHighlightColor = 'transparent';
+    poolLabel.addEventListener('click', () => { if (!editMode) openPoolPopup(); });
+  }
 })();
 </script>
 
