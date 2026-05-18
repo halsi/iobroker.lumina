@@ -35,15 +35,21 @@ html, body {
   z-index: 10;
 }
 
+/* Flow labels draggable in edit mode */
+.edit-mode #flow-svg text { pointer-events: all; cursor: grab; }
+.edit-mode #flow-svg text:active { cursor: grabbing; }
+
 /* ── Flow path styles ─────────────────────────────────────────────────── */
 .flow-path {
   fill: none;
-  stroke-width: 2.5;
-  stroke-dasharray: 10 6;
-  opacity: 0;
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+  opacity: 0.08;
   transition: opacity 0.4s;
 }
 .flow-path.flow-active {
+  stroke-width: 2.5;
+  stroke-dasharray: 10 6;
   opacity: 1;
   animation: dash 1.2s linear infinite;
 }
@@ -125,6 +131,7 @@ html, body {
   letter-spacing: 2px;
   color: #B59CFF;
 }
+.node-name-orange { color: #F5B14C; }
 .node-value {
   display: block;
   font-size: 22px;
@@ -348,6 +355,16 @@ html, body {
     <span class="node-value" id="v-car">–</span>
   </div>
 
+  <!-- Sensor labels -->
+  <div id="lb-pool" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name node-name-orange">POOL</span><br>
+    <span class="node-value" id="v-pool">–</span>
+  </div>
+
   <!-- Flow anchors: 2 per flow (each endpoint independently draggable in edit mode) -->
   <!-- Solar → Haus -->
   <div id="anc-solar-haus" class="flow-anchor"><span class="anchor-label">Solar→Haus</span></div>
@@ -548,12 +565,18 @@ function loadAnchorState() {
   } catch(e) {}
   return null;
 }
+// ── Flow label offsets (dx/dy from auto-midpoint) ─────────────────────────
+const FLOW_LABEL_IDS = ['fl-pv-house','fl-pv-batt','fl-pv-wb','fl-batt-house','fl-house-grid','fl-wb-grid','fl-wb-car'];
+const flowLabelOffsets = {};
+FLOW_LABEL_IDS.forEach(id => { flowLabelOffsets[id] = { dx: 0, dy: 0 }; });
+
 function saveAnchorState() {
   const s = {};
   Object.keys(DEFAULT_ANCHORS).forEach(id => {
     const el = document.getElementById(id);
     if (el) s[id] = { x: parseFloat(el.style.left)||0, y: parseFloat(el.style.top)||0 };
   });
+  s._flowLabelOffsets = JSON.parse(JSON.stringify(flowLabelOffsets));
   try { localStorage.setItem('holo_anchors', JSON.stringify(s)); } catch(e) {}
   saveToServer(CFG_ANCHORS, s);
 }
@@ -565,6 +588,11 @@ function applyAnchorState(state) {
     el.style.left = s.x + 'px';
     el.style.top  = s.y + 'px';
   });
+  if (state && state._flowLabelOffsets) {
+    Object.keys(state._flowLabelOffsets).forEach(id => {
+      if (flowLabelOffsets[id]) flowLabelOffsets[id] = state._flowLabelOffsets[id];
+    });
+  }
 }
 function anchorCenter(id) {
   const el = document.getElementById(id);
@@ -593,9 +621,42 @@ function updatePaths() {
     path.setAttribute('d', bezierD(c1, c2));
     if (lbl) {
       const mid = bezierMid(c1, c2);
-      lbl.setAttribute('x', Math.round(mid.x));
-      lbl.setAttribute('y', Math.round(mid.y) - 14);
+      const off = flowLabelOffsets[labelId] || { dx: 0, dy: 0 };
+      lbl.setAttribute('x', Math.round(mid.x) + off.dx);
+      lbl.setAttribute('y', Math.round(mid.y) - 14 + off.dy);
     }
+  });
+}
+
+// ── Flow label drag (edit mode) ────────────────────────────────────────────
+function initFlowLabelDrag() {
+  FLOW_LABEL_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.cursor = 'grab';
+    el.addEventListener('mousedown', e => {
+      if (!editMode) return;
+      e.stopPropagation();
+      const off    = flowLabelOffsets[id];
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const origDx = off.dx;
+      const origDy = off.dy;
+      el.style.cursor = 'grabbing';
+      function onMove(ev) {
+        off.dx = origDx + (ev.clientX - startX);
+        off.dy = origDy + (ev.clientY - startY);
+        updatePaths();
+      }
+      function onUp() {
+        el.style.cursor = 'grab';
+        saveAnchorState();
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      }
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
   });
 }
 
@@ -613,6 +674,7 @@ const OIDs = {
   wbPowerPV:   '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
   carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
   nacht:       '0_userdata.0.Generic.Nacht',
+  poolTemp:    '0_userdata.0.Pool.Pooltemperatur',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -620,7 +682,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -734,6 +796,12 @@ function updateFlows() {
   setFlowLabel('fl-wb-car', wbOn ? fmtW(wbPower) : '', wbOn);
 }
 
+// ── Sensor label updates ───────────────────────────────────────────────────
+function updateSensors() {
+  const el = document.getElementById('v-pool');
+  if (el) el.textContent = live.poolTemp != null ? live.poolTemp.toFixed(1) + ' °C' : '–';
+}
+
 // ── Solar / Moon image switcher ───────────────────────────────────────────
 function updateSolarImg() {
   const img = document.getElementById('solar-img');
@@ -767,6 +835,7 @@ function applyState(oid, val) {
     case OIDs.carSoc:      live.carSoc      = isNaN(n) ? null : n;      updateFlows(); break;
     case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n;      updateFlows(); break;
     case OIDs.nacht:       live.nacht       = !!val;                     updateSolarImg(); break;
+    case OIDs.poolTemp:    live.poolTemp    = isNaN(n) ? null : n;       updateSensors();  break;
     // remaining OIDs subscribed to keep parity with energie.html
     default: break;
   }
@@ -845,6 +914,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-grid':    { x: 1270, y: 245, size: 22 },
   'lb-wallbox': { x: 1175, y: 700, size: 22 },
   'lb-car':     { x: 1460, y: 620, size: 22 },
+  'lb-pool':    { x: 100,  y: 500, size: 22 },
 };
 
 function loadLabelState() {
@@ -1019,6 +1089,7 @@ function initAnchorDrag(anchorEl) {
       const anc = document.getElementById(id);
       if (anc) initAnchorDrag(anc);
     });
+    initFlowLabelDrag();
   }
 
   // Redraw paths on viewport resize
