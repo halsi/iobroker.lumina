@@ -394,6 +394,64 @@ html, body {
 .shp-btn-disable  { background: #F5B14C; color: #000; }
 .shp-btn-inactive { background: #FF5555; color: #000; }
 
+/* ── Beregner popup ───────────────────────────────────────────────── */
+#beregner-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#beregner-popup-backdrop.open { display: flex; }
+#beregner-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(106,174,255,0.45);
+  border-radius: 18px;
+  width: 320px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(106,174,255,0.18), 0 0 80px rgba(106,174,255,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.bep-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(106,174,255,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #6AAEFF;
+  border-bottom: 1px solid rgba(106,174,255,0.2);
+}
+.bep-dot { width:8px; height:8px; border-radius:50%; background:#6AAEFF; flex-shrink:0; }
+.bep-status-block {
+  padding: 18px 16px 14px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.bep-status-lbl {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  margin-bottom: 8px;
+}
+.bep-status-val {
+  font-size: 28px; font-weight: 800; letter-spacing: 4px;
+  text-transform: uppercase;
+}
+.bep-body { padding: 6px 16px 14px; }
+.bep-btn-row { display: flex; gap: 10px; padding: 14px 0 6px; }
+.bep-btn {
+  flex: 1; padding: 10px 4px;
+  border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
+  text-transform: uppercase; cursor: pointer;
+  transition: filter 0.12s, transform 0.1s;
+}
+.bep-btn:hover  { filter: brightness(120%); }
+.bep-btn:active { transform: scale(0.96); filter: brightness(90%); }
+.bep-btn-on  { background: #44AA44; color: #000; }
+.bep-btn-off { background: #FF5555; color: #000; }
+
 /* ── Alarm fog ────────────────────────────────────────────────────── */
 /* ── Alarm fog — radial-gradient approach, zero filter, zero clip issues ── */
 /* @property enables CSS transitions on the custom color variable          */
@@ -556,6 +614,7 @@ html, body {
            style="position:absolute;bottom:0;left:0;width:160px;z-index:0;transition:opacity 0.4s;">
       <img id="beregner-active-img" src="img/dashboard/beregner-active.png" alt="Beregner aktiv"
            style="position:absolute;bottom:-26px;left:-17px;width:192px;z-index:1;opacity:0;transition:opacity 0.4s;">
+      <div id="beregner-clickzone" style="position:absolute;inset:0;cursor:pointer;z-index:5;-webkit-tap-highlight-color:transparent;"></div>
     </div>
     <div class="resize-handle"></div>
   </div>
@@ -772,6 +831,23 @@ html, body {
         <button class="shp-btn shp-btn-enable"   onclick="shieldAction('alarm.0.use.enable')">ENABLE</button>
         <button class="shp-btn shp-btn-disable"  onclick="shieldAction('alarm.0.use.disable')">DISABLE</button>
         <button class="shp-btn shp-btn-inactive" onclick="shieldAction('alarm.0.use.activate_sharp_inside')">INACTIVE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Beregner popup modal ──────────────────────────────────────────── -->
+<div id="beregner-popup-backdrop" onclick="closeBeregnerPopup()">
+  <div id="beregner-popup-card" onclick="event.stopPropagation()">
+    <div class="bep-header"><span class="bep-dot"></span>BEREGNER · GARTEN</div>
+    <div class="bep-status-block">
+      <div class="bep-status-lbl">STATUS</div>
+      <div class="bep-status-val" id="bep-status-val">–</div>
+    </div>
+    <div class="bep-body">
+      <div class="bep-btn-row">
+        <button class="bep-btn bep-btn-on"  onclick="beregnerAction(true)">AKTIVIEREN</button>
+        <button class="bep-btn bep-btn-off" onclick="beregnerAction(false)">DEAKTIVIEREN</button>
       </div>
     </div>
   </div>
@@ -1090,7 +1166,7 @@ const OIDs = {
   poolORP:        '0_userdata.0.Pool.PoolORP',
   alarmActivated:   'alarm.0.status.activated',
   alarmSharpInside: 'alarm.0.status.sharp_inside_activated',
-  beregnerActive:   '0_userdata.0.Test',
+  beregnerActive:   '0_userdata.0.Wasser.Gartenberegner',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -1315,6 +1391,26 @@ window.shieldAction = function(oid) {
   }
 };
 
+// ── Beregner popup ────────────────────────────────────────────────────────
+function updateBeregnerPopup() {
+  const statusEl = document.getElementById('bep-status-val');
+  if (!statusEl) return;
+  if (live.beregnerActive) {
+    statusEl.textContent = 'AKTIV';
+    statusEl.style.color = '#44AA44';
+  } else {
+    statusEl.textContent = 'INAKTIV';
+    statusEl.style.color = '#6AAEFF';
+  }
+}
+
+window.beregnerAction = function(val) {
+  if (window._dashSocket && window._dashSocket.connected) {
+    window._dashSocket.emit('setState', '0_userdata.0.Wasser.Gartenberegner-Schalter', { val: val, ack: false }, () => {});
+  }
+  closeBeregnerPopup();
+};
+
 // ── Beregner countdown timer ──────────────────────────────────────────────
 let _beregnerTimer   = null;
 let _beregnerSeconds = 0;
@@ -1359,6 +1455,8 @@ function updateBeregner(wasActive) {
   } else if (!live.beregnerActive) {
     _stopBeregnerTimer();            // → false: stop & reset display
   }
+  // keep popup in sync if open
+  if (document.getElementById('beregner-popup-backdrop').classList.contains('open')) updateBeregnerPopup();
 }
 
 // ── Battery SOC block visualisation ───────────────────────────────────────
@@ -1812,7 +1910,7 @@ function initAnchorDrag(anchorEl) {
 
   // Close on Escape key
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); window.closeShieldPopup(); }
+    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); window.closeShieldPopup(); window.closeBeregnerPopup(); }
   });
 
   // ── Edit-mode connector lines ──────────────────────────────────────────────
@@ -1894,6 +1992,30 @@ function initAnchorDrag(anchorEl) {
     poolLabel.style.cursor = 'pointer';
     poolLabel.style.webkitTapHighlightColor = 'transparent';
     poolLabel.addEventListener('click', () => { if (!editMode) openPoolPopup(); });
+  }
+
+  // ── Beregner popup ─────────────────────────────────────────────────────────
+  window.openBeregnerPopup = function() {
+    updateBeregnerPopup();
+    document.getElementById('beregner-popup-backdrop').classList.add('open');
+  };
+  window.closeBeregnerPopup = function() {
+    document.getElementById('beregner-popup-backdrop').classList.remove('open');
+  };
+
+  const beregnerZone = document.getElementById('beregner-clickzone');
+  if (beregnerZone) {
+    beregnerZone.addEventListener('click', e => {
+      if (editMode) return;
+      e.stopPropagation();
+      openBeregnerPopup();
+    });
+  }
+  const beregnerLabel = document.getElementById('lb-beregner');
+  if (beregnerLabel) {
+    beregnerLabel.style.cursor = 'pointer';
+    beregnerLabel.style.webkitTapHighlightColor = 'transparent';
+    beregnerLabel.addEventListener('click', () => { if (!editMode) openBeregnerPopup(); });
   }
 
   // ── Shield popup ───────────────────────────────────────────────────────────
