@@ -328,24 +328,26 @@ html, body {
 .cpp-batt-bar  { height:100%; border-radius:4px; background:#44AA44; transition:width 0.4s, background 0.4s; }
 
 /* ── Alarm fog ────────────────────────────────────────────────────── */
+/* Lives OUTSIDE #scene so overflow:hidden cannot clip filter:blur() */
 #alarm-fog {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 2;          /* above bg(0) + bg-overlay(1), below holo-nodes(3) */
   pointer-events: none;
 }
 .fog-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(60px);
   background-color: #F5B14C;   /* default: disabled/yellow — JS overrides */
-  opacity: 0.30;
+  opacity: 0.35;
   transition: background-color 2s ease, opacity 1.5s ease;
 }
-.fog-blob-1 { width: 520px; height: 420px; left: 30%; top:  5%; animation: fog-drift-a 10s ease-in-out infinite; }
-.fog-blob-2 { width: 420px; height: 360px; left: 26%; top:  2%; animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
-.fog-blob-3 { width: 360px; height: 320px; left: 37%; top: 12%; animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
-.fog-blob-4 { width: 300px; height: 260px; left: 32%; top:  0%; animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
+/* Centred on house area (DEFAULT_POSITIONS: n-house x:650 y:140, w:240) */
+.fog-blob-1 { width: 500px; height: 400px; left: 530px; top:  50px; animation: fog-drift-a 10s ease-in-out infinite; }
+.fog-blob-2 { width: 380px; height: 340px; left: 570px; top:  20px; animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
+.fog-blob-3 { width: 340px; height: 300px; left: 640px; top: 110px; animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
+.fog-blob-4 { width: 280px; height: 250px; left: 600px; top:  10px; animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
 
 @keyframes fog-drift-a {
   0%,100% { transform: translate(  0px,   0px) scale(1.00); }
@@ -369,15 +371,16 @@ html, body {
 
 <div id="bg" style="background-image:url('img/dashboard/background-day.png')"></div>
 <div id="bg-overlay"></div>
-<div id="scene">
 
-  <!-- Alarm fog — z:2, sits between bg-overlay and holo-nodes -->
-  <div id="alarm-fog">
-    <div class="fog-blob fog-blob-1"></div>
-    <div class="fog-blob fog-blob-2"></div>
-    <div class="fog-blob fog-blob-3"></div>
-    <div class="fog-blob fog-blob-4"></div>
-  </div>
+<!-- Alarm fog — outside #scene so overflow:hidden cannot clip filter:blur() -->
+<div id="alarm-fog">
+  <div class="fog-blob fog-blob-1"></div>
+  <div class="fog-blob fog-blob-2"></div>
+  <div class="fog-blob fog-blob-3"></div>
+  <div class="fog-blob fog-blob-4"></div>
+</div>
+
+<div id="scene">
 
   <!-- Edit-mode connector lines SVG -->
   <svg id="connector-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;display:none;"></svg>
