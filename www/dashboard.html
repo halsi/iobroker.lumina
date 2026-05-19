@@ -328,30 +328,35 @@ html, body {
 .cpp-batt-bar  { height:100%; border-radius:4px; background:#44AA44; transition:width 0.4s, background 0.4s; }
 
 /* ── Alarm fog ────────────────────────────────────────────────────── */
-/* Lives OUTSIDE #scene so overflow:hidden cannot clip filter:blur() */
+/* ── Alarm fog — radial-gradient approach, zero filter, zero clip issues ── */
+/* @property enables CSS transitions on the custom color variable          */
+@property --fog-col {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(245, 177, 76, 0.42);   /* disabled = LCARS orange */
+}
+
 #alarm-fog {
   position: absolute;
   inset: 0;
-  z-index: 2;          /* above bg(0)+bg-overlay(1), below holo-nodes(3) = behind house */
+  z-index: 2;          /* above bg(0)+bg-overlay(1), below holo-nodes(3) */
   pointer-events: none;
+  --fog-col: rgba(245, 177, 76, 0.42);
+  transition: --fog-col 2s ease;
 }
-/* In edit mode fog floats above nodes so it stays visible for repositioning */
-#alarm-fog.fog-edit {
-  z-index: 5;
-}
+#alarm-fog.fog-edit { z-index: 5; }   /* edit mode: in front of all nodes */
+
+/* Each blob is a large radial-gradient ellipse — soft edge without filter */
 .fog-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  background-color: #F5B14C;   /* default: disabled/yellow — JS overrides */
-  opacity: 0.35;
-  transition: background-color 2s ease, opacity 1.5s ease;
+  background: radial-gradient(ellipse at center, var(--fog-col) 0%, transparent 68%);
 }
-/* Centred on house area (DEFAULT_POSITIONS: n-house x:650 y:140, w:240) */
-.fog-blob-1 { width: 500px; height: 400px; left: 530px; top:  50px; animation: fog-drift-a 10s ease-in-out infinite; }
-.fog-blob-2 { width: 380px; height: 340px; left: 570px; top:  20px; animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
-.fog-blob-3 { width: 340px; height: 300px; left: 640px; top: 110px; animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
-.fog-blob-4 { width: 280px; height: 250px; left: 600px; top:  10px; animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
+/* Centred on house (DEFAULT n-house x:650 y:140 w:240 → centre ~770,248) */
+.fog-blob-1 { width: 620px; height: 500px; left: 460px; top:   0px; animation: fog-drift-a 10s ease-in-out infinite; }
+.fog-blob-2 { width: 500px; height: 420px; left: 510px; top: -20px; animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
+.fog-blob-3 { width: 440px; height: 380px; left: 570px; top:  80px; animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
+.fog-blob-4 { width: 380px; height: 320px; left: 540px; top: -10px; animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
 
 @keyframes fog-drift-a {
   0%,100% { transform: translate(  0px,   0px) scale(1.00); }
@@ -591,7 +596,7 @@ html, body {
       <button class="lbl-btn lbl-minus">−</button>
       <button class="lbl-btn lbl-plus">+</button>
     </div>
-    <span class="node-name" style="color:#CC2200;">SHIELD</span><br>
+    <span class="node-name" style="color:#FF5555;">SHIELD</span><br>
     <span class="node-value" id="v-shield">–</span>
   </div>
 
@@ -950,6 +955,7 @@ const OIDs = {
   wbPowerGrid: '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Grid',
   wbPowerPV:   '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
   carSoc:      '0_userdata.0.Auto.BYD-Sealion7.SoC',
+  carPresence: '0_userdata.0.Auto.BYD-Sealion7.Anwesenheit',
   nacht:       '0_userdata.0.Generic.Nacht',
   poolTemp:    '0_userdata.0.Pool.Pooltemperatur',
   tempOut:     'mqtt.0.ebusd.700.DisplayedOutsideTemp',
@@ -969,7 +975,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1054,7 +1060,7 @@ function updateFlows() {
   document.getElementById('v-wallbox').textContent = wbOn ? fmtW(wbPower) : '–';
 
   const { carSoc } = live;
-  document.getElementById('v-car').textContent = carSoc != null ? Math.round(carSoc) + ' %' : '–';
+  document.getElementById('v-car').textContent = carSoc != null ? 'SOC ' + Math.round(carSoc) + ' %' : '–';
 
   // ── Flow paths ─────────────────────────────────────────────────────────
   // PV → House (PV share of house load)
@@ -1119,18 +1125,15 @@ function updateSolarImg() {
 function updateAlarmFog() {
   const fog = document.getElementById('alarm-fog');
   if (!fog) return;
-  let color, opacity;
+  let col;
   if (live.alarmActivated) {
-    color = '#F07C7C'; opacity = 0.38;        // LCARS Salmon — alarm active
+    col = 'rgba(240, 124, 124, 0.45)';   // LCARS Salmon — alarm active
   } else if (live.alarmSharpInside) {
-    color = '#99FF99'; opacity = 0.32;        // LCARS Lime   — armed / inactive
+    col = 'rgba(153, 255, 153, 0.38)';   // LCARS Lime   — armed / inactive
   } else {
-    color = '#F5B14C'; opacity = 0.30;        // LCARS Orange — disabled
+    col = 'rgba(245, 177, 76,  0.42)';   // LCARS Orange — disabled
   }
-  fog.querySelectorAll('.fog-blob').forEach(b => {
-    b.style.backgroundColor = color;
-    b.style.opacity = String(opacity);
-  });
+  fog.style.setProperty('--fog-col', col);
 }
 
 function updateShieldLabel() {
@@ -1169,6 +1172,12 @@ function applyState(oid, val) {
     case OIDs.wbPowerGrid: live.wbPowerGrid = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
     case OIDs.wbPowerPV:   live.wbPowerPV   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
     case OIDs.carSoc:      live.carSoc      = isNaN(n) ? null : n;      updateFlows(); break;
+    case OIDs.carPresence: {
+      live.carPresence = (val === true || val === 'true' || val === 1 || val === '1');
+      const carImg = document.querySelector('#n-car img');
+      if (carImg) carImg.style.opacity = live.carPresence ? '1' : '0';
+      break;
+    }
     case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n;      updateFlows(); break;
     case OIDs.nacht:       live.nacht       = !!val;                     updateSolarImg(); break;
     case OIDs.poolTemp:    live.poolTemp    = isNaN(n) ? null : n;       updateSensors();  break;
@@ -1273,7 +1282,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-hochbeet':    { x: 500,  y: 730, size: 22 },
   'lb-tomaten':     { x: 320,  y: 730, size: 22 },
   'lb-gurken':      { x: 140,  y: 730, size: 22 },
-  'lb-shield':      { x: 770,  y: 440, size: 22 },
+  'lb-shield':      { x: 870,  y: 380, size: 22 },
 };
 
 function loadLabelState() {
