@@ -415,12 +415,12 @@ function applyState(oid, val) {
     case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
     case OIDs.wbPowerGrid: live.wbPowerGrid = isNaN(n) ? 0 : n;        updateFlows(); break;
     case OIDs.wbPowerPV:   live.wbPowerPV   = isNaN(n) ? 0 : n;        updateFlows(); break;
-    case OIDs.pvToLoad:    live.pvToLoad    = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.gridToLoad:  live.gridToLoad  = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.batToLoad:   live.batToLoad   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.pvToGrid:    live.pvToGrid    = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.gridToBat:   live.gridToBat   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.pvToBat:     live.pvToBat     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.pvToLoad:    live.pvToLoad    = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.gridToLoad:  live.gridToLoad  = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.batToLoad:   live.batToLoad   = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.pvToGrid:    live.pvToGrid    = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.gridToBat:   live.gridToBat   = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.pvToBat:     live.pvToBat     = isNaN(n) ? 0 : n; updateFlows(); break;
 
     case OIDs.autarkie:
       setHTML('d-autarkie', isNaN(n) ? '–' : Math.round(n) + '<span class="u">%</span>');

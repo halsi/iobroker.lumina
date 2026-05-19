@@ -1901,12 +1901,12 @@ function applyState(oid, val) {
       updateAllPipeFlows();
       break;
     }
-    case OIDs.pvToLoad:   live.pvToLoad   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.gridToLoad: live.gridToLoad = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.batToLoad:  live.batToLoad  = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.pvToGrid:   live.pvToGrid   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.gridToBat:  live.gridToBat  = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
-    case OIDs.pvToBat:    live.pvToBat    = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.pvToLoad:   live.pvToLoad   = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.gridToLoad: live.gridToLoad = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.batToLoad:  live.batToLoad  = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.pvToGrid:   live.pvToGrid   = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.gridToBat:  live.gridToBat  = isNaN(n) ? 0 : n; updateFlows(); break;
+    case OIDs.pvToBat:    live.pvToBat    = isNaN(n) ? 0 : n; updateFlows(); break;
     case OIDs.beregnerActive: {
       const prevActive = live.beregnerActive;
       live.beregnerActive = (val === true || val === 'true' || val === 1 || val === '1');
