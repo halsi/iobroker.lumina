@@ -1283,10 +1283,10 @@ function _pd(id, liveKey, pts) {
 }
 const WATER_PIPE_DEFS = [
   _pd('garten',    'gartenWasser', ['wph-garten-0',   'wph-garten-1',   'wph-garten-2',   'wph-garten-3']),
-  _pd('beregner',  null,           ['wph-beregner-0', 'wph-beregner-1', 'wph-beregner-2', 'wph-beregner-3']),
-  _pd('hochbeet',  null,           ['wph-hochbeet-0', 'wph-hochbeet-1', 'wph-hochbeet-2', 'wph-hochbeet-3']),
-  _pd('gieskanne', null,           ['wph-gieskanne-0','wph-gieskanne-1','wph-gieskanne-2','wph-gieskanne-3']),
-  _pd('pool',      null,           ['wph-pool-0',     'wph-pool-1',     'wph-pool-2',     'wph-pool-3']),
+  _pd('beregner',  'gartenWasser', ['wph-beregner-0', 'wph-beregner-1', 'wph-beregner-2', 'wph-beregner-3']),
+  _pd('hochbeet',  'gartenWasser', ['wph-hochbeet-0', 'wph-hochbeet-1', 'wph-hochbeet-2', 'wph-hochbeet-3']),
+  _pd('gieskanne', 'gartenWasser', ['wph-gieskanne-0','wph-gieskanne-1','wph-gieskanne-2','wph-gieskanne-3']),
+  _pd('pool',      'gartenWasser', ['wph-pool-0',     'wph-pool-1',     'wph-pool-2',     'wph-pool-3']),
 ];
 
 const DEFAULT_PIPE_POINTS = {
@@ -1880,7 +1880,7 @@ function applyState(oid, val) {
     case OIDs.alarmSharpInside: live.alarmSharpInside = !!val; updateShieldLabel(); break;
     case OIDs.gartenWasser: {
       live.gartenWasser = (val === true || val === 'true' || val === 1 || val === '1');
-      updatePipeFlow('garten', live.gartenWasser);
+      updateAllPipeFlows();
       break;
     }
     case OIDs.beregnerActive: {
