@@ -342,21 +342,22 @@ html, body {
   z-index: 2;          /* above bg(0)+bg-overlay(1), below holo-nodes(3) */
   pointer-events: none;
   --fog-col: rgba(245, 177, 76, 0.42);
+  --fog-cx: 770px;     /* updated by JS to match house centre */
+  --fog-cy: 248px;
   transition: --fog-col 2s ease;
 }
-#alarm-fog.fog-edit { z-index: 5; }   /* edit mode: in front of all nodes */
 
 /* Each blob is a large radial-gradient ellipse — soft edge without filter */
+/* Positions auto-centre on house via --fog-cx / --fog-cy (set by JS)      */
 .fog-blob {
   position: absolute;
   border-radius: 50%;
   background: radial-gradient(ellipse at center, var(--fog-col) 0%, transparent 68%);
 }
-/* Centred on house (DEFAULT n-house x:650 y:140 w:240 → centre ~770,248) */
-.fog-blob-1 { width: 620px; height: 500px; left: 460px; top:   0px; animation: fog-drift-a 10s ease-in-out infinite; }
-.fog-blob-2 { width: 500px; height: 420px; left: 510px; top: -20px; animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
-.fog-blob-3 { width: 440px; height: 380px; left: 570px; top:  80px; animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
-.fog-blob-4 { width: 380px; height: 320px; left: 540px; top: -10px; animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
+.fog-blob-1 { width: 620px; height: 500px; left: calc(var(--fog-cx) - 310px); top: calc(var(--fog-cy) - 320px); animation: fog-drift-a 10s ease-in-out infinite; }
+.fog-blob-2 { width: 500px; height: 420px; left: calc(var(--fog-cx) - 280px); top: calc(var(--fog-cy) - 350px); animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
+.fog-blob-3 { width: 440px; height: 380px; left: calc(var(--fog-cx) - 180px); top: calc(var(--fog-cy) - 220px); animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
+.fog-blob-4 { width: 380px; height: 320px; left: calc(var(--fog-cx) - 240px); top: calc(var(--fog-cy) - 300px); animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
 
 @keyframes fog-drift-a {
   0%,100% { transform: translate(  0px,   0px) scale(1.00); }
@@ -894,6 +895,7 @@ const FLOW_DEFS = [
 ];
 
 function updatePaths() {
+  updateFogPosition();
   FLOW_DEFS.forEach(({ pathId, labelId, a1, a2 }) => {
     const c1   = anchorCenter(a1);
     const c2   = anchorCenter(a2);
@@ -1121,17 +1123,32 @@ function updateSolarImg() {
     : "url('img/dashboard/background-day.png')";
 }
 
+// ── Fog position — always centred on n-house ──────────────────────────────
+function updateFogPosition() {
+  const house = document.getElementById('n-house');
+  const fog   = document.getElementById('alarm-fog');
+  if (!house || !fog) return;
+  const img = house.querySelector('img');
+  const iw  = parseFloat(img && img.style.width) || 240;
+  const meta = NODE_META['n-house'];
+  const ih  = meta ? meta.h * (iw / meta.w) : 215;
+  const cx  = (parseFloat(house.style.left) || 0) + iw / 2;
+  const cy  = (parseFloat(house.style.top)  || 0) + ih / 2;
+  fog.style.setProperty('--fog-cx', cx + 'px');
+  fog.style.setProperty('--fog-cy', cy + 'px');
+}
+
 // ── Alarm fog + shield label ───────────────────────────────────────────────
 function updateAlarmFog() {
   const fog = document.getElementById('alarm-fog');
   if (!fog) return;
   let col;
   if (live.alarmActivated) {
-    col = 'rgba(240, 124, 124, 0.45)';   // LCARS Salmon — alarm active
+    col = 'rgba(255,  85,  85, 0.45)';   // Battery-Rot   #FF5555
   } else if (live.alarmSharpInside) {
-    col = 'rgba(153, 255, 153, 0.38)';   // LCARS Lime   — armed / inactive
+    col = 'rgba( 68, 170,  68, 0.42)';   // Battery-Grün  #44AA44
   } else {
-    col = 'rgba(245, 177, 76,  0.42)';   // LCARS Orange — disabled
+    col = 'rgba(245, 177,  76, 0.42)';   // LCARS Orange  #F5B14C — disabled
   }
   fog.style.setProperty('--fog-col', col);
 }
@@ -1141,14 +1158,12 @@ function updateShieldLabel() {
   if (!valEl) return;
   if (live.alarmActivated) {
     valEl.textContent = 'ACTIVE';
-    valEl.style.color = '#F07C7C';
   } else if (live.alarmSharpInside) {
     valEl.textContent = 'INACTIVE';
-    valEl.style.color = '#99FF99';
   } else {
     valEl.textContent = 'DISABLED';
-    valEl.style.color = '#F5B14C';
   }
+  valEl.style.color = '#fff';   // always white like other node-values
   updateAlarmFog();
 }
 
@@ -1448,9 +1463,7 @@ function initAnchorDrag(anchorEl) {
   if (editMode) {
     document.getElementById('edit-badge').style.display = 'block';
     document.getElementById('scene').classList.add('edit-mode');
-    // Fog above nodes in edit mode so it stays visible for positioning
-    const fogEl = document.getElementById('alarm-fog');
-    if (fogEl) fogEl.classList.add('fog-edit');
+    // Fog auto-follows house — no manual positioning needed
     Object.keys(NODE_META).forEach(id => {
       const node = document.getElementById(id);
       if (node) { initDrag(node); initResize(node); }
