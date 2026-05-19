@@ -110,6 +110,8 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
   <path id="fp-wb-pv"   class="flow-line" d="M 1045,151 L 1515,151"  stroke="#99CCFF"/>
   <!-- Wallbox (1600,236) → Grid (1600,400): vertical -->
   <path id="fp-wb-grid" class="flow-line" d="M 1600,236  L 1600,400" stroke="#99CCFF"/>
+  <!-- Grid (1515,485) → Battery (405,485): routed below via y:560 -->
+  <path id="fp-grid-batt" class="flow-line" d="M 1515,485 L 1515,560 L 320,560 L 320,485" stroke="#FF9C7A" fill="none"/>
 
   <!-- ── Flow power labels (shown on active paths) ─────────────── -->
   <text id="fl-pv"      x="990"  y="318" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#FFCC00" opacity="0"/>
@@ -117,6 +119,7 @@ svg#flow-svg { flex: 1; width: 100%; display: block; }
   <text id="fl-batt"    x="590"  y="475" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#CC99FF" opacity="0"/>
   <text id="fl-grid"    x="1200" y="475" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#66CCBB" opacity="0"/>
   <text id="fl-wb"      x="1280" y="136" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#99CCFF" opacity="0"/>
+  <text id="fl-grid-batt" x="900" y="580" font-family="system-ui,sans-serif" font-size="15" font-weight="600" fill="#FF9C7A" opacity="0"/>
 
   <!-- ══ PV NODE (960, 151) ════════════════════════════════════════ -->
   <g transform="translate(960,151)">
@@ -273,6 +276,12 @@ const OIDs = {
   wbPower:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
   wbPowerGrid: '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Grid',
   wbPowerPV:   '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
+  pvToLoad:    '0_userdata.0.Photovoltaik.PvToLoad',
+  gridToLoad:  '0_userdata.0.Photovoltaik.GridToLoad',
+  batToLoad:   '0_userdata.0.Photovoltaik.BatToLoad',
+  pvToGrid:    '0_userdata.0.Photovoltaik.PvToGrid',
+  gridToBat:   '0_userdata.0.Photovoltaik.GridToBat',
+  pvToBat:     '0_userdata.0.Photovoltaik.PvToBat',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -280,7 +289,7 @@ const OIDs = {
 };
 
 // ── Live values ────────────────────────────────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0 };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -330,21 +339,24 @@ function updateFlows() {
   const gridOn  = gridImp || gridExp;
   const gridPow = gridImp ? effBezug : effEinsp;
 
-  // PV → House (always forward when active) — label shows house load, not total PV
+  // PV → House (direct OID)
   const pvOn = pv > THRESH;
-  setFlow('fp-pv', pvOn, false);
-  setFlowLabel('fl-pv', pvOn && load > THRESH ? fmtW(load) : '', pvOn && load > THRESH, '#FFCC00');
+  const pvHouseOn = live.pvToLoad > THRESH;
+  setFlow('fp-pv', pvHouseOn, false);
+  setFlowLabel('fl-pv', pvHouseOn ? fmtW(live.pvToLoad) : '', pvHouseOn, '#FFCC00');
   setText('vn-pv', pvOn ? fmtW(pv) : '–');
-  // PV → Battery (L-shape, only when battery is charging)
-  const pvBattOn = pvOn && battCharge;
-  setFlow('fp-pv-batt', pvBattOn, false);
-  setFlowLabel('fl-pv-batt', pvBattOn ? fmtW(battPow) : '', pvBattOn, '#FFCC00');
 
-  // Battery → House: only when discharging (charging comes via Solar→Battery L-path)
+  // PV → Battery (direct OID)
+  const pvBattOn = live.pvToBat > THRESH;
+  setFlow('fp-pv-batt', pvBattOn, false);
+  setFlowLabel('fl-pv-batt', pvBattOn ? fmtW(live.pvToBat) : '', pvBattOn, '#FFCC00');
+
+  // Battery → House (direct OID)
+  const batHouseOn = live.batToLoad > THRESH;
   const battColor = '#FF9900';
   el('fp-batt').style.stroke = battColor;
-  setFlow('fp-batt', battDisch, false);
-  setFlowLabel('fl-batt', battDisch ? fmtW(Math.abs(battPow)) : '', battDisch, battColor);
+  setFlow('fp-batt', batHouseOn, false);
+  setFlowLabel('fl-batt', batHouseOn ? fmtW(live.batToLoad) : '', batHouseOn, battColor);
   const bdEl = el('vn-batt-dir');
   if (bdEl) {
     bdEl.textContent = battCharge ? 'LADEN' : battDisch ? 'ENTLADEN' : '';
@@ -380,6 +392,11 @@ function updateFlows() {
   setFlow('fp-wb-grid', wbFromGrid, false);
   setFlowLabel('fl-wb', wbOn ? fmtW(wbPower) : '', wbOn, '#99CCFF');
   setText('vn-wb', wbOn ? fmtW(wbPower) : '–');
+
+  // Grid → Battery (direct OID)
+  const gridBattOn = live.gridToBat > THRESH;
+  setFlow('fp-grid-batt', gridBattOn, false);
+  setFlowLabel('fl-grid-batt', gridBattOn ? fmtW(live.gridToBat) : '', gridBattOn, '#FF9C7A');
   const wbRing = el('wb-ring');
   if (wbRing) wbRing.className.baseVal = wbOn ? 'node-ring' : 'node-ring node-ring-off';
 
@@ -398,6 +415,12 @@ function applyState(oid, val) {
     case OIDs.wbPower:     live.wbPower     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
     case OIDs.wbPowerGrid: live.wbPowerGrid = isNaN(n) ? 0 : n;        updateFlows(); break;
     case OIDs.wbPowerPV:   live.wbPowerPV   = isNaN(n) ? 0 : n;        updateFlows(); break;
+    case OIDs.pvToLoad:    live.pvToLoad    = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.gridToLoad:  live.gridToLoad  = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.batToLoad:   live.batToLoad   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.pvToGrid:    live.pvToGrid    = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.gridToBat:   live.gridToBat   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.pvToBat:     live.pvToBat     = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
 
     case OIDs.autarkie:
       setHTML('d-autarkie', isNaN(n) ? '–' : Math.round(n) + '<span class="u">%</span>');

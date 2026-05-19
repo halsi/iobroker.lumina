@@ -582,6 +582,7 @@ html, body {
     <path id="fp-house-grid" class="flow-path" stroke="#FF9C7A"/>
     <path id="fp-wb-grid"    class="flow-path" stroke="#FF9C7A"/>
     <path id="fp-wb-car"     class="flow-path" stroke="#52E5FF"/>
+    <path id="fp-grid-batt"  class="flow-path" stroke="#FF9C7A"/>
 
     <!-- ── Water pipes ── -->
     <g id="water-pipes-g">
@@ -673,6 +674,7 @@ html, body {
     <text id="fl-house-grid" font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-wb-grid"    font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-wb-car"     font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-grid-batt"  font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
   </svg>
 
   <!-- Holo nodes -->
@@ -907,6 +909,8 @@ html, body {
   <!-- Wallbox → Auto -->
   <div id="anc-wb-car"     class="flow-anchor"><span class="anchor-label">WB→Auto</span></div>
   <div id="anc-car-wb"     class="flow-anchor"><span class="anchor-label">Auto←WB</span></div>
+  <div id="anc-grid-batt"  class="flow-anchor"><span class="anchor-label">Netz→Batt</span></div>
+  <div id="anc-batt-grid"  class="flow-anchor"><span class="anchor-label">Batt←Netz</span></div>
 
 </div><!-- /#scene -->
 
@@ -1156,6 +1160,9 @@ const DEFAULT_ANCHORS = {
   // Wallbox → Auto
   'anc-wb-car':     { x: 1175, y: 580 },
   'anc-car-wb':     { x: 1390, y: 575 },
+  // Netz → Batterie (GridToBat)
+  'anc-grid-batt':  { x: 1250, y: 210 },
+  'anc-batt-grid':  { x: 200,  y: 525 },
 };
 
 function loadAnchorState() {
@@ -1173,7 +1180,7 @@ function loadAnchorState() {
   return null;
 }
 // ── Flow label offsets (dx/dy from auto-midpoint) ─────────────────────────
-const FLOW_LABEL_IDS = ['fl-pv-house','fl-pv-batt','fl-pv-wb','fl-batt-house','fl-pv-grid','fl-house-grid','fl-wb-grid','fl-wb-car'];
+const FLOW_LABEL_IDS = ['fl-pv-house','fl-pv-batt','fl-pv-wb','fl-batt-house','fl-pv-grid','fl-house-grid','fl-wb-grid','fl-wb-car','fl-grid-batt'];
 const flowLabelOffsets = {};
 FLOW_LABEL_IDS.forEach(id => { flowLabelOffsets[id] = { dx: 0, dy: 0 }; });
 
@@ -1217,6 +1224,7 @@ const FLOW_DEFS = [
   { pathId: 'fp-house-grid', labelId: 'fl-house-grid', a1: 'anc-haus-grid',  a2: 'anc-grid-haus'  },
   { pathId: 'fp-wb-grid',    labelId: 'fl-wb-grid',    a1: 'anc-wb-grid',    a2: 'anc-grid-wb'    },
   { pathId: 'fp-wb-car',     labelId: 'fl-wb-car',     a1: 'anc-wb-car',     a2: 'anc-car-wb'     },
+  { pathId: 'fp-grid-batt',  labelId: 'fl-grid-batt',  a1: 'anc-grid-batt',  a2: 'anc-batt-grid'  },
 ];
 
 function updatePaths() {
@@ -1546,6 +1554,12 @@ const OIDs = {
   alarmSharpInside: 'alarm.0.status.sharp_inside_activated',
   beregnerActive:   '0_userdata.0.Wasser.Gartenberegner',
   gartenWasser:     '0_userdata.0.Test',
+  pvToLoad:         '0_userdata.0.Photovoltaik.PvToLoad',
+  gridToLoad:       '0_userdata.0.Photovoltaik.GridToLoad',
+  batToLoad:        '0_userdata.0.Photovoltaik.BatToLoad',
+  pvToGrid:         '0_userdata.0.Photovoltaik.PvToGrid',
+  gridToBat:        '0_userdata.0.Photovoltaik.GridToBat',
+  pvToBat:          '0_userdata.0.Photovoltaik.PvToBat',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -1553,7 +1567,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, gartenWasser: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, gartenWasser: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1640,32 +1654,36 @@ function updateFlows() {
   const { carSoc } = live;
   document.getElementById('v-car').textContent = carSoc != null ? 'SOC ' + Math.round(carSoc) + ' %' : '–';
 
-  // ── Flow paths ─────────────────────────────────────────────────────────
-  // PV → House (PV share of house load)
-  const pvToHouse = Math.max(0, load - bezugHaus);
-  const pvHouseOn = pvOn && pvToHouse > THRESH;
+  // ── Flow paths (direct OID values) ────────────────────────────────────
+  // PV → House
+  const pvHouseOn = live.pvToLoad > THRESH;
   setFlow('fp-pv-house', pvHouseOn, false);
-  setFlowLabel('fl-pv-house', pvHouseOn ? fmtW(pvToHouse) : '', pvHouseOn);
+  setFlowLabel('fl-pv-house', pvHouseOn ? fmtW(live.pvToLoad) : '', pvHouseOn);
 
-  // PV → Battery (only when charging)
-  const pvBattOn = pvOn && battCharge;
+  // PV → Battery
+  const pvBattOn = live.pvToBat > THRESH;
   setFlow('fp-pv-batt', pvBattOn, false);
-  setFlowLabel('fl-pv-batt', pvBattOn ? fmtW(battPow) : '', pvBattOn);
+  setFlowLabel('fl-pv-batt', pvBattOn ? fmtW(live.pvToBat) : '', pvBattOn);
 
-  // Battery → House (only when discharging)
-  const battDisch2 = battPow < -THRESH;
-  setFlow('fp-batt-house', battDisch2, false);
-  setFlowLabel('fl-batt-house', battDisch2 ? fmtW(Math.abs(battPow)) : '', battDisch2);
+  // Battery → House
+  const batHouseOn = live.batToLoad > THRESH;
+  setFlow('fp-batt-house', batHouseOn, false);
+  setFlowLabel('fl-batt-house', batHouseOn ? fmtW(live.batToLoad) : '', batHouseOn);
 
-  // Solar → Netz (Einspeisung): solar excess fed into grid
-  const pvGridOn = gridExp;
+  // Solar → Netz (Einspeisung)
+  const pvGridOn = live.pvToGrid > THRESH;
   setFlow('fp-pv-grid', pvGridOn, false);
-  setFlowLabel('fl-pv-grid', pvGridOn ? fmtW(effEinsp) : '', pvGridOn);
+  setFlowLabel('fl-pv-grid', pvGridOn ? fmtW(live.pvToGrid) : '', pvGridOn);
 
-  // Netz → Haus (Bezug only): grid import for house consumption
-  const houseGridImp = bezugHaus > THRESH;
+  // Netz → Haus (Bezug)
+  const houseGridImp = live.gridToLoad > THRESH;
   setFlow('fp-house-grid', houseGridImp, false);
-  setFlowLabel('fl-house-grid', houseGridImp ? fmtW(bezugHaus) : '', houseGridImp);
+  setFlowLabel('fl-house-grid', houseGridImp ? fmtW(live.gridToLoad) : '', houseGridImp);
+
+  // Netz → Batterie (GridToBat)
+  const gridBattOn = live.gridToBat > THRESH;
+  setFlow('fp-grid-batt', gridBattOn, false);
+  setFlowLabel('fl-grid-batt', gridBattOn ? fmtW(live.gridToBat) : '', gridBattOn);
 
   // PV → Wallbox
   const pvWbOn = wbPowerPV > THRESH;
@@ -1883,6 +1901,12 @@ function applyState(oid, val) {
       updateAllPipeFlows();
       break;
     }
+    case OIDs.pvToLoad:   live.pvToLoad   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.gridToLoad: live.gridToLoad = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.batToLoad:  live.batToLoad  = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.pvToGrid:   live.pvToGrid   = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.gridToBat:  live.gridToBat  = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
+    case OIDs.pvToBat:    live.pvToBat    = isNaN(n) ? 0 : n * 1000; updateFlows(); break;
     case OIDs.beregnerActive: {
       const prevActive = live.beregnerActive;
       live.beregnerActive = (val === true || val === 'true' || val === 1 || val === '1');
