@@ -968,7 +968,7 @@ function loadAnchorState() {
   return null;
 }
 // ── Flow label offsets (dx/dy from auto-midpoint) ─────────────────────────
-const FLOW_LABEL_IDS = ['fl-pv-house','fl-pv-batt','fl-pv-wb','fl-batt-house','fl-house-grid','fl-wb-grid','fl-wb-car'];
+const FLOW_LABEL_IDS = ['fl-pv-house','fl-pv-batt','fl-pv-wb','fl-batt-house','fl-pv-grid','fl-house-grid','fl-wb-grid','fl-wb-car'];
 const flowLabelOffsets = {};
 FLOW_LABEL_IDS.forEach(id => { flowLabelOffsets[id] = { dx: 0, dy: 0 }; });
 
