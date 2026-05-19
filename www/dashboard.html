@@ -482,10 +482,10 @@ html, body {
 }
 /* Blobs centred well above house → glow peaks at roofline, fades before walls */
 /* +50px right (less subtracted from cx), +30% wider, centres at fog-cy-170  */
-.fog-blob-1 { width: 832px; height: 480px; left: calc(var(--fog-cx) - 250px); top: calc(var(--fog-cy) - 488px); animation: fog-drift-a 10s ease-in-out infinite; }
-.fog-blob-2 { width: 676px; height: 400px; left: calc(var(--fog-cx) - 230px); top: calc(var(--fog-cy) - 448px); animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
-.fog-blob-3 { width: 598px; height: 360px; left: calc(var(--fog-cx) -  90px); top: calc(var(--fog-cy) - 420px); animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
-.fog-blob-4 { width: 520px; height: 300px; left: calc(var(--fog-cx) - 190px); top: calc(var(--fog-cy) - 438px); animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
+.fog-blob-1 { width: 832px; height: 380px; left: calc(var(--fog-cx) - 250px); top: calc(var(--fog-cy) - 388px); animation: fog-drift-a 10s ease-in-out infinite; }
+.fog-blob-2 { width: 676px; height: 320px; left: calc(var(--fog-cx) - 230px); top: calc(var(--fog-cy) - 368px); animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
+.fog-blob-3 { width: 598px; height: 280px; left: calc(var(--fog-cx) -  90px); top: calc(var(--fog-cy) - 340px); animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
+.fog-blob-4 { width: 520px; height: 220px; left: calc(var(--fog-cx) - 190px); top: calc(var(--fog-cy) - 358px); animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
 
 @keyframes fog-drift-a {
   0%,100% { transform: translate(  0px,   0px) scale(1.00); }
@@ -1335,7 +1335,7 @@ function updateFogPosition() {
   const meta = NODE_META['n-house'];
   const ih  = meta ? meta.h * (iw / meta.w) : 215;
   const cx  = (parseFloat(house.style.left) || 0) + iw / 2;
-  const cy  = (parseFloat(house.style.top)  || 0) + ih / 2;
+  const cy  = (parseFloat(house.style.top)  || 0) + ih / 2 - 20;
   fog.style.setProperty('--fog-cx', cx + 'px');
   fog.style.setProperty('--fog-cy', cy + 'px');
 }
