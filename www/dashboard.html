@@ -334,6 +334,9 @@ html, body {
 <div id="bg-overlay"></div>
 <div id="scene">
 
+  <!-- Edit-mode connector lines SVG -->
+  <svg id="connector-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;display:none;"></svg>
+
   <!-- SVG flow overlay -->
   <svg id="flow-svg">
     <!-- Paths (d attributes set by updatePaths()) -->
@@ -1475,6 +1478,49 @@ function initAnchorDrag(anchorEl) {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); }
   });
+
+  // ── Edit-mode connector lines ──────────────────────────────────────────────
+  const LABEL_NODE_MAP = {
+    'lb-solar':      'n-solar',
+    'lb-house':      'n-house',
+    'lb-battery':    'n-battery',
+    'lb-grid':       'n-grid',
+    'lb-wallbox':    'n-wallbox',
+    'lb-car':        'n-car',
+    'lb-pool':       'n-house',
+    'lb-poolheizung':'n-poolheizung',
+    'lb-heizung':    'n-heizung',
+    'lb-hochbeet':   'n-hochbeet',
+    'lb-tomaten':    'n-tomaten',
+    'lb-gurken':     'n-gurken',
+  };
+
+  const connSvg = document.getElementById('connector-svg');
+
+  function elCenter(el) {
+    const r = el.getBoundingClientRect();
+    const sr = connSvg.getBoundingClientRect();
+    return { x: r.left - sr.left + r.width / 2, y: r.top - sr.top + r.height / 2 };
+  }
+
+  function updateConnectors() {
+    if (!editMode || !connSvg) return;
+    const lines = [];
+    for (const [lbId, nId] of Object.entries(LABEL_NODE_MAP)) {
+      const lb = document.getElementById(lbId);
+      const nd = document.getElementById(nId);
+      if (!lb || !nd) continue;
+      const lc = elCenter(lb), nc = elCenter(nd);
+      lines.push(`<line x1="${lc.x.toFixed(1)}" y1="${lc.y.toFixed(1)}" x2="${nc.x.toFixed(1)}" y2="${nc.y.toFixed(1)}" stroke="rgba(180,180,180,0.45)" stroke-width="1" stroke-dasharray="4 4"/>`);
+    }
+    connSvg.innerHTML = lines.join('');
+  }
+
+  if (editMode) {
+    connSvg.style.display = 'block';
+    // Update on every animation frame while in edit mode (covers drag)
+    (function rafLoop() { updateConnectors(); requestAnimationFrame(rafLoop); })();
+  }
 
   // ── Pool popup ─────────────────────────────────────────────────────────────
   window.updatePoolPopup = function updatePoolPopup() {
