@@ -1298,9 +1298,10 @@ function updateFlows() {
   setFlow('fp-wb-grid', wbGridOn, true);
   setFlowLabel('fl-wb-grid', wbGridOn ? fmtW(wbPowerGrid) : '', wbGridOn);
 
-  // Wallbox → Auto
-  setFlow('fp-wb-car', wbOn, false);
-  setFlowLabel('fl-wb-car', wbOn ? fmtW(wbPower) : '', wbOn);
+  // Wallbox → Auto (nur wenn Auto anwesend)
+  const wbCarOn = wbOn && live.carPresence;
+  setFlow('fp-wb-car', wbCarOn, false);
+  setFlowLabel('fl-wb-car', wbCarOn ? fmtW(wbPower) : '', wbCarOn);
 }
 
 // ── Sensor label updates ───────────────────────────────────────────────────
