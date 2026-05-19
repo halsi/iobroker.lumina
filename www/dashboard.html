@@ -555,7 +555,7 @@ html, body {
       <img id="beregner-base-img" src="img/dashboard/beregner-inactive.png" alt="Beregner"
            style="position:absolute;bottom:0;left:0;width:160px;z-index:0;transition:opacity 0.4s;">
       <img id="beregner-active-img" src="img/dashboard/beregner-active.png" alt="Beregner aktiv"
-           style="position:absolute;bottom:-30px;left:0;width:160px;z-index:1;opacity:0;transition:opacity 0.4s;">
+           style="position:absolute;bottom:-25px;left:-10px;width:180px;z-index:1;opacity:0;transition:opacity 0.4s;">
     </div>
     <div class="resize-handle"></div>
   </div>
@@ -1315,7 +1315,36 @@ window.shieldAction = function(oid) {
   }
 };
 
-function updateBeregner() {
+// ── Beregner countdown timer ──────────────────────────────────────────────
+let _beregnerTimer   = null;
+let _beregnerSeconds = 0;
+
+function _beregnerTimerTick() {
+  _beregnerSeconds--;
+  if (_beregnerSeconds <= 0) { _beregnerSeconds = 0; _stopBeregnerTimer(); }
+  _beregnerUpdateDisplay();
+}
+
+function _startBeregnerTimer() {
+  _stopBeregnerTimer();
+  _beregnerSeconds = 60 * 60;   // 60 Minuten
+  _beregnerUpdateDisplay();
+  _beregnerTimer = setInterval(_beregnerTimerTick, 1000);
+}
+
+function _stopBeregnerTimer() {
+  if (_beregnerTimer) { clearInterval(_beregnerTimer); _beregnerTimer = null; }
+}
+
+function _beregnerUpdateDisplay() {
+  const valEl = document.getElementById('v-beregner');
+  if (!valEl) return;
+  const m = Math.floor(_beregnerSeconds / 60);
+  const s = _beregnerSeconds % 60;
+  valEl.textContent = m + ':' + s.toString().padStart(2, '0') + ' min';
+}
+
+function updateBeregner(wasActive) {
   const activeImg = document.getElementById('beregner-active-img');
   const baseImg   = document.getElementById('beregner-base-img');
   const valEl     = document.getElementById('v-beregner');
@@ -1323,6 +1352,13 @@ function updateBeregner() {
   if (activeImg) activeImg.style.opacity = active ? '1' : '0';
   if (baseImg)   baseImg.style.opacity   = active ? '0' : '1';
   if (valEl)     valEl.style.display     = live.beregnerActive ? '' : 'none';
+
+  // Timer logic (ignore editMode flips)
+  if (live.beregnerActive && !wasActive) {
+    _startBeregnerTimer();           // false → true: (re)start at 60:00
+  } else if (!live.beregnerActive) {
+    _stopBeregnerTimer();            // → false: stop & reset display
+  }
 }
 
 // ── Battery SOC block visualisation ───────────────────────────────────────
@@ -1364,8 +1400,9 @@ function applyState(oid, val) {
     case OIDs.alarmActivated:   live.alarmActivated   = !!val; updateShieldLabel(); break;
     case OIDs.alarmSharpInside: live.alarmSharpInside = !!val; updateShieldLabel(); break;
     case OIDs.beregnerActive: {
+      const prevActive = live.beregnerActive;
       live.beregnerActive = (val === true || val === 'true' || val === 1 || val === '1');
-      updateBeregner();
+      updateBeregner(prevActive);
       break;
     }
     case OIDs.poolAbdeckung: {
