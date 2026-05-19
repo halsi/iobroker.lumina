@@ -1332,7 +1332,7 @@ function applyState(oid, val) {
     case OIDs.carPresence: {
       live.carPresence = (val === true || val === 'true' || val === 1 || val === '1');
       const carImg = document.querySelector('#n-car img');
-      if (carImg) carImg.style.opacity = live.carPresence ? '1' : '0';
+      if (carImg) carImg.style.opacity = (editMode || live.carPresence) ? '1' : '0';
       break;
     }
     case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n;      updateFlows(); break;
@@ -1607,6 +1607,12 @@ function initAnchorDrag(anchorEl) {
   // Initialize shield label + fog with current (default) state
   updateShieldLabel();
   updateBeregner();
+
+  // In edit mode: always show car (even if absent)
+  if (editMode) {
+    const carImgEl = document.querySelector('#n-car img');
+    if (carImgEl) carImgEl.style.opacity = '1';
+  }
 
   // Edit mode setup
   if (editMode) {
