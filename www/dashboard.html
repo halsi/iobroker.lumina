@@ -550,7 +550,7 @@ html, body {
 
   <div id="n-beregner" class="holo-node">
     <div style="position:relative;display:inline-block;line-height:0;">
-      <img id="beregner-base-img" src="img/dashboard/beregner-inactive.png" alt="Beregner" style="width:160px;">
+      <img id="beregner-base-img" src="img/dashboard/beregner-inactive.png" alt="Beregner" style="width:160px;transition:opacity 0.4s;">
       <img id="beregner-active-img" src="img/dashboard/beregner-active.png" alt="Beregner aktiv"
            style="position:absolute;left:0;top:-60px;width:100%;height:100%;opacity:0;transition:opacity 0.4s;z-index:1;">
     </div>
@@ -1303,9 +1303,11 @@ window.shieldAction = function(oid) {
 
 function updateBeregner() {
   const activeImg = document.getElementById('beregner-active-img');
+  const baseImg   = document.getElementById('beregner-base-img');
   const valEl     = document.getElementById('v-beregner');
   const active    = editMode || live.beregnerActive;
   if (activeImg) activeImg.style.opacity = active ? '1' : '0';
+  if (baseImg)   baseImg.style.opacity   = active ? '0' : '1';
   if (valEl)     valEl.style.display     = live.beregnerActive ? '' : 'none';
 }
 
