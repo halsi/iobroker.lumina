@@ -472,6 +472,7 @@ html, body {
     <path id="fp-pv-batt"    class="flow-path" stroke="#6AAEFF"/>
     <path id="fp-pv-wb"      class="flow-path" stroke="#52E5FF"/>
     <path id="fp-batt-house" class="flow-path" stroke="#6AAEFF"/>
+    <path id="fp-pv-grid"    class="flow-path" stroke="#F5B14C"/>
     <path id="fp-house-grid" class="flow-path" stroke="#FF9C7A"/>
     <path id="fp-wb-grid"    class="flow-path" stroke="#FF9C7A"/>
     <path id="fp-wb-car"     class="flow-path" stroke="#52E5FF"/>
@@ -481,6 +482,7 @@ html, body {
     <text id="fl-pv-batt"    font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-pv-wb"      font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-batt-house" font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
+    <text id="fl-pv-grid"    font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#F5B14C"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-house-grid" font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-wb-grid"    font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#FF9C7A"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-wb-car"     font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#52E5FF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
@@ -705,7 +707,10 @@ html, body {
   <!-- Batterie → Haus -->
   <div id="anc-batt-haus"  class="flow-anchor"><span class="anchor-label">Batt→Haus</span></div>
   <div id="anc-haus-batt"  class="flow-anchor"><span class="anchor-label">Haus←Batt</span></div>
-  <!-- Haus → Netz -->
+  <!-- Solar → Netz (Einspeisung) -->
+  <div id="anc-solar-grid" class="flow-anchor"><span class="anchor-label">Solar→Netz</span></div>
+  <div id="anc-grid-solar" class="flow-anchor"><span class="anchor-label">Netz←Solar</span></div>
+  <!-- Netz → Haus (Bezug) -->
   <div id="anc-haus-grid"  class="flow-anchor"><span class="anchor-label">Haus→Netz</span></div>
   <div id="anc-grid-haus"  class="flow-anchor"><span class="anchor-label">Netz←Haus</span></div>
   <!-- Wallbox → Netz -->
@@ -934,7 +939,10 @@ const DEFAULT_ANCHORS = {
   // Batterie → Haus
   'anc-batt-haus':  { x: 230,  y: 530 },
   'anc-haus-batt':  { x: 760,  y: 280 },
-  // Haus → Netz
+  // Solar → Netz (Einspeisung)
+  'anc-solar-grid': { x: 270,  y: 215 },
+  'anc-grid-solar': { x: 1255, y: 155 },
+  // Netz → Haus (Bezug)
   'anc-haus-grid':  { x: 820,  y: 220 },
   'anc-grid-haus':  { x: 1250, y: 178 },
   // Wallbox → Netz
@@ -1000,6 +1008,7 @@ const FLOW_DEFS = [
   { pathId: 'fp-pv-batt',    labelId: 'fl-pv-batt',    a1: 'anc-solar-batt', a2: 'anc-batt-solar' },
   { pathId: 'fp-pv-wb',      labelId: 'fl-pv-wb',      a1: 'anc-solar-wb',   a2: 'anc-wb-solar'   },
   { pathId: 'fp-batt-house', labelId: 'fl-batt-house', a1: 'anc-batt-haus',  a2: 'anc-haus-batt'  },
+  { pathId: 'fp-pv-grid',    labelId: 'fl-pv-grid',    a1: 'anc-solar-grid', a2: 'anc-grid-solar' },
   { pathId: 'fp-house-grid', labelId: 'fl-house-grid', a1: 'anc-haus-grid',  a2: 'anc-grid-haus'  },
   { pathId: 'fp-wb-grid',    labelId: 'fl-wb-grid',    a1: 'anc-wb-grid',    a2: 'anc-grid-wb'    },
   { pathId: 'fp-wb-car',     labelId: 'fl-wb-car',     a1: 'anc-wb-car',     a2: 'anc-car-wb'     },
@@ -1193,11 +1202,15 @@ function updateFlows() {
   setFlow('fp-batt-house', battDisch2, false);
   setFlowLabel('fl-batt-house', battDisch2 ? fmtW(Math.abs(battPow)) : '', battDisch2);
 
-  // Grid ↔ House: import = bezug minus what goes to wallbox; export = einspeisung
+  // Solar → Netz (Einspeisung): solar excess fed into grid
+  const pvGridOn = gridExp;
+  setFlow('fp-pv-grid', pvGridOn, false);
+  setFlowLabel('fl-pv-grid', pvGridOn ? fmtW(effEinsp) : '', pvGridOn);
+
+  // Netz → Haus (Bezug only): grid import for house consumption
   const houseGridImp = bezugHaus > THRESH;
-  const houseGridOn  = houseGridImp || gridExp;
-  setFlow('fp-house-grid', houseGridOn, houseGridImp);
-  setFlowLabel('fl-house-grid', houseGridOn ? fmtW(houseGridImp ? bezugHaus : effEinsp) : '', houseGridOn);
+  setFlow('fp-house-grid', houseGridImp, false);
+  setFlowLabel('fl-house-grid', houseGridImp ? fmtW(bezugHaus) : '', houseGridImp);
 
   // PV → Wallbox
   const pvWbOn = wbPowerPV > THRESH;
