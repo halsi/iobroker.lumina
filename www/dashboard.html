@@ -394,6 +394,27 @@ html, body {
 .shp-btn-disable  { background: #F5B14C; color: #000; }
 .shp-btn-inactive { background: #FF5555; color: #000; }
 
+/* ── Water pipes ──────────────────────────────────────────────────── */
+.pipe-handle {
+  display: none;
+  cursor: grab;
+  pointer-events: all;
+  filter: drop-shadow(0 0 4px rgba(92,174,255,0.8));
+}
+.pipe-handle:active { cursor: grabbing; }
+.edit-mode #flow-svg .pipe-handle { display: block; }
+.pipe-handle-label {
+  display: none;
+  pointer-events: none;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  fill: #7ECFFF;
+  letter-spacing: 1px;
+}
+.edit-mode #flow-svg .pipe-handle-label { display: block; }
+@keyframes water-flow { to { stroke-dashoffset: -80; } }
+
 /* ── Beregner popup ───────────────────────────────────────────────── */
 #beregner-popup-backdrop {
   display: none;
@@ -534,6 +555,25 @@ html, body {
     <path id="fp-house-grid" class="flow-path" stroke="#FF9C7A"/>
     <path id="fp-wb-grid"    class="flow-path" stroke="#FF9C7A"/>
     <path id="fp-wb-car"     class="flow-path" stroke="#52E5FF"/>
+
+    <!-- ── Water pipes ── -->
+    <g id="water-pipes-g">
+      <!-- wp-garten: shadow / body / highlight / flow-animation -->
+      <path id="wpe-garten-shadow" fill="none" stroke="rgba(5,20,50,0.65)"    stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-garten-body"   fill="none" stroke="rgba(126,207,255,0.2)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-garten-hi"     fill="none" stroke="rgba(200,235,255,0.75)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-garten-flow"   fill="none" stroke="rgba(200,240,255,0.92)" stroke-width="5" stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <!-- Control point handles (visible in edit mode) -->
+      <circle class="pipe-handle" id="wph-garten-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <circle class="pipe-handle" id="wph-garten-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-garten-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-garten-3" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <!-- Handle labels -->
+      <text class="pipe-handle-label" id="wphl-garten-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
+      <text class="pipe-handle-label" id="wphl-garten-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
+      <text class="pipe-handle-label" id="wphl-garten-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
+      <text class="pipe-handle-label" id="wphl-garten-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+    </g>
 
     <!-- Flow midpoint value labels -->
     <text id="fl-pv-house"   font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#F5B14C"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
@@ -1092,6 +1132,7 @@ const FLOW_DEFS = [
 
 function updatePaths() {
   updateFogPosition();
+  renderWaterPipes();
   FLOW_DEFS.forEach(({ pathId, labelId, a1, a2 }) => {
     const c1   = anchorCenter(a1);
     const c2   = anchorCenter(a2);
@@ -1140,6 +1181,150 @@ function initFlowLabelDrag() {
   });
 }
 
+// ── Water pipes ───────────────────────────────────────────────────────────
+const WATER_PIPE_DEFS = [
+  {
+    id: 'garten',
+    oid: 'gartenWasser',
+    pointIds: ['wph-garten-0','wph-garten-1','wph-garten-2','wph-garten-3'],
+    pathIds:  { shadow:'wpe-garten-shadow', body:'wpe-garten-body', hi:'wpe-garten-hi', flow:'wpe-garten-flow' },
+    labelIds: ['wphl-garten-0','wphl-garten-1','wphl-garten-2','wphl-garten-3'],
+  }
+];
+
+const DEFAULT_PIPE_POINTS = {
+  'wph-garten-0': { x: 700, y: 380 },
+  'wph-garten-1': { x: 700, y: 520 },
+  'wph-garten-2': { x: 490, y: 520 },
+  'wph-garten-3': { x: 350, y: 660 },
+};
+
+const pipePointPos = {};   // { pointId: {x,y} }
+
+function loadPipePoints() {
+  try {
+    const raw = localStorage.getItem('holo_water_pipes');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      Object.keys(DEFAULT_PIPE_POINTS).forEach(k => {
+        pipePointPos[k] = (saved[k] && saved[k].x != null) ? saved[k] : { ...DEFAULT_PIPE_POINTS[k] };
+      });
+      return;
+    }
+  } catch(e) {}
+  Object.keys(DEFAULT_PIPE_POINTS).forEach(k => {
+    pipePointPos[k] = { ...DEFAULT_PIPE_POINTS[k] };
+  });
+}
+
+function savePipePoints() {
+  try { localStorage.setItem('holo_water_pipes', JSON.stringify(pipePointPos)); } catch(e) {}
+}
+
+function buildPipePath(pointIds) {
+  const pts = pointIds.map(id => pipePointPos[id]).filter(Boolean);
+  if (pts.length < 2) return '';
+  return 'M ' + pts.map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(' L ');
+}
+
+function renderWaterPipes() {
+  WATER_PIPE_DEFS.forEach(pipe => {
+    const d = buildPipePath(pipe.pointIds);
+    Object.values(pipe.pathIds).forEach(pid => {
+      const el = document.getElementById(pid);
+      if (el) el.setAttribute('d', d);
+    });
+    pipe.pointIds.forEach((pid, i) => {
+      const pos = pipePointPos[pid];
+      const el  = document.getElementById(pid);
+      if (el && pos) { el.setAttribute('cx', Math.round(pos.x)); el.setAttribute('cy', Math.round(pos.y)); }
+      const lbl = document.getElementById(pipe.labelIds[i]);
+      if (lbl && pos) { lbl.setAttribute('x', Math.round(pos.x)); lbl.setAttribute('y', Math.round(pos.y)); }
+    });
+  });
+}
+
+function updatePipeFlow(pipeId, active) {
+  const pipe = WATER_PIPE_DEFS.find(p => p.id === pipeId);
+  if (!pipe) return;
+  const flowEl = document.getElementById(pipe.pathIds.flow);
+  const bodyEl = document.getElementById(pipe.pathIds.body);
+  const on = editMode || active;
+  if (flowEl) {
+    if (on) {
+      flowEl.style.animation = 'water-flow 2.5s linear infinite';
+      flowEl.setAttribute('opacity', '1');
+    } else {
+      flowEl.style.animation = 'none';
+      flowEl.setAttribute('opacity', '0');
+    }
+  }
+  if (bodyEl) {
+    bodyEl.setAttribute('stroke', on
+      ? 'rgba(126,207,255,0.75)'
+      : 'rgba(126,207,255,0.2)');
+  }
+}
+
+function updateAllPipeFlows() {
+  WATER_PIPE_DEFS.forEach(pipe => {
+    updatePipeFlow(pipe.id, live[pipe.oid] || false);
+  });
+}
+
+// Snap dragged point to nearest 45° direction relative to a fixed neighbour
+function snap45(fromX, fromY, toX, toY) {
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const dist  = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx);
+  const snapped = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+  return {
+    x: Math.round(fromX + Math.cos(snapped) * dist),
+    y: Math.round(fromY + Math.sin(snapped) * dist),
+  };
+}
+
+function initPipeDrag() {
+  const svg = document.getElementById('flow-svg');
+  WATER_PIPE_DEFS.forEach(pipe => {
+    pipe.pointIds.forEach((pid, idx) => {
+      const el = document.getElementById(pid);
+      if (!el) return;
+      el.addEventListener('mousedown', e => {
+        if (!editMode) return;
+        e.stopPropagation();
+        const svgRect = svg.getBoundingClientRect();
+        const startCX = e.clientX;
+        const startCY = e.clientY;
+        const orig    = { ...pipePointPos[pid] };
+        el.style.cursor = 'grabbing';
+
+        function onMove(ev) {
+          let nx = orig.x + (ev.clientX - startCX);
+          let ny = orig.y + (ev.clientY - startCY);
+          // Snap relative to previous point if it exists
+          const prevId = pipe.pointIds[idx - 1];
+          if (prevId && pipePointPos[prevId]) {
+            const s = snap45(pipePointPos[prevId].x, pipePointPos[prevId].y, nx, ny);
+            nx = s.x; ny = s.y;
+          }
+          pipePointPos[pid] = { x: nx, y: ny };
+          renderWaterPipes();
+        }
+        function onUp() {
+          el.style.cursor = 'grab';
+          savePipePoints();
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+        }
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      });
+    });
+  });
+}
+
 // ── OIDs (verbatim from energie.html) ─────────────────────────────────────
 const OIDs = {
   pv:          'modbus.0.inputRegisters.5016_Total_DC_Power',
@@ -1167,6 +1352,7 @@ const OIDs = {
   alarmActivated:   'alarm.0.status.activated',
   alarmSharpInside: 'alarm.0.status.sharp_inside_activated',
   beregnerActive:   '0_userdata.0.Wasser.Gartenberegner',
+  gartenWasser:     '0_userdata.0.Test',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -1174,7 +1360,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, gartenWasser: false };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1499,6 +1685,11 @@ function applyState(oid, val) {
     case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
     case OIDs.alarmActivated:   live.alarmActivated   = !!val; updateShieldLabel(); break;
     case OIDs.alarmSharpInside: live.alarmSharpInside = !!val; updateShieldLabel(); break;
+    case OIDs.gartenWasser: {
+      live.gartenWasser = (val === true || val === 'true' || val === 1 || val === '1');
+      updatePipeFlow('garten', live.gartenWasser);
+      break;
+    }
     case OIDs.beregnerActive: {
       const prevActive = live.beregnerActive;
       live.beregnerActive = (val === true || val === 'true' || val === 1 || val === '1');
@@ -1753,9 +1944,11 @@ function initAnchorDrag(anchorEl) {
   applyPositions(loadPositions());
   applyLabelState(loadLabelState());
   applyAnchorState(loadAnchorState());
+  loadPipePoints();
 
-  // Draw initial SVG paths
+  // Draw initial SVG paths (includes renderWaterPipes)
   updatePaths();
+  updateAllPipeFlows();
 
   // Initialize shield label + fog with current (default) state
   updateShieldLabel();
@@ -1785,6 +1978,7 @@ function initAnchorDrag(anchorEl) {
       if (anc) initAnchorDrag(anc);
     });
     initFlowLabelDrag();
+    initPipeDrag();
   }
 
   // Redraw paths on viewport resize
