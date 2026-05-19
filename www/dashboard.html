@@ -378,8 +378,21 @@ html, body {
   font-size: 14px;
 }
 .shp-row:last-child { border-bottom: none; }
-.shp-lbl { color: rgba(255,255,255,0.45); font-weight: 600; }
-.shp-val { color: #fff; font-weight: 700; }
+.shp-btn-row {
+  display: flex; gap: 10px; padding: 14px 0 6px;
+}
+.shp-btn {
+  flex: 1; padding: 10px 4px;
+  border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
+  text-transform: uppercase; cursor: pointer;
+  transition: filter 0.12s, transform 0.1s;
+}
+.shp-btn:hover  { filter: brightness(120%); }
+.shp-btn:active { transform: scale(0.96); filter: brightness(90%); }
+.shp-btn-enable   { background: #44AA44; color: #000; }
+.shp-btn-disable  { background: #FF5555; color: #000; }
+.shp-btn-inactive { background: #F5B14C; color: #000; }
 
 /* ── Alarm fog ────────────────────────────────────────────────────── */
 /* ── Alarm fog — radial-gradient approach, zero filter, zero clip issues ── */
@@ -731,8 +744,11 @@ html, body {
       <div class="shp-status-val" id="shp-status-val">–</div>
     </div>
     <div class="shp-body">
-      <div class="shp-row"><span class="shp-lbl">Alarm aktiviert</span><span class="shp-val" id="shp-activated">–</span></div>
-      <div class="shp-row"><span class="shp-lbl">Scharf innen</span><span class="shp-val" id="shp-inside">–</span></div>
+      <div class="shp-btn-row">
+        <button class="shp-btn shp-btn-enable"   onclick="shieldAction('alarm.0.use.enable')">ENABLE</button>
+        <button class="shp-btn shp-btn-disable"  onclick="shieldAction('alarm.0.use.disable')">DISABLE</button>
+        <button class="shp-btn shp-btn-inactive" onclick="shieldAction('alarm.0.use.activate_sharp_inside')">INACTIVE</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1245,8 +1261,6 @@ function updateShieldLabel() {
 
 function updateShieldPopup() {
   const statusEl = document.getElementById('shp-status-val');
-  const activEl  = document.getElementById('shp-activated');
-  const insideEl = document.getElementById('shp-inside');
   if (!statusEl) return;
   if (live.alarmActivated) {
     statusEl.textContent = 'ACTIVE';
@@ -1258,9 +1272,13 @@ function updateShieldPopup() {
     statusEl.textContent = 'DISABLED';
     statusEl.style.color = '#F5B14C';
   }
-  if (activEl)  activEl.textContent  = live.alarmActivated   ? 'JA' : 'NEIN';
-  if (insideEl) insideEl.textContent = live.alarmSharpInside ? 'JA' : 'NEIN';
 }
+
+window.shieldAction = function(oid) {
+  if (window._dashSocket && window._dashSocket.connected) {
+    window._dashSocket.emit('setState', oid, { val: true, ack: false }, () => {});
+  }
+};
 
 // ── Battery SOC block visualisation ───────────────────────────────────────
 function updateBattBlocks(soc) {
