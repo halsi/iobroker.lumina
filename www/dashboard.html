@@ -332,8 +332,12 @@ html, body {
 #alarm-fog {
   position: absolute;
   inset: 0;
-  z-index: 2;          /* above bg(0) + bg-overlay(1), below holo-nodes(3) */
+  z-index: 2;          /* above bg(0)+bg-overlay(1), below holo-nodes(3) = behind house */
   pointer-events: none;
+}
+/* In edit mode fog floats above nodes so it stays visible for repositioning */
+#alarm-fog.fog-edit {
+  z-index: 5;
 }
 .fog-blob {
   position: absolute;
@@ -1435,6 +1439,9 @@ function initAnchorDrag(anchorEl) {
   if (editMode) {
     document.getElementById('edit-badge').style.display = 'block';
     document.getElementById('scene').classList.add('edit-mode');
+    // Fog above nodes in edit mode so it stays visible for positioning
+    const fogEl = document.getElementById('alarm-fog');
+    if (fogEl) fogEl.classList.add('fog-edit');
     Object.keys(NODE_META).forEach(id => {
       const node = document.getElementById(id);
       if (node) { initDrag(node); initResize(node); }
