@@ -352,14 +352,15 @@ html, body {
 .fog-blob {
   position: absolute;
   border-radius: 50%;
-  /* Gradient fades quickly → color stays at edges/top, not in house center */
-  background: radial-gradient(ellipse at center, var(--fog-col) 0%, transparent 55%);
+  /* Tight falloff at 40% → color only reaches roofline, not house body */
+  background: radial-gradient(ellipse at center, var(--fog-col) 0%, transparent 40%);
 }
-/* All blobs pushed well above house centre → light rises from behind/above */
-.fog-blob-1 { width: 640px; height: 480px; left: calc(var(--fog-cx) - 280px); top: calc(var(--fog-cy) - 440px); animation: fog-drift-a 10s ease-in-out infinite; }
-.fog-blob-2 { width: 520px; height: 400px; left: calc(var(--fog-cx) - 260px); top: calc(var(--fog-cy) - 430px); animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
-.fog-blob-3 { width: 460px; height: 360px; left: calc(var(--fog-cx) - 120px); top: calc(var(--fog-cy) - 360px); animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
-.fog-blob-4 { width: 400px; height: 300px; left: calc(var(--fog-cx) - 220px); top: calc(var(--fog-cy) - 410px); animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
+/* Blobs centred well above house → glow peaks at roofline, fades before walls */
+/* +50px right (less subtracted from cx), +30% wider, centres at fog-cy-170  */
+.fog-blob-1 { width: 832px; height: 480px; left: calc(var(--fog-cx) - 230px); top: calc(var(--fog-cy) - 408px); animation: fog-drift-a 10s ease-in-out infinite; }
+.fog-blob-2 { width: 676px; height: 400px; left: calc(var(--fog-cx) - 210px); top: calc(var(--fog-cy) - 368px); animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
+.fog-blob-3 { width: 598px; height: 360px; left: calc(var(--fog-cx) -  70px); top: calc(var(--fog-cy) - 340px); animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
+.fog-blob-4 { width: 520px; height: 300px; left: calc(var(--fog-cx) - 170px); top: calc(var(--fog-cy) - 358px); animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
 
 @keyframes fog-drift-a {
   0%,100% { transform: translate(  0px,   0px) scale(1.00); }
