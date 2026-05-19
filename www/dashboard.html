@@ -333,13 +333,13 @@ html, body {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  overflow: hidden;
 }
 .fog-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0;
+  background-color: #F5B14C;   /* default: disabled/yellow — JS overrides */
+  opacity: 0.30;
   transition: background-color 2s ease, opacity 1.5s ease;
 }
 .fog-blob-1 { width: 520px; height: 420px; left: 30%; top:  5%; animation: fog-drift-a 10s ease-in-out infinite; }
@@ -1122,7 +1122,7 @@ function updateAlarmFog() {
   }
   fog.querySelectorAll('.fog-blob').forEach(b => {
     b.style.backgroundColor = color;
-    b.style.opacity = opacity;
+    b.style.opacity = String(opacity);
   });
 }
 
