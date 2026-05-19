@@ -352,12 +352,14 @@ html, body {
 .fog-blob {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, var(--fog-col) 0%, transparent 68%);
+  /* Gradient fades quickly → color stays at edges/top, not in house center */
+  background: radial-gradient(ellipse at center, var(--fog-col) 0%, transparent 55%);
 }
-.fog-blob-1 { width: 620px; height: 500px; left: calc(var(--fog-cx) - 310px); top: calc(var(--fog-cy) - 320px); animation: fog-drift-a 10s ease-in-out infinite; }
-.fog-blob-2 { width: 500px; height: 420px; left: calc(var(--fog-cx) - 280px); top: calc(var(--fog-cy) - 350px); animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
-.fog-blob-3 { width: 440px; height: 380px; left: calc(var(--fog-cx) - 180px); top: calc(var(--fog-cy) - 220px); animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
-.fog-blob-4 { width: 380px; height: 320px; left: calc(var(--fog-cx) - 240px); top: calc(var(--fog-cy) - 300px); animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
+/* All blobs pushed well above house centre → light rises from behind/above */
+.fog-blob-1 { width: 640px; height: 480px; left: calc(var(--fog-cx) - 280px); top: calc(var(--fog-cy) - 440px); animation: fog-drift-a 10s ease-in-out infinite; }
+.fog-blob-2 { width: 520px; height: 400px; left: calc(var(--fog-cx) - 260px); top: calc(var(--fog-cy) - 430px); animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
+.fog-blob-3 { width: 460px; height: 360px; left: calc(var(--fog-cx) - 120px); top: calc(var(--fog-cy) - 360px); animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
+.fog-blob-4 { width: 400px; height: 300px; left: calc(var(--fog-cx) - 220px); top: calc(var(--fog-cy) - 410px); animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
 
 @keyframes fog-drift-a {
   0%,100% { transform: translate(  0px,   0px) scale(1.00); }
@@ -1144,11 +1146,11 @@ function updateAlarmFog() {
   if (!fog) return;
   let col;
   if (live.alarmActivated) {
-    col = 'rgba(255,  85,  85, 0.45)';   // Battery-Rot   #FF5555
+    col = 'rgba(255,  85,  85, 0.38)';   // Battery-Rot   #FF5555
   } else if (live.alarmSharpInside) {
-    col = 'rgba( 68, 170,  68, 0.42)';   // Battery-Grün  #44AA44
+    col = 'rgba( 68, 170,  68, 0.32)';   // Battery-Grün  #44AA44
   } else {
-    col = 'rgba(245, 177,  76, 0.42)';   // LCARS Orange  #F5B14C — disabled
+    col = 'rgba(245, 177,  76, 0.30)';   // LCARS Orange  #F5B14C — disabled
   }
   fog.style.setProperty('--fog-col', col);
 }
