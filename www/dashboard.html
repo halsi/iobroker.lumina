@@ -414,6 +414,33 @@ html, body {
 }
 .edit-mode #flow-svg .pipe-handle-label { display: block; }
 @keyframes water-flow { to { stroke-dashoffset: -80; } }
+.pipe-label {
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  fill: #7ECFFF;
+  opacity: 0.92;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+.edit-mode #flow-svg .pipe-label {
+  pointer-events: all;
+  cursor: grab;
+}
+.edit-mode #flow-svg .pipe-label:active { cursor: grabbing; }
+/* rotation hint badge in edit mode */
+.pipe-label-rot-hint {
+  display: none;
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  fill: rgba(126,207,255,0.6);
+  text-anchor: middle;
+  pointer-events: none;
+}
+.edit-mode #flow-svg .pipe-label-rot-hint { display: block; }
 
 /* ── Beregner popup ───────────────────────────────────────────────── */
 #beregner-popup-backdrop {
@@ -568,11 +595,73 @@ html, body {
       <circle class="pipe-handle" id="wph-garten-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
       <circle class="pipe-handle" id="wph-garten-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
       <circle class="pipe-handle" id="wph-garten-3" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
-      <!-- Handle labels -->
       <text class="pipe-handle-label" id="wphl-garten-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
       <text class="pipe-handle-label" id="wphl-garten-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
       <text class="pipe-handle-label" id="wphl-garten-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
       <text class="pipe-handle-label" id="wphl-garten-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+
+      <!-- wp-beregner -->
+      <path id="wpe-beregner-shadow" fill="none" stroke="rgba(5,20,50,0.65)"     stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-beregner-body"   fill="none" stroke="rgba(126,207,255,0.2)"  stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-beregner-hi"     fill="none" stroke="rgba(200,235,255,0.75)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-beregner-flow"   fill="none" stroke="rgba(200,240,255,0.92)" stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <circle class="pipe-handle" id="wph-beregner-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <circle class="pipe-handle" id="wph-beregner-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-beregner-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-beregner-3" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <text class="pipe-handle-label" id="wphl-beregner-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
+      <text class="pipe-handle-label" id="wphl-beregner-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
+      <text class="pipe-handle-label" id="wphl-beregner-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
+      <text class="pipe-handle-label" id="wphl-beregner-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+
+      <!-- wp-hochbeet -->
+      <path id="wpe-hochbeet-shadow" fill="none" stroke="rgba(5,20,50,0.65)"     stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-hochbeet-body"   fill="none" stroke="rgba(126,207,255,0.2)"  stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-hochbeet-hi"     fill="none" stroke="rgba(200,235,255,0.75)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-hochbeet-flow"   fill="none" stroke="rgba(200,240,255,0.92)" stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <circle class="pipe-handle" id="wph-hochbeet-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <circle class="pipe-handle" id="wph-hochbeet-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-hochbeet-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-hochbeet-3" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <text class="pipe-handle-label" id="wphl-hochbeet-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
+      <text class="pipe-handle-label" id="wphl-hochbeet-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
+      <text class="pipe-handle-label" id="wphl-hochbeet-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
+      <text class="pipe-handle-label" id="wphl-hochbeet-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+
+      <!-- wp-gieskanne -->
+      <path id="wpe-gieskanne-shadow" fill="none" stroke="rgba(5,20,50,0.65)"     stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-gieskanne-body"   fill="none" stroke="rgba(126,207,255,0.2)"  stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-gieskanne-hi"     fill="none" stroke="rgba(200,235,255,0.75)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-gieskanne-flow"   fill="none" stroke="rgba(200,240,255,0.92)" stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <circle class="pipe-handle" id="wph-gieskanne-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <circle class="pipe-handle" id="wph-gieskanne-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-gieskanne-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-gieskanne-3" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <text class="pipe-handle-label" id="wphl-gieskanne-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
+      <text class="pipe-handle-label" id="wphl-gieskanne-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
+      <text class="pipe-handle-label" id="wphl-gieskanne-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
+      <text class="pipe-handle-label" id="wphl-gieskanne-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+
+      <!-- wp-pool -->
+      <path id="wpe-pool-shadow" fill="none" stroke="rgba(5,20,50,0.65)"     stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-pool-body"   fill="none" stroke="rgba(126,207,255,0.2)"  stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-pool-hi"     fill="none" stroke="rgba(200,235,255,0.75)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="wpe-pool-flow"   fill="none" stroke="rgba(200,240,255,0.92)" stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <circle class="pipe-handle" id="wph-pool-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <circle class="pipe-handle" id="wph-pool-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-pool-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-pool-3" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <text class="pipe-handle-label" id="wphl-pool-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
+      <text class="pipe-handle-label" id="wphl-pool-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
+      <text class="pipe-handle-label" id="wphl-pool-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
+      <text class="pipe-handle-label" id="wphl-pool-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+
+      <!-- Pipe labels (draggable + rotatable in edit mode) -->
+      <text class="pipe-label" id="wpl-garten"    x="550" y="470">GARTEN</text>
+      <text class="pipe-label" id="wpl-beregner"  x="420" y="590">BEREGNER</text>
+      <text class="pipe-label" id="wpl-hochbeet"  x="500" y="700">HOCHBEET</text>
+      <text class="pipe-label" id="wpl-gieskanne" x="330" y="770">GIESKANNE</text>
+      <text class="pipe-label" id="wpl-pool"      x="220" y="550">POOL</text>
     </g>
 
     <!-- Flow midpoint value labels -->
@@ -1182,22 +1271,123 @@ function initFlowLabelDrag() {
 }
 
 // ── Water pipes ───────────────────────────────────────────────────────────
+// helper to build pipe def
+function _pd(id, liveKey, pts) {
+  return {
+    id, liveKey,
+    pointIds: pts,
+    pathIds:  { shadow:`wpe-${id}-shadow`, body:`wpe-${id}-body`, hi:`wpe-${id}-hi`, flow:`wpe-${id}-flow` },
+    hlIds:    pts.map((_, i) => `wphl-${id}-${i}`),
+    labelId:  `wpl-${id}`,
+  };
+}
 const WATER_PIPE_DEFS = [
-  {
-    id: 'garten',
-    oid: 'gartenWasser',
-    pointIds: ['wph-garten-0','wph-garten-1','wph-garten-2','wph-garten-3'],
-    pathIds:  { shadow:'wpe-garten-shadow', body:'wpe-garten-body', hi:'wpe-garten-hi', flow:'wpe-garten-flow' },
-    labelIds: ['wphl-garten-0','wphl-garten-1','wphl-garten-2','wphl-garten-3'],
-  }
+  _pd('garten',    'gartenWasser', ['wph-garten-0',   'wph-garten-1',   'wph-garten-2',   'wph-garten-3']),
+  _pd('beregner',  null,           ['wph-beregner-0', 'wph-beregner-1', 'wph-beregner-2', 'wph-beregner-3']),
+  _pd('hochbeet',  null,           ['wph-hochbeet-0', 'wph-hochbeet-1', 'wph-hochbeet-2', 'wph-hochbeet-3']),
+  _pd('gieskanne', null,           ['wph-gieskanne-0','wph-gieskanne-1','wph-gieskanne-2','wph-gieskanne-3']),
+  _pd('pool',      null,           ['wph-pool-0',     'wph-pool-1',     'wph-pool-2',     'wph-pool-3']),
 ];
 
 const DEFAULT_PIPE_POINTS = {
-  'wph-garten-0': { x: 700, y: 380 },
-  'wph-garten-1': { x: 700, y: 520 },
-  'wph-garten-2': { x: 490, y: 520 },
-  'wph-garten-3': { x: 350, y: 660 },
+  'wph-garten-0':    { x: 700, y: 380 }, 'wph-garten-1':    { x: 700, y: 520 },
+  'wph-garten-2':    { x: 490, y: 520 }, 'wph-garten-3':    { x: 350, y: 660 },
+  'wph-beregner-0':  { x: 350, y: 660 }, 'wph-beregner-1':  { x: 350, y: 740 },
+  'wph-beregner-2':  { x: 280, y: 740 }, 'wph-beregner-3':  { x: 280, y: 820 },
+  'wph-hochbeet-0':  { x: 490, y: 520 }, 'wph-hochbeet-1':  { x: 490, y: 700 },
+  'wph-hochbeet-2':  { x: 600, y: 700 }, 'wph-hochbeet-3':  { x: 600, y: 820 },
+  'wph-gieskanne-0': { x: 700, y: 520 }, 'wph-gieskanne-1': { x: 700, y: 680 },
+  'wph-gieskanne-2': { x: 820, y: 680 }, 'wph-gieskanne-3': { x: 820, y: 820 },
+  'wph-pool-0':      { x: 700, y: 380 }, 'wph-pool-1':      { x: 700, y: 260 },
+  'wph-pool-2':      { x: 200, y: 260 }, 'wph-pool-3':      { x: 200, y: 480 },
 };
+
+// ── Pipe label state ───────────────────────────────────────────────────────
+const DEFAULT_PIPE_LABELS = {
+  'wpl-garten':    { x: 550, y: 470, rot: 0 },
+  'wpl-beregner':  { x: 320, y: 710, rot: 0 },
+  'wpl-hochbeet':  { x: 540, y: 630, rot: 0 },
+  'wpl-gieskanne': { x: 760, y: 620, rot: 0 },
+  'wpl-pool':      { x: 450, y: 300, rot: 0 },
+};
+const pipeLabelState = {};
+
+function loadPipeLabels() {
+  try {
+    const raw = localStorage.getItem('holo_pipe_labels');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      Object.keys(DEFAULT_PIPE_LABELS).forEach(k => {
+        pipeLabelState[k] = (saved[k] && saved[k].x != null) ? saved[k] : { ...DEFAULT_PIPE_LABELS[k] };
+      });
+      return;
+    }
+  } catch(e) {}
+  Object.keys(DEFAULT_PIPE_LABELS).forEach(k => { pipeLabelState[k] = { ...DEFAULT_PIPE_LABELS[k] }; });
+}
+
+function savePipeLabels() {
+  try { localStorage.setItem('holo_pipe_labels', JSON.stringify(pipeLabelState)); } catch(e) {}
+}
+
+function applyPipeLabel(id) {
+  const el = document.getElementById(id);
+  const s  = pipeLabelState[id];
+  if (!el || !s) return;
+  el.setAttribute('x', Math.round(s.x));
+  el.setAttribute('y', Math.round(s.y));
+  el.setAttribute('transform', s.rot ? `rotate(${s.rot},${Math.round(s.x)},${Math.round(s.y)})` : '');
+}
+
+function applyAllPipeLabels() {
+  Object.keys(pipeLabelState).forEach(applyPipeLabel);
+}
+
+function initPipeLabelDrag() {
+  WATER_PIPE_DEFS.forEach(pipe => {
+    const id = pipe.labelId;
+    const el = document.getElementById(id);
+    if (!el) return;
+    let dragMoved = false;
+
+    el.addEventListener('mousedown', e => {
+      if (!editMode) return;
+      e.stopPropagation();
+      dragMoved = false;
+      const s      = pipeLabelState[id];
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const origX  = s.x;
+      const origY  = s.y;
+      el.style.cursor = 'grabbing';
+
+      function onMove(ev) {
+        dragMoved = true;
+        s.x = origX + (ev.clientX - startX);
+        s.y = origY + (ev.clientY - startY);
+        applyPipeLabel(id);
+      }
+      function onUp() {
+        el.style.cursor = 'grab';
+        if (dragMoved) savePipeLabels();
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      }
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
+
+    // Click (no drag) → cycle rotation 0→45→90→135→0
+    el.addEventListener('click', e => {
+      if (!editMode || dragMoved) return;
+      e.stopPropagation();
+      const s = pipeLabelState[id];
+      s.rot = (s.rot + 45) % 180;
+      applyPipeLabel(id);
+      savePipeLabels();
+    });
+  });
+}
 
 const pipePointPos = {};   // { pointId: {x,y} }
 
@@ -1234,13 +1424,16 @@ function renderWaterPipes() {
       const el = document.getElementById(pid);
       if (el) el.setAttribute('d', d);
     });
+    // Control point handles + handle labels
     pipe.pointIds.forEach((pid, i) => {
       const pos = pipePointPos[pid];
       const el  = document.getElementById(pid);
       if (el && pos) { el.setAttribute('cx', Math.round(pos.x)); el.setAttribute('cy', Math.round(pos.y)); }
-      const lbl = document.getElementById(pipe.labelIds[i]);
-      if (lbl && pos) { lbl.setAttribute('x', Math.round(pos.x)); lbl.setAttribute('y', Math.round(pos.y)); }
+      const hl = document.getElementById(pipe.hlIds[i]);
+      if (hl && pos) { hl.setAttribute('x', Math.round(pos.x)); hl.setAttribute('y', Math.round(pos.y)); }
     });
+    // Pipe label
+    applyPipeLabel(pipe.labelId);
   });
 }
 
@@ -1268,7 +1461,7 @@ function updatePipeFlow(pipeId, active) {
 
 function updateAllPipeFlows() {
   WATER_PIPE_DEFS.forEach(pipe => {
-    updatePipeFlow(pipe.id, live[pipe.oid] || false);
+    updatePipeFlow(pipe.id, pipe.liveKey ? (live[pipe.liveKey] || false) : false);
   });
 }
 
@@ -1945,9 +2138,11 @@ function initAnchorDrag(anchorEl) {
   applyLabelState(loadLabelState());
   applyAnchorState(loadAnchorState());
   loadPipePoints();
+  loadPipeLabels();
 
-  // Draw initial SVG paths (includes renderWaterPipes)
+  // Draw initial SVG paths (includes renderWaterPipes + applyAllPipeLabels)
   updatePaths();
+  applyAllPipeLabels();
   updateAllPipeFlows();
 
   // Initialize shield label + fog with current (default) state
@@ -1979,6 +2174,7 @@ function initAnchorDrag(anchorEl) {
     });
     initFlowLabelDrag();
     initPipeDrag();
+    initPipeLabelDrag();
   }
 
   // Redraw paths on viewport resize
