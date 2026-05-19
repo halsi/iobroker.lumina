@@ -327,6 +327,60 @@ html, body {
 .cpp-batt-wrap { width:70px; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; }
 .cpp-batt-bar  { height:100%; border-radius:4px; background:#44AA44; transition:width 0.4s, background 0.4s; }
 
+/* ── Shield popup modal ──────────────────────────────────────────────────── */
+#shield-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#shield-popup-backdrop.open { display: flex; }
+#shield-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(255,85,85,0.45);
+  border-radius: 18px;
+  width: 360px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(255,85,85,0.18), 0 0 80px rgba(255,85,85,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.shp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255,85,85,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #FF5555;
+  border-bottom: 1px solid rgba(255,85,85,0.2);
+}
+.shp-dot { width:8px; height:8px; border-radius:50%; background:#FF5555; flex-shrink:0; }
+.shp-status-block {
+  padding: 18px 16px 14px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.shp-status-lbl {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  margin-bottom: 8px;
+}
+.shp-status-val {
+  font-size: 28px; font-weight: 800; letter-spacing: 4px;
+  text-transform: uppercase;
+}
+.shp-body { padding: 6px 16px 14px; }
+.shp-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 14px;
+}
+.shp-row:last-child { border-bottom: none; }
+.shp-lbl { color: rgba(255,255,255,0.45); font-weight: 600; }
+.shp-val { color: #fff; font-weight: 700; }
+
 /* ── Alarm fog ────────────────────────────────────────────────────── */
 /* ── Alarm fog — radial-gradient approach, zero filter, zero clip issues ── */
 /* @property enables CSS transitions on the custom color variable          */
@@ -430,6 +484,8 @@ html, body {
       <img id="haus-img" src="img/dashboard/haus.png" alt="Haus" style="width:240px;">
       <!-- Transparent pool click zone: pool occupies ~7.5-25.6% left, 61.5-76.9% top of the image -->
       <div id="pool-clickzone" style="position:absolute;left:7.5%;top:61.5%;width:18.1%;height:15.4%;cursor:pointer;-webkit-tap-highlight-color:transparent;"></div>
+      <!-- Shield / fog click zone: covers the roof + fog area above the house -->
+      <div id="shield-clickzone" style="position:absolute;left:5%;top:-70%;width:90%;height:75%;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:5;"></div>
     </div>
     <div class="resize-handle"></div>
   </div>
@@ -662,6 +718,21 @@ html, body {
       <div class="cpp-row"><span class="cpp-lbl">Wassertemperatur</span><span class="cpp-val" id="ppp-temp">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">pH-Wert</span><span class="cpp-val" id="ppp-ph">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">ORP</span><span class="cpp-val" id="ppp-orp">–</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Shield popup modal ───────────────────────────────────────────── -->
+<div id="shield-popup-backdrop" onclick="closeShieldPopup()">
+  <div id="shield-popup-card" onclick="event.stopPropagation()">
+    <div class="shp-header"><span class="shp-dot"></span>SHIELD · ALARMSYSTEM</div>
+    <div class="shp-status-block">
+      <div class="shp-status-lbl">STATUS</div>
+      <div class="shp-status-val" id="shp-status-val">–</div>
+    </div>
+    <div class="shp-body">
+      <div class="shp-row"><span class="shp-lbl">Alarm aktiviert</span><span class="shp-val" id="shp-activated">–</span></div>
+      <div class="shp-row"><span class="shp-lbl">Scharf innen</span><span class="shp-val" id="shp-inside">–</span></div>
     </div>
   </div>
 </div>
@@ -1168,6 +1239,27 @@ function updateShieldLabel() {
   }
   valEl.style.color = '#fff';   // always white like other node-values
   updateAlarmFog();
+  // keep open popup in sync
+  if (document.getElementById('shield-popup-backdrop').classList.contains('open')) updateShieldPopup();
+}
+
+function updateShieldPopup() {
+  const statusEl = document.getElementById('shp-status-val');
+  const activEl  = document.getElementById('shp-activated');
+  const insideEl = document.getElementById('shp-inside');
+  if (!statusEl) return;
+  if (live.alarmActivated) {
+    statusEl.textContent = 'ACTIVE';
+    statusEl.style.color = '#FF5555';
+  } else if (live.alarmSharpInside) {
+    statusEl.textContent = 'INACTIVE';
+    statusEl.style.color = '#44AA44';
+  } else {
+    statusEl.textContent = 'DISABLED';
+    statusEl.style.color = '#F5B14C';
+  }
+  if (activEl)  activEl.textContent  = live.alarmActivated   ? 'JA' : 'NEIN';
+  if (insideEl) insideEl.textContent = live.alarmSharpInside ? 'JA' : 'NEIN';
 }
 
 // ── Battery SOC block visualisation ───────────────────────────────────────
@@ -1607,7 +1699,7 @@ function initAnchorDrag(anchorEl) {
 
   // Close on Escape key
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); }
+    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); window.closeShieldPopup(); }
   });
 
   // ── Edit-mode connector lines ──────────────────────────────────────────────
@@ -1688,6 +1780,32 @@ function initAnchorDrag(anchorEl) {
     poolLabel.style.cursor = 'pointer';
     poolLabel.style.webkitTapHighlightColor = 'transparent';
     poolLabel.addEventListener('click', () => { if (!editMode) openPoolPopup(); });
+  }
+
+  // ── Shield popup ───────────────────────────────────────────────────────────
+  window.openShieldPopup = function() {
+    updateShieldPopup();
+    document.getElementById('shield-popup-backdrop').classList.add('open');
+  };
+  window.closeShieldPopup = function() {
+    document.getElementById('shield-popup-backdrop').classList.remove('open');
+  };
+
+  // Shield clickzone (fog / roof area above house)
+  const shieldZone = document.getElementById('shield-clickzone');
+  if (shieldZone) {
+    shieldZone.addEventListener('click', e => {
+      if (editMode) return;
+      e.stopPropagation();
+      openShieldPopup();
+    });
+  }
+  // Shield label
+  const shieldLabel = document.getElementById('lb-shield');
+  if (shieldLabel) {
+    shieldLabel.style.cursor = 'pointer';
+    shieldLabel.style.webkitTapHighlightColor = 'transparent';
+    shieldLabel.addEventListener('click', () => { if (!editMode) openShieldPopup(); });
   }
 })();
 </script>
