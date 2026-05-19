@@ -1484,6 +1484,7 @@ function applyState(oid, val) {
       live.carPresence = (val === true || val === 'true' || val === 1 || val === '1');
       const carImg = document.querySelector('#n-car img');
       if (carImg) carImg.style.opacity = (editMode || live.carPresence) ? '1' : '0';
+      updateFlows();
       break;
     }
     case OIDs.battSoc:     live.battSoc     = isNaN(n) ? null : n;      updateFlows(); break;
