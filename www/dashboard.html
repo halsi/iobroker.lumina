@@ -391,8 +391,8 @@ html, body {
 .shp-btn:hover  { filter: brightness(120%); }
 .shp-btn:active { transform: scale(0.96); filter: brightness(90%); }
 .shp-btn-enable   { background: #44AA44; color: #000; }
-.shp-btn-disable  { background: #FF5555; color: #000; }
-.shp-btn-inactive { background: #F5B14C; color: #000; }
+.shp-btn-disable  { background: #F5B14C; color: #000; }
+.shp-btn-inactive { background: #FF5555; color: #000; }
 
 /* ── Alarm fog ────────────────────────────────────────────────────── */
 /* ── Alarm fog — radial-gradient approach, zero filter, zero clip issues ── */
@@ -548,6 +548,15 @@ html, body {
     <div class="resize-handle"></div>
   </div>
 
+  <div id="n-beregner" class="holo-node">
+    <div style="position:relative;display:inline-block;line-height:0;">
+      <img id="beregner-base-img" src="img/dashboard/beregner-inactive.png" alt="Beregner" style="width:160px;">
+      <img id="beregner-active-img" src="img/dashboard/beregner-active.png" alt="Beregner aktiv"
+           style="position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 0.4s;">
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
   <!-- Independent draggable labels -->
   <div id="lb-solar" class="holo-label" data-size="22">
     <div class="label-controls">
@@ -662,6 +671,15 @@ html, body {
     </div>
     <span class="node-name" style="color:#6AAEFF;">BODENFEUCHTE</span><br>
     <span class="node-value" id="v-gurken">–</span>
+  </div>
+
+  <div id="lb-beregner" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#6AAEFF;">BEREGNER</span><br>
+    <span class="node-value" id="v-beregner" style="display:none;">–</span>
   </div>
 
   <div id="lb-shield" class="holo-label" data-size="22">
@@ -804,6 +822,7 @@ const NODE_META = {
   'n-hochbeet':    { w: 160, h: 160 },
   'n-tomaten':     { w: 160, h: 160 },
   'n-gurken':      { w: 120, h: 180 },
+  'n-beregner':   { w: 160, h: 160 },
 };
 
 // Default positions for ~1600×900 viewport
@@ -819,6 +838,7 @@ const DEFAULT_POSITIONS = {
   'n-hochbeet':    { x: 420,  y: 570 },
   'n-tomaten':     { x: 240,  y: 570 },
   'n-gurken':      { x:  80,  y: 570 },
+  'n-beregner':   { x: 240,  y: 700 },
 };
 
 // ── Load/save positions ────────────────────────────────────────────────────
@@ -1060,6 +1080,7 @@ const OIDs = {
   poolORP:        '0_userdata.0.Pool.PoolORP',
   alarmActivated:   'alarm.0.status.activated',
   alarmSharpInside: 'alarm.0.status.sharp_inside_activated',
+  beregnerActive:   '0_userdata.0.Test',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -1067,7 +1088,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1280,6 +1301,14 @@ window.shieldAction = function(oid) {
   }
 };
 
+function updateBeregner() {
+  const activeImg = document.getElementById('beregner-active-img');
+  const valEl     = document.getElementById('v-beregner');
+  const active    = editMode || live.beregnerActive;
+  if (activeImg) activeImg.style.opacity = active ? '1' : '0';
+  if (valEl)     valEl.style.display     = live.beregnerActive ? '' : 'none';
+}
+
 // ── Battery SOC block visualisation ───────────────────────────────────────
 function updateBattBlocks(soc) {
   const filled = soc == null ? 0 : Math.ceil((soc / 100) * 6);
@@ -1318,6 +1347,11 @@ function applyState(oid, val) {
     case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
     case OIDs.alarmActivated:   live.alarmActivated   = !!val; updateShieldLabel(); break;
     case OIDs.alarmSharpInside: live.alarmSharpInside = !!val; updateShieldLabel(); break;
+    case OIDs.beregnerActive: {
+      live.beregnerActive = (val === true || val === 'true' || val === 1 || val === '1');
+      updateBeregner();
+      break;
+    }
     case OIDs.poolAbdeckung: {
       live.poolAbdeckung = !!val;
       const hi = document.getElementById('haus-img');
@@ -1411,6 +1445,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-tomaten':     { x: 320,  y: 730, size: 22 },
   'lb-gurken':      { x: 140,  y: 730, size: 22 },
   'lb-shield':      { x: 870,  y: 380, size: 22 },
+  'lb-beregner':   { x: 320,  y: 870, size: 22 },
 };
 
 function loadLabelState() {
@@ -1571,6 +1606,7 @@ function initAnchorDrag(anchorEl) {
 
   // Initialize shield label + fog with current (default) state
   updateShieldLabel();
+  updateBeregner();
 
   // Edit mode setup
   if (editMode) {
@@ -1735,6 +1771,7 @@ function initAnchorDrag(anchorEl) {
     'lb-tomaten':    'n-tomaten',
     'lb-gurken':     'n-gurken',
     'lb-shield':     'n-house',
+    'lb-beregner':  'n-beregner',
   };
 
   const connSvg = document.getElementById('connector-svg');
