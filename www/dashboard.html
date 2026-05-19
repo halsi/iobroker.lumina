@@ -1298,10 +1298,10 @@ function updateFlows() {
   setFlow('fp-wb-grid', wbGridOn, true);
   setFlowLabel('fl-wb-grid', wbGridOn ? fmtW(wbPowerGrid) : '', wbGridOn);
 
-  // Wallbox → Auto (nur wenn Auto anwesend)
-  const wbCarOn = wbOn && live.carPresence;
-  setFlow('fp-wb-car', wbCarOn, false);
-  setFlowLabel('fl-wb-car', wbCarOn ? fmtW(wbPower) : '', wbCarOn);
+  // Wallbox → Auto: sichtbar wenn Auto da (oder edit mode), lädt nur wenn wbOn
+  const carVisible = editMode || live.carPresence;
+  setFlow('fp-wb-car', carVisible, false);
+  setFlowLabel('fl-wb-car', (carVisible && wbOn) ? fmtW(wbPower) : '', carVisible && wbOn);
 }
 
 // ── Sensor label updates ───────────────────────────────────────────────────
