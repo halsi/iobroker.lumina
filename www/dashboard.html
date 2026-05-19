@@ -555,7 +555,7 @@ html, body {
       <img id="beregner-base-img" src="img/dashboard/beregner-inactive.png" alt="Beregner"
            style="position:absolute;left:0;top:0;width:160px;z-index:0;">
       <img id="beregner-active-img" src="img/dashboard/beregner-active.png" alt="Beregner aktiv"
-           style="position:absolute;left:0;top:-60px;width:160px;z-index:1;opacity:0;transition:opacity 0.4s;">
+           style="position:absolute;left:0;top:-70px;width:160px;z-index:1;opacity:0;transition:opacity 0.4s;">
     </div>
     <div class="resize-handle"></div>
   </div>
@@ -1317,9 +1317,11 @@ window.shieldAction = function(oid) {
 
 function updateBeregner() {
   const activeImg = document.getElementById('beregner-active-img');
+  const baseImg   = document.getElementById('beregner-base-img');
   const valEl     = document.getElementById('v-beregner');
   const active    = editMode || live.beregnerActive;
   if (activeImg) activeImg.style.opacity = active ? '1' : '0';
+  if (baseImg)   baseImg.style.opacity   = active ? '0' : '1';
   if (valEl)     valEl.style.display     = live.beregnerActive ? '' : 'none';
 }
 
