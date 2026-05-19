@@ -326,6 +326,41 @@ html, body {
 .cpp-val { color:#fff; font-weight:700; }
 .cpp-batt-wrap { width:70px; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; }
 .cpp-batt-bar  { height:100%; border-radius:4px; background:#44AA44; transition:width 0.4s, background 0.4s; }
+
+/* ── Alarm fog ────────────────────────────────────────────────────── */
+#alarm-fog {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+.fog-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0;
+  transition: background-color 2s ease, opacity 1.5s ease;
+}
+.fog-blob-1 { width: 520px; height: 420px; left: 30%; top:  5%; animation: fog-drift-a 10s ease-in-out infinite; }
+.fog-blob-2 { width: 420px; height: 360px; left: 26%; top:  2%; animation: fog-drift-b 13s ease-in-out infinite; animation-delay: -4s; }
+.fog-blob-3 { width: 360px; height: 320px; left: 37%; top: 12%; animation: fog-drift-c  9s ease-in-out infinite; animation-delay: -6s; }
+.fog-blob-4 { width: 300px; height: 260px; left: 32%; top:  0%; animation: fog-drift-a 15s ease-in-out infinite; animation-delay: -9s; }
+
+@keyframes fog-drift-a {
+  0%,100% { transform: translate(  0px,   0px) scale(1.00); }
+  35%     { transform: translate( 38px, -28px) scale(1.13); }
+  70%     { transform: translate(-22px,  18px) scale(0.94); }
+}
+@keyframes fog-drift-b {
+  0%,100% { transform: translate(  0px,   0px) scale(1.00); }
+  40%     { transform: translate(-32px,  22px) scale(1.09); }
+  75%     { transform: translate( 28px, -32px) scale(1.06); }
+}
+@keyframes fog-drift-c {
+  0%,100% { transform: translate( 0px,  0px) scale(1.00); }
+  50%     { transform: translate(18px, 28px) scale(0.91); }
+}
 </style>
 </head>
 <body>
@@ -335,6 +370,14 @@ html, body {
 <div id="bg" style="background-image:url('img/dashboard/background-day.png')"></div>
 <div id="bg-overlay"></div>
 <div id="scene">
+
+  <!-- Alarm fog — z:2, sits between bg-overlay and holo-nodes -->
+  <div id="alarm-fog">
+    <div class="fog-blob fog-blob-1"></div>
+    <div class="fog-blob fog-blob-2"></div>
+    <div class="fog-blob fog-blob-3"></div>
+    <div class="fog-blob fog-blob-4"></div>
+  </div>
 
   <!-- Edit-mode connector lines SVG -->
   <svg id="connector-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;display:none;"></svg>
@@ -534,6 +577,15 @@ html, body {
     </div>
     <span class="node-name" style="color:#6AAEFF;">BODENFEUCHTE</span><br>
     <span class="node-value" id="v-gurken">–</span>
+  </div>
+
+  <div id="lb-shield" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#CC2200;">SHIELD</span><br>
+    <span class="node-value" id="v-shield">–</span>
   </div>
 
   <!-- Flow anchors: 2 per flow (each endpoint independently draggable in edit mode) -->
@@ -901,6 +953,8 @@ const OIDs = {
   poolAbdeckung:  '0_userdata.0.Pool.Abdeckung',
   poolPH:         '0_userdata.0.Pool.Pool-PH-Wert',
   poolORP:        '0_userdata.0.Pool.PoolORP',
+  alarmActivated:   'alarm.0.status.activated',
+  alarmSharpInside: 'alarm.0.status.sharp_inside_activated',
   pvDay:       'modbus.0.inputRegisters.13001_Daily_PV_Generation',
   bezugDay:    'modbus.0.inputRegisters.13035_Daily_Import_Energy',
   loadDay:     'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
@@ -908,7 +962,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1054,6 +1108,40 @@ function updateSolarImg() {
     : "url('img/dashboard/background-day.png')";
 }
 
+// ── Alarm fog + shield label ───────────────────────────────────────────────
+function updateAlarmFog() {
+  const fog = document.getElementById('alarm-fog');
+  if (!fog) return;
+  let color, opacity;
+  if (live.alarmActivated) {
+    color = '#F07C7C'; opacity = 0.38;        // LCARS Salmon — alarm active
+  } else if (live.alarmSharpInside) {
+    color = '#99FF99'; opacity = 0.32;        // LCARS Lime   — armed / inactive
+  } else {
+    color = '#F5B14C'; opacity = 0.30;        // LCARS Orange — disabled
+  }
+  fog.querySelectorAll('.fog-blob').forEach(b => {
+    b.style.backgroundColor = color;
+    b.style.opacity = opacity;
+  });
+}
+
+function updateShieldLabel() {
+  const valEl = document.getElementById('v-shield');
+  if (!valEl) return;
+  if (live.alarmActivated) {
+    valEl.textContent = 'ACTIVE';
+    valEl.style.color = '#F07C7C';
+  } else if (live.alarmSharpInside) {
+    valEl.textContent = 'INACTIVE';
+    valEl.style.color = '#99FF99';
+  } else {
+    valEl.textContent = 'DISABLED';
+    valEl.style.color = '#F5B14C';
+  }
+  updateAlarmFog();
+}
+
 // ── Battery SOC block visualisation ───────────────────────────────────────
 function updateBattBlocks(soc) {
   const filled = soc == null ? 0 : Math.ceil((soc / 100) * 6);
@@ -1084,6 +1172,8 @@ function applyState(oid, val) {
     case OIDs.bodenfeuchte:   live.bodenfeuchte   = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.poolPH:  live.poolPH  = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
     case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
+    case OIDs.alarmActivated:   live.alarmActivated   = !!val; updateShieldLabel(); break;
+    case OIDs.alarmSharpInside: live.alarmSharpInside = !!val; updateShieldLabel(); break;
     case OIDs.poolAbdeckung: {
       live.poolAbdeckung = !!val;
       const hi = document.getElementById('haus-img');
@@ -1176,6 +1266,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-hochbeet':    { x: 500,  y: 730, size: 22 },
   'lb-tomaten':     { x: 320,  y: 730, size: 22 },
   'lb-gurken':      { x: 140,  y: 730, size: 22 },
+  'lb-shield':      { x: 770,  y: 440, size: 22 },
 };
 
 function loadLabelState() {
@@ -1333,6 +1424,9 @@ function initAnchorDrag(anchorEl) {
 
   // Draw initial SVG paths
   updatePaths();
+
+  // Initialize shield label + fog with current (default) state
+  updateShieldLabel();
 
   // Edit mode setup
   if (editMode) {
@@ -1495,6 +1589,7 @@ function initAnchorDrag(anchorEl) {
     'lb-hochbeet':   'n-hochbeet',
     'lb-tomaten':    'n-tomaten',
     'lb-gurken':     'n-gurken',
+    'lb-shield':     'n-house',
   };
 
   const connSvg = document.getElementById('connector-svg');
