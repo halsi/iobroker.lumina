@@ -38,7 +38,6 @@
 
 html, body {
   width: 100%; height: 100%;
-  min-width: 1920px; min-height: 1080px;
   overflow: hidden;
   background: #05070D;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -48,12 +47,13 @@ html, body {
 
 /* Outer padding creates the thin black border around the whole frame */
 #lcars-wrap {
-  width: 100vw;
-  height: 100vh;
+  width: 1920px;
+  height: 1080px;
   padding: 8px 12px;
   background: var(--bg);
   display: flex;
   gap: var(--gap);
+  transform-origin: top left;
 }
 
 /* ══ LEFT SIDEBAR ══════════════════════════════════════════════════ */
@@ -407,6 +407,18 @@ setInterval(updateClock, 10000);
   const sock = io({ path: '/socket.io' });
   sock.on('connect',    () => { dot.style.background = ''; dot.style.boxShadow = ''; text.textContent = 'Online';  });
   sock.on('disconnect', () => { dot.style.background = '#CC2200'; dot.style.boxShadow = 'none'; text.textContent = 'Offline'; });
+})();
+</script>
+
+<script>
+(function() {
+  const wrap = document.getElementById('lcars-wrap');
+  function scaleToFit() {
+    const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    wrap.style.transform = s >= 1 ? '' : `scale(${s})`;
+  }
+  scaleToFit();
+  window.addEventListener('resize', scaleToFit);
 })();
 </script>
 
