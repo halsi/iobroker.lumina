@@ -1124,20 +1124,20 @@ const NODE_META = {
 
 // Default positions for ~1600×900 viewport
 const DEFAULT_POSITIONS = {
-  'n-solar':   { x: 180,  y: 120 },
-  'n-house':   { x: 650,  y: 140 },
-  'n-battery': { x: 120,  y: 480 },
-  'n-grid':    { x: 1200, y: 100 },
-  'n-wallbox': { x: 1080, y: 420 },
-  'n-car':     { x: 1350, y: 560 },
-  'n-heizung':     { x: 780,  y: 570 },
-  'n-poolheizung': { x: 600,  y: 570 },
-  'n-hochbeet':    { x: 420,  y: 570 },
-  'n-tomaten':     { x: 240,  y: 570 },
-  'n-gurken':      { x:  80,  y: 570 },
-  'n-verteiler-wasser': { x: 560, y: 360 },
-  'n-boiler':           { x: 960, y: 400 },
-  'n-beregner':   { x: 240,  y: 700 },
+  'n-solar':            { x: 278,  y:  -4, width: 284 },
+  'n-house':            { x: 839,  y:  31, width: 794 },
+  'n-battery':          { x: 749,  y: 142, width: 147 },
+  'n-grid':             { x: 373,  y: 236, width: 129 },
+  'n-wallbox':          { x:  96,  y: 287, width: 175 },
+  'n-car':              { x:  74,  y: 444, width: 358 },
+  'n-heizung':          { x:1617,  y: 270, width: 147 },
+  'n-poolheizung':      { x: 758,  y: 365, width:  96 },
+  'n-hochbeet':         { x:1280,  y: 384, width: 356 },
+  'n-tomaten':          { x:1591,  y: 519, width: 147 },
+  'n-gurken':           { x:1461,  y: 621, width: 110 },
+  'n-verteiler-wasser': { x: 856,  y: 684, width: 129, rot: 180 },
+  'n-boiler':           { x:1633,  y: 123, width: 110 },
+  'n-beregner':         { x:1124,  y: 595, width: 147 },
 };
 
 // ── Load/save positions ────────────────────────────────────────────────────
@@ -1231,32 +1231,32 @@ function bezierMid(c1, c2) {
 // ── Flow anchor state — 2 endpoints per flow ───────────────────────────────
 const DEFAULT_ANCHORS = {
   // Solar → Haus
-  'anc-solar-haus': { x: 290,  y: 200 },
-  'anc-haus-solar': { x: 730,  y: 248 },
+  'anc-solar-haus': { x:  479, y: 102 },
+  'anc-haus-solar': { x: 1144, y: 195 },
   // Solar → Batterie
-  'anc-solar-batt': { x: 250,  y: 225 },
-  'anc-batt-solar': { x: 190,  y: 530 },
+  'anc-solar-batt': { x:  473, y: 162 },
+  'anc-batt-solar': { x:  775, y: 184 },
   // Solar → Wallbox
-  'anc-solar-wb':   { x: 310,  y: 200 },
-  'anc-wb-solar':   { x: 1110, y: 475 },
+  'anc-solar-wb':   { x:  368, y: 161 },
+  'anc-wb-solar':   { x:  211, y: 320 },
   // Batterie → Haus
-  'anc-batt-haus':  { x: 230,  y: 530 },
-  'anc-haus-batt':  { x: 760,  y: 280 },
+  'anc-batt-haus':  { x:  865, y: 288 },
+  'anc-haus-batt':  { x: 1016, y: 289 },
   // Solar → Netz (Einspeisung)
-  'anc-solar-grid': { x: 270,  y: 215 },
-  'anc-grid-solar': { x: 1255, y: 155 },
+  'anc-solar-grid': { x:  419, y: 162 },
+  'anc-grid-solar': { x:  410, y: 267 },
   // Netz → Haus (Bezug)
-  'anc-haus-grid':  { x: 820,  y: 220 },
-  'anc-grid-haus':  { x: 1250, y: 178 },
+  'anc-haus-grid':  { x: 1068, y: 311 },
+  'anc-grid-haus':  { x:  478, y: 307 },
   // Wallbox → Netz
-  'anc-wb-grid':    { x: 1145, y: 470 },
-  'anc-grid-wb':    { x: 1278, y: 205 },
+  'anc-wb-grid':    { x:  209, y: 326 },
+  'anc-grid-wb':    { x:  433, y: 386 },
   // Wallbox → Auto
-  'anc-wb-car':     { x: 1175, y: 580 },
-  'anc-car-wb':     { x: 1390, y: 575 },
+  'anc-wb-car':     { x:  191, y: 377 },
+  'anc-car-wb':     { x:  237, y: 507 },
   // Netz → Batterie (GridToBat)
-  'anc-grid-batt':  { x: 1250, y: 210 },
-  'anc-batt-grid':  { x: 200,  y: 525 },
+  'anc-grid-batt':  { x:  475, y: 277 },
+  'anc-batt-grid':  { x:  770, y: 225 },
 };
 
 function loadAnchorState() {
@@ -1392,25 +1392,25 @@ const WATER_PIPE_DEFS = [
 ];
 
 const DEFAULT_PIPE_POINTS = {
-  'wph-garten-0':    { x: 700, y: 380 }, 'wph-garten-1':    { x: 700, y: 520 },
-  'wph-garten-2':    { x: 490, y: 520 }, 'wph-garten-3':    { x: 350, y: 660 },
-  'wph-beregner-0':  { x: 350, y: 660 }, 'wph-beregner-1':  { x: 350, y: 740 },
-  'wph-beregner-2':  { x: 280, y: 740 }, 'wph-beregner-3':  { x: 280, y: 820 },
-  'wph-hochbeet-0':  { x: 490, y: 520 }, 'wph-hochbeet-1':  { x: 490, y: 700 },
-  'wph-hochbeet-2':  { x: 600, y: 700 }, 'wph-hochbeet-3':  { x: 600, y: 820 },
-  'wph-gieskanne-0': { x: 700, y: 520 }, 'wph-gieskanne-1': { x: 700, y: 680 },
-  'wph-gieskanne-2': { x: 820, y: 680 }, 'wph-gieskanne-3': { x: 820, y: 820 },
-  'wph-pool-0':      { x: 700, y: 380 }, 'wph-pool-1':      { x: 700, y: 260 },
-  'wph-pool-2':      { x: 200, y: 260 }, 'wph-pool-3':      { x: 200, y: 480 },
+  'wph-garten-0':    { x:  920, y: 933 }, 'wph-garten-1':    { x:  920, y: 887 },
+  'wph-garten-2':    { x:  920, y: 856 }, 'wph-garten-3':    { x:  920, y: 820 },
+  'wph-beregner-0':  { x: 1022, y: 932 }, 'wph-beregner-1':  { x: 1022, y: 857 },
+  'wph-beregner-2':  { x: 1196, y: 857 }, 'wph-beregner-3':  { x: 1196, y: 726 },
+  'wph-hochbeet-0':  { x:  956, y: 732 }, 'wph-hochbeet-1':  { x:  956, y: 579 },
+  'wph-hochbeet-2':  { x: 1261, y: 579 }, 'wph-hochbeet-3':  { x: 1311, y: 579 },
+  'wph-gieskanne-0': { x:  885, y: 729 }, 'wph-gieskanne-1': { x:  885, y: 637 },
+  'wph-gieskanne-2': { x:  755, y: 637 }, 'wph-gieskanne-3': { x:  755, y: 724 },
+  'wph-pool-0':      { x:  643, y: 929 }, 'wph-pool-1':      { x:  643, y: 553 },
+  'wph-pool-2':      { x:  901, y: 553 }, 'wph-pool-3':      { x: 1034, y: 427 },
 };
 
 // ── Pipe label state ───────────────────────────────────────────────────────
 const DEFAULT_PIPE_LABELS = {
-  'wpl-garten':    { x: 550, y: 470, rot: 0 },
-  'wpl-beregner':  { x: 320, y: 710, rot: 0 },
-  'wpl-hochbeet':  { x: 540, y: 630, rot: 0 },
-  'wpl-gieskanne': { x: 760, y: 620, rot: 0 },
-  'wpl-pool':      { x: 450, y: 300, rot: 0 },
+  'wpl-garten':    { x:  970, y: 737, rot: 0 },
+  'wpl-beregner':  { x: 1110, y: 838, rot: 0 },
+  'wpl-hochbeet':  { x: 1137, y: 563, rot: 0 },
+  'wpl-gieskanne': { x:  820, y: 618, rot: 0 },
+  'wpl-pool':      { x:  729, y: 538, rot: 0 },
 };
 const pipeLabelState = {};
 
@@ -2125,23 +2125,23 @@ function initResize(nodeEl) {
 
 // ── Label state: default positions + font sizes ────────────────────────────
 const DEFAULT_LABEL_STATE = {
-  'lb-solar':   { x: 270,  y: 310, size: 22 },
-  'lb-house':   { x: 770,  y: 370, size: 22 },
-  'lb-battery': { x: 200,  y: 645, size: 22 },
-  'lb-grid':    { x: 1270, y: 245, size: 22 },
-  'lb-wallbox': { x: 1175, y: 700, size: 22 },
-  'lb-car':     { x: 1460, y: 620, size: 22 },
-  'lb-temp-out': { x: 100,  y: 500, size: 22 },
-  'lb-temp-in':  { x: 100,  y: 560, size: 22 },
-  'lb-pool':     { x: 100,  y: 620, size: 22 },
-  'lb-heizung':     { x: 860,  y: 730, size: 22 },
-  'lb-poolheizung': { x: 680,  y: 730, size: 22 },
-  'lb-hochbeet':    { x: 500,  y: 730, size: 22 },
-  'lb-tomaten':     { x: 320,  y: 730, size: 22 },
-  'lb-gurken':      { x: 140,  y: 730, size: 22 },
-  'lb-shield':      { x: 870,  y: 380, size: 22 },
-  'lb-beregner':   { x: 320,  y: 870, size: 22 },
-  'lb-boiler':     { x: 1060, y: 540, size: 22 },
+  'lb-solar':       { x:  315, y:  35, size: 22 },
+  'lb-house':       { x: 1044, y:  84, size: 34 },
+  'lb-battery':     { x:  710, y: 340, size: 22 },
+  'lb-grid':        { x:  509, y: 339, size: 22 },
+  'lb-wallbox':     { x:   97, y: 316, size: 22 },
+  'lb-car':         { x:  310, y: 424, size: 22 },
+  'lb-temp-out':    { x: 1187, y:  67, size: 22 },
+  'lb-temp-in':     { x: 1135, y: 268, size: 22 },
+  'lb-pool':        { x:  966, y: 342, size: 22 },
+  'lb-heizung':     { x: 1697, y: 390, size: 22 },
+  'lb-poolheizung': { x:  804, y: 439, size: 22 },
+  'lb-hochbeet':    { x: 1499, y: 539, size: 22 },
+  'lb-tomaten':     { x: 1663, y: 662, size: 22 },
+  'lb-gurken':      { x: 1518, y: 778, size: 22 },
+  'lb-shield':      { x: 1372, y:  65, size: 22 },
+  'lb-beregner':    { x: 1123, y: 729, size: 22 },
+  'lb-boiler':      { x: 1679, y:  64, size: 22 },
 };
 
 function loadLabelState() {
