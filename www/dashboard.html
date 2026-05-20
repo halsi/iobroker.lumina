@@ -188,6 +188,27 @@ html, body {
 }
 .edit-mode .resize-handle { display: block; }
 
+/* ── Rotate handle ────────────────────────────────────────────────────── */
+.rotate-handle {
+  display: none;
+  position: absolute;
+  left: -6px;
+  bottom: 26px;
+  width: 18px;
+  height: 18px;
+  background: rgba(40,100,220,0.35);
+  border: 1.5px solid rgba(126,207,255,0.7);
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 20;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  color: rgba(200,235,255,0.9);
+  user-select: none;
+}
+.edit-mode .rotate-handle { display: block; }
+
 /* ── Flow anchors ─────────────────────────────────────────────────────── */
 .flow-anchor {
   position: absolute;
@@ -588,7 +609,7 @@ html, body {
     <g id="water-pipes-g">
       <!-- wp-garten: shadow / body / highlight / flow-animation -->
       <path id="wpe-garten-shadow" fill="none" stroke="rgba(5,20,50,0.35)"    stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-garten-body"   fill="none" stroke="rgba(126,207,255,0.08)" stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-garten-body"   fill="none" stroke="rgba(126,207,255,0.0)" stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-garten-hi"     fill="none" stroke="rgba(200,235,255,0.25)" stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-garten-flow"   fill="none" stroke="rgba(40,100,220,0.92)" stroke-width="5" stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
       <!-- Control point handles (visible in edit mode) -->
@@ -603,7 +624,7 @@ html, body {
 
       <!-- wp-beregner -->
       <path id="wpe-beregner-shadow" fill="none" stroke="rgba(5,20,50,0.35)"     stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-beregner-body"   fill="none" stroke="rgba(126,207,255,0.08)"  stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-beregner-body"   fill="none" stroke="rgba(126,207,255,0.0)"  stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-beregner-hi"     fill="none" stroke="rgba(200,235,255,0.25)" stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-beregner-flow"   fill="none" stroke="rgba(40,100,220,0.92)" stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
       <circle class="pipe-handle" id="wph-beregner-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
@@ -617,7 +638,7 @@ html, body {
 
       <!-- wp-hochbeet -->
       <path id="wpe-hochbeet-shadow" fill="none" stroke="rgba(5,20,50,0.35)"     stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-hochbeet-body"   fill="none" stroke="rgba(126,207,255,0.08)"  stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-hochbeet-body"   fill="none" stroke="rgba(126,207,255,0.0)"  stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-hochbeet-hi"     fill="none" stroke="rgba(200,235,255,0.25)" stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-hochbeet-flow"   fill="none" stroke="rgba(40,100,220,0.92)" stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
       <circle class="pipe-handle" id="wph-hochbeet-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
@@ -631,7 +652,7 @@ html, body {
 
       <!-- wp-gieskanne -->
       <path id="wpe-gieskanne-shadow" fill="none" stroke="rgba(5,20,50,0.35)"     stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-gieskanne-body"   fill="none" stroke="rgba(126,207,255,0.08)"  stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-gieskanne-body"   fill="none" stroke="rgba(126,207,255,0.0)"  stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-gieskanne-hi"     fill="none" stroke="rgba(200,235,255,0.25)" stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-gieskanne-flow"   fill="none" stroke="rgba(40,100,220,0.92)" stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
       <circle class="pipe-handle" id="wph-gieskanne-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
@@ -645,7 +666,7 @@ html, body {
 
       <!-- wp-pool -->
       <path id="wpe-pool-shadow" fill="none" stroke="rgba(5,20,50,0.35)"     stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-pool-body"   fill="none" stroke="rgba(126,207,255,0.08)"  stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-pool-body"   fill="none" stroke="rgba(126,207,255,0.0)"  stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-pool-hi"     fill="none" stroke="rgba(200,235,255,0.25)" stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-pool-flow"   fill="none" stroke="rgba(40,100,220,0.92)" stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
       <circle class="pipe-handle" id="wph-pool-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
@@ -748,6 +769,12 @@ html, body {
       <div id="beregner-clickzone" style="position:absolute;inset:0;cursor:pointer;z-index:5;-webkit-tap-highlight-color:transparent;"></div>
     </div>
     <div class="resize-handle"></div>
+  </div>
+
+  <div id="n-verteiler-wasser" class="holo-node">
+    <img src="img/dashboard/verteiler-wasser.png" alt="Wasser-Verteiler" style="width:140px;">
+    <div class="resize-handle"></div>
+    <div class="rotate-handle" title="Drehen (45°)">↻</div>
   </div>
 
   <!-- Independent draggable labels -->
@@ -1041,6 +1068,7 @@ const NODE_META = {
   'n-hochbeet':    { w: 160, h: 160 },
   'n-tomaten':     { w: 160, h: 160 },
   'n-gurken':      { w: 120, h: 180 },
+  'n-verteiler-wasser': { w: 140, h: 140 },
   'n-beregner':   { w: 160, h: 160 },
 };
 
@@ -1057,6 +1085,7 @@ const DEFAULT_POSITIONS = {
   'n-hochbeet':    { x: 420,  y: 570 },
   'n-tomaten':     { x: 240,  y: 570 },
   'n-gurken':      { x:  80,  y: 570 },
+  'n-verteiler-wasser': { x: 560, y: 360 },
   'n-beregner':   { x: 240,  y: 700 },
 };
 
@@ -1083,11 +1112,15 @@ function savePositions() {
     const node = document.getElementById(id);
     if (!node) return;
     const img = node.querySelector('img');
-    pos[id] = {
+    const entry = {
       x:     parseFloat(node.style.left) || 0,
       y:     parseFloat(node.style.top)  || 0,
       width: parseFloat(img && img.style.width) || NODE_META[id].w,
     };
+    // Persist rotation for nodes that support it
+    const rh = node.querySelector('.rotate-handle');
+    if (rh) entry.rot = parseInt(rh.dataset.rot || '0', 10);
+    pos[id] = entry;
   });
   try { localStorage.setItem('holo_positions', JSON.stringify(pos)); } catch (e) {}
   saveToServer(CFG_POSITIONS, pos);
@@ -1101,7 +1134,13 @@ function applyPositions(positions) {
     const p = (positions && positions[id]) || DEFAULT_POSITIONS[id] || { x: 0, y: 0 };
     node.style.left = p.x + 'px';
     node.style.top  = p.y + 'px';
-    if (p.width) node.querySelector('img').style.width = p.width + 'px';
+    const img = node.querySelector('img');
+    if (p.width && img) img.style.width = p.width + 'px';
+    if (p.rot != null) {
+      if (img) img.style.transform = `rotate(${p.rot}deg)`;
+      const rh = node.querySelector('.rotate-handle');
+      if (rh) rh.dataset.rot = p.rot;
+    }
   });
 }
 
@@ -1468,8 +1507,8 @@ function updatePipeFlow(pipeId, active) {
   }
   if (bodyEl) {
     bodyEl.setAttribute('stroke', on
-      ? 'rgba(126,207,255,0.32)'
-      : 'rgba(126,207,255,0.08)');
+      ? 'rgba(126,207,255,0.65)'
+      : 'rgba(126,207,255,0.0)');
   }
 }
 
@@ -2192,7 +2231,23 @@ function initAnchorDrag(anchorEl) {
     // Fog auto-follows house — no manual positioning needed
     Object.keys(NODE_META).forEach(id => {
       const node = document.getElementById(id);
-      if (node) { initDrag(node); initResize(node); }
+      if (node) {
+        initDrag(node);
+        initResize(node);
+        // Rotate handle (45° steps) — only for nodes that have one
+        const rh = node.querySelector('.rotate-handle');
+        if (rh) {
+          rh.addEventListener('click', e => {
+            e.stopPropagation();
+            const cur = parseInt(rh.dataset.rot || '0', 10);
+            const next = (cur + 45) % 360;
+            rh.dataset.rot = next;
+            const img = node.querySelector('img');
+            if (img) img.style.transform = `rotate(${next}deg)`;
+            savePositions();
+          });
+        }
+      }
     });
     Object.keys(DEFAULT_LABEL_STATE).forEach(id => {
       const label = document.getElementById(id);
