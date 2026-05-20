@@ -811,6 +811,11 @@ html, body {
     <div class="rotate-handle" title="Drehen (45°)">↻</div>
   </div>
 
+  <div id="n-boiler" class="holo-node">
+    <img src="img/dashboard/boiler.png" alt="Warmwasser-Boiler" style="width:120px;">
+    <div class="resize-handle"></div>
+  </div>
+
   <!-- Independent draggable labels -->
   <div id="lb-solar" class="holo-label" data-size="22">
     <div class="label-controls">
@@ -901,6 +906,14 @@ html, body {
     </div>
     <span class="node-name" style="color:#FF6347;">HEIZUNG</span><br>
     <span class="node-value" id="v-heizung">–</span>
+  </div>
+  <div id="lb-boiler" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#FF6347;">WARMWASSER</span><br>
+    <span class="node-value" id="v-boiler">–</span>
   </div>
   <div id="lb-hochbeet" class="holo-label" data-size="22">
     <div class="label-controls">
@@ -1105,6 +1118,7 @@ const NODE_META = {
   'n-tomaten':     { w: 160, h: 160 },
   'n-gurken':      { w: 120, h: 180 },
   'n-verteiler-wasser': { w: 140, h: 140 },
+  'n-boiler':           { w: 120, h: 120 },
   'n-beregner':   { w: 160, h: 160 },
 };
 
@@ -1122,6 +1136,7 @@ const DEFAULT_POSITIONS = {
   'n-tomaten':     { x: 240,  y: 570 },
   'n-gurken':      { x:  80,  y: 570 },
   'n-verteiler-wasser': { x: 560, y: 360 },
+  'n-boiler':           { x: 960, y: 400 },
   'n-beregner':   { x: 240,  y: 700 },
 };
 
@@ -1626,6 +1641,7 @@ const OIDs = {
   tempOut:     'mqtt.0.ebusd.700.DisplayedOutsideTemp',
   tempIn:      'mqtt.0.ebusd.700.z1RoomTemp',
   vorlaufTemp:    'mqtt.0.ebusd.700.Hc1FlowTemp',
+  hwcStorageTemp: 'mqtt.0.ebusd.700.HwcStorageTemp',
   poolHeizTarget: 'tuya.0.72783082e09806145670.2',
   bodenfeuchte:   '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.moisture',
   bodenfeuchteGurken:  '0_userdata.0.Wetter.Bodenfeuchte.0f74c2.moisture',
@@ -1650,7 +1666,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, gartenWasser: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, gartenWasser: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1801,6 +1817,7 @@ function updateSensors() {
   const tOut = document.getElementById('v-temp-out'); if (tOut)    tOut.textContent    = fmt(live.tempOut);
   const tIn  = document.getElementById('v-temp-in');  if (tIn)     tIn.textContent     = fmt(live.tempIn);
   const tHz  = document.getElementById('v-heizung');    if (tHz)  tHz.textContent  = fmt(live.vorlaufTemp);
+  const tBL  = document.getElementById('v-boiler');     if (tBL)  tBL.textContent  = fmt(live.hwcStorageTemp);
   const tPH  = document.getElementById('v-poolheizung'); if (tPH)  tPH.textContent  = fmt(live.poolHeizTarget);
   const tBF  = document.getElementById('v-hochbeet');    if (tBF)  tBF.textContent  = live.bodenfeuchte        != null ? live.bodenfeuchte.toFixed(0)        + ' %' : '–';
   const tGU  = document.getElementById('v-gurken');      if (tGU)  tGU.textContent  = live.bodenfeuchteGurken  != null ? live.bodenfeuchteGurken.toFixed(0)  + ' %' : '–';
@@ -1985,6 +2002,7 @@ function applyState(oid, val) {
     case OIDs.tempOut:     live.tempOut     = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.tempIn:      live.tempIn      = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.vorlaufTemp:    live.vorlaufTemp    = isNaN(n) ? null : n; updateSensors(); break;
+    case OIDs.hwcStorageTemp: live.hwcStorageTemp = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.poolHeizTarget: live.poolHeizTarget = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.bodenfeuchte:        live.bodenfeuchte        = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.bodenfeuchteGurken:  live.bodenfeuchteGurken  = isNaN(n) ? null : n; updateSensors(); break;
@@ -2104,6 +2122,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-gurken':      { x: 140,  y: 730, size: 22 },
   'lb-shield':      { x: 870,  y: 380, size: 22 },
   'lb-beregner':   { x: 320,  y: 870, size: 22 },
+  'lb-boiler':     { x: 1060, y: 540, size: 22 },
 };
 
 function loadLabelState() {
@@ -2461,6 +2480,7 @@ function initAnchorDrag(anchorEl) {
     'lb-gurken':     'n-gurken',
     'lb-shield':     'n-house',
     'lb-beregner':  'n-beregner',
+    'lb-boiler':    'n-boiler',
   };
 
   const connSvg = document.getElementById('connector-svg');
