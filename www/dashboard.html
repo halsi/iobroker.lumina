@@ -41,12 +41,19 @@ html, body {
   z-index: 1;
 }
 
-#scene {
+#dashboard-root {
   position: relative;
   width: 1920px;
   height: 1080px;
   overflow: hidden;
   transform-origin: top left;
+}
+
+#scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* ── SVG flow overlay ─────────────────────────────────────────────────── */
@@ -580,10 +587,12 @@ html, body {
 
 <div id="edit-badge">EDIT MODE — drag nodes/labels · corner=resize · ±=font</div>
 
+<div id="dashboard-root">
+
 <div id="bg" style="background-image:url('img/dashboard/background-day.png')"></div>
 <div id="bg-overlay"></div>
 
-<!-- Alarm fog — outside #scene so overflow:hidden cannot clip filter:blur() -->
+<!-- Alarm fog — inside dashboard-root so it scales with scene -->
 <div id="alarm-fog">
   <div class="fog-blob fog-blob-1"></div>
   <div class="fog-blob fog-blob-2"></div>
@@ -944,6 +953,8 @@ html, body {
   <div id="anc-batt-grid"  class="flow-anchor"><span class="anchor-label">Batt←Netz</span></div>
 
 </div><!-- /#scene -->
+
+</div><!-- /#dashboard-root -->
 
 <!-- ── Car popup modal ─────────────────────────────────────────────── -->
 <div id="car-popup-backdrop" onclick="closeCarPopup()">
@@ -2541,10 +2552,10 @@ function initAnchorDrag(anchorEl) {
 
 <script>
 (function() {
-  const scene = document.getElementById('scene');
+  const root = document.getElementById('dashboard-root');
   function scaleToFit() {
     const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-    scene.style.transform = s >= 1 ? '' : `scale(${s})`;
+    root.style.transform = s >= 1 ? '' : `scale(${s})`;
   }
   scaleToFit();
   window.addEventListener('resize', scaleToFit);
