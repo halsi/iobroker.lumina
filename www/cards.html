@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1920">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Lumina Cards</title>
 <link rel="shortcut icon" href="favicon32.png">
@@ -38,6 +38,7 @@ body {
   font-size: 15px;
   width: 1920px; height: 1080px;
   overflow: hidden;
+  transform-origin: top left;
 }
 
 /* ── Header ─────────────────────────────────────────────────────── */
@@ -879,5 +880,15 @@ setInterval(refreshAll, 300000);
   transform: scale(1.08);
 }
 </style>
+<script>
+(function() {
+  function scaleToFit() {
+    const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    document.body.style.transform = s >= 1 ? '' : `scale(${s})`;
+  }
+  scaleToFit();
+  window.addEventListener('resize', scaleToFit);
+})();
+</script>
 </body>
 </html>
