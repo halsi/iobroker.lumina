@@ -1607,6 +1607,8 @@ const OIDs = {
   vorlaufTemp:    'mqtt.0.ebusd.700.Hc1FlowTemp',
   poolHeizTarget: 'tuya.0.72783082e09806145670.2',
   bodenfeuchte:   '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.moisture',
+  bodenfeuchteGurken:  '0_userdata.0.Wetter.Bodenfeuchte.0f74c2.moisture',
+  bodenfeuchteTomaten: '0_userdata.0.Wetter.Bodenfeuchte.0f6c8d.moisture',
   poolAbdeckung:  '0_userdata.0.Pool.Abdeckung',
   poolPH:         '0_userdata.0.Pool.Pool-PH-Wert',
   poolORP:        '0_userdata.0.Pool.PoolORP',
@@ -1627,7 +1629,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, gartenWasser: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, gartenWasser: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1779,7 +1781,9 @@ function updateSensors() {
   const tIn  = document.getElementById('v-temp-in');  if (tIn)     tIn.textContent     = fmt(live.tempIn);
   const tHz  = document.getElementById('v-heizung');    if (tHz)  tHz.textContent  = fmt(live.vorlaufTemp);
   const tPH  = document.getElementById('v-poolheizung'); if (tPH)  tPH.textContent  = fmt(live.poolHeizTarget);
-  const tBF  = document.getElementById('v-hochbeet');    if (tBF)  tBF.textContent  = live.bodenfeuchte != null ? live.bodenfeuchte.toFixed(0) + ' %' : '–';
+  const tBF  = document.getElementById('v-hochbeet');    if (tBF)  tBF.textContent  = live.bodenfeuchte        != null ? live.bodenfeuchte.toFixed(0)        + ' %' : '–';
+  const tGU  = document.getElementById('v-gurken');      if (tGU)  tGU.textContent  = live.bodenfeuchteGurken  != null ? live.bodenfeuchteGurken.toFixed(0)  + ' %' : '–';
+  const tTO  = document.getElementById('v-tomaten');     if (tTO)  tTO.textContent  = live.bodenfeuchteTomaten != null ? live.bodenfeuchteTomaten.toFixed(0) + ' %' : '–';
 }
 
 // ── Solar / Moon image switcher ───────────────────────────────────────────
@@ -1961,7 +1965,9 @@ function applyState(oid, val) {
     case OIDs.tempIn:      live.tempIn      = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.vorlaufTemp:    live.vorlaufTemp    = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.poolHeizTarget: live.poolHeizTarget = isNaN(n) ? null : n; updateSensors(); break;
-    case OIDs.bodenfeuchte:   live.bodenfeuchte   = isNaN(n) ? null : n; updateSensors(); break;
+    case OIDs.bodenfeuchte:        live.bodenfeuchte        = isNaN(n) ? null : n; updateSensors(); break;
+    case OIDs.bodenfeuchteGurken:  live.bodenfeuchteGurken  = isNaN(n) ? null : n; updateSensors(); break;
+    case OIDs.bodenfeuchteTomaten: live.bodenfeuchteTomaten = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.poolPH:  live.poolPH  = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
     case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
     case OIDs.alarmActivated:   live.alarmActivated   = !!val; updateShieldLabel(); break;
