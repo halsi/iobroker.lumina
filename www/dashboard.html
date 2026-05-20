@@ -114,6 +114,17 @@ html, body {
 }
 
 #n-car { z-index: 5; }
+#n-car::before {
+  content: '';
+  position: absolute;
+  inset: -5% -8%;
+  background: radial-gradient(ellipse at 55% 60%,
+    rgba(5,7,13,0.92) 25%,
+    transparent 72%);
+  z-index: 0;
+  pointer-events: none;
+}
+#n-car img { position: relative; z-index: 1; }
 #n-car:active { opacity: 1 !important; outline: none; -webkit-tap-highlight-color: transparent; }
 
 
