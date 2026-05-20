@@ -581,8 +581,9 @@ html, body {
   0%,100% { transform: translate( 0px,  0px) scale(1.00); }
   50%     { transform: translate(18px, 28px) scale(0.91); }
 }
-html.edit-mode #dashboard-root {
-  box-shadow: inset 0 0 0 3px rgba(255, 40, 40, 1);
+html.edit-mode #dashboard-root,
+#dashboard-root.edit-mode {
+  box-shadow: inset 0 0 0 3px rgba(255, 40, 40, 1) !important;
 }
 </style>
 <script>if (new URLSearchParams(location.search).has('edit')) document.documentElement.classList.add('edit-mode');</script>
