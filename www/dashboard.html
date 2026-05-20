@@ -70,6 +70,11 @@ html, body {
   opacity: 0.23;
   transition: opacity 0.4s;
 }
+.flow-path.flow-hidden {
+  opacity: 0 !important;
+  animation: none !important;
+  stroke-dasharray: none !important;
+}
 .flow-path.flow-active {
   stroke-width: 2.5;
   stroke-dasharray: 10 6;
@@ -1740,9 +1745,19 @@ function updateFlows() {
   setFlowLabel('fl-wb-grid', wbGridOn ? fmtW(wbPowerGrid) : '', wbGridOn);
 
   // Wallbox → Auto: sichtbar wenn Auto da (oder edit mode), lädt nur wenn wbOn
-  const carVisible = editMode || live.carPresence;
-  setFlow('fp-wb-car', carVisible, false);
-  setFlowLabel('fl-wb-car', (carVisible && wbOn) ? fmtW(wbPower) : '', carVisible && wbOn);
+  // wb-car: 3 states — hidden / static / animated
+  const carPresent = editMode || live.carPresence;
+  const wbCarEl = document.getElementById('fp-wb-car');
+  if (wbCarEl) {
+    wbCarEl.classList.remove('flow-hidden', 'flow-active', 'flow-rev');
+    if (!carPresent) {
+      wbCarEl.classList.add('flow-hidden');          // auto weg → unsichtbar
+    } else if (wbOn) {
+      wbCarEl.classList.add('flow-active');           // auto da + lädt → animiert
+    }
+    // auto da + nicht am laden → dezente statische linie (default 0.23)
+  }
+  setFlowLabel('fl-wb-car', (carPresent && wbOn) ? fmtW(wbPower) : '', carPresent && wbOn);
 }
 
 // ── Sensor label updates ───────────────────────────────────────────────────
