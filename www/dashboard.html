@@ -581,16 +581,16 @@ html, body {
   0%,100% { transform: translate( 0px,  0px) scale(1.00); }
   50%     { transform: translate(18px, 28px) scale(0.91); }
 }
-body.edit-mode::after {
+#dashboard-root.edit-mode::before {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   border: 3px solid rgba(255, 40, 40, 0.9);
   pointer-events: none;
   z-index: 99999;
 }
 </style>
-<script>if (new URLSearchParams(location.search).has('edit')) { document.documentElement.classList.add('edit-mode'); document.addEventListener('DOMContentLoaded', function(){ document.body.classList.add('edit-mode'); }); }</script>
+<script>if (new URLSearchParams(location.search).has('edit')) document.documentElement.classList.add('edit-mode');</script>
 </head>
 <body>
 
@@ -2269,7 +2269,6 @@ function initAnchorDrag(anchorEl) {
     document.getElementById('edit-badge').style.display = 'block';
     document.getElementById('scene').classList.add('edit-mode');
     document.getElementById('dashboard-root').classList.add('edit-mode');
-    document.body.classList.add('edit-mode');
     // Fog auto-follows house — no manual positioning needed
     Object.keys(NODE_META).forEach(id => {
       const node = document.getElementById(id);
