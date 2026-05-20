@@ -2290,11 +2290,13 @@ function initAnchorDrag(anchorEl) {
       openCarPopup();
     });
   }
-  // Also click on car label opens popup
+  // Also click on car label / SOC opens popup
   const carLabel = document.getElementById('lb-car');
   if (carLabel) {
-    carLabel.addEventListener('click', () => {
+    if (!editMode) carLabel.style.cursor = 'pointer';
+    carLabel.addEventListener('click', e => {
       if (editMode) return;
+      e.stopPropagation();
       openCarPopup();
     });
   }
