@@ -48,6 +48,10 @@ html, body {
   overflow: hidden;
   transform-origin: top left;
 }
+#dashboard-root.edit-mode {
+  outline: 2px solid rgba(255, 60, 60, 0.85);
+  outline-offset: -2px;
+}
 
 #scene {
   position: relative;
@@ -2259,6 +2263,7 @@ function initAnchorDrag(anchorEl) {
   if (editMode) {
     document.getElementById('edit-badge').style.display = 'block';
     document.getElementById('scene').classList.add('edit-mode');
+    document.getElementById('dashboard-root').classList.add('edit-mode');
     // Fog auto-follows house — no manual positioning needed
     Object.keys(NODE_META).forEach(id => {
       const node = document.getElementById(id);
