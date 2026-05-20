@@ -43,8 +43,8 @@ html, body {
 
 #dashboard-root {
   position: relative;
-  width: 1920px;
-  height: 1080px;
+  width: 1767px;
+  height: 938px;
   overflow: hidden;
   transform-origin: top left;
 }
@@ -2602,7 +2602,7 @@ function initAnchorDrag(anchorEl) {
 (function() {
   const root = document.getElementById('dashboard-root');
   function scaleToFit() {
-    const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    const s = Math.min(window.innerWidth / 1767, window.innerHeight / 938);
     root.style.transform = s >= 1 ? '' : `scale(${s})`;
   }
   scaleToFit();
