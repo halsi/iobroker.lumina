@@ -68,6 +68,8 @@ html, body {
 /* Flow labels draggable in edit mode */
 .edit-mode #flow-svg text { pointer-events: all; cursor: grab; }
 .edit-mode #flow-svg text:active { cursor: grabbing; }
+/* Pipe handles/labels in water-pipes-svg draggable in edit mode */
+.edit-mode #water-pipes-svg { pointer-events: all; }
 
 /* ── Flow path styles ─────────────────────────────────────────────────── */
 .flow-path {
@@ -446,7 +448,7 @@ html, body {
   filter: drop-shadow(0 0 4px rgba(92,174,255,0.8));
 }
 .pipe-handle:active { cursor: grabbing; }
-.edit-mode #flow-svg .pipe-handle { display: block; }
+.edit-mode #water-pipes-svg .pipe-handle { display: block; }
 .pipe-handle-label {
   display: none;
   pointer-events: none;
@@ -456,7 +458,7 @@ html, body {
   fill: #7ECFFF;
   letter-spacing: 1px;
 }
-.edit-mode #flow-svg .pipe-handle-label { display: block; }
+.edit-mode #water-pipes-svg .pipe-handle-label { display: block; }
 @keyframes water-flow { to { stroke-dashoffset: -80; } }
 .pipe-label {
   font-family: system-ui, sans-serif;
@@ -470,11 +472,11 @@ html, body {
   dominant-baseline: middle;
   pointer-events: none;
 }
-.edit-mode #flow-svg .pipe-label {
+.edit-mode #water-pipes-svg .pipe-label {
   pointer-events: all;
   cursor: grab;
 }
-.edit-mode #flow-svg .pipe-label:active { cursor: grabbing; }
+.edit-mode #water-pipes-svg .pipe-label:active { cursor: grabbing; }
 /* rotation hint badge in edit mode */
 .pipe-label-rot-hint {
   display: none;
@@ -484,7 +486,7 @@ html, body {
   text-anchor: middle;
   pointer-events: none;
 }
-.edit-mode #flow-svg .pipe-label-rot-hint { display: block; }
+.edit-mode #water-pipes-svg .pipe-label-rot-hint { display: block; }
 
 /* ── Beregner popup ───────────────────────────────────────────────── */
 #beregner-popup-backdrop {
@@ -639,7 +641,10 @@ html, body {
     <path id="fp-wb-car"     class="flow-path" stroke="#52E5FF"/>
     <path id="fp-grid-batt"  class="flow-path" stroke="#FF9C7A"/>
 
-    <!-- ── Water pipes ── -->
+  </svg><!-- end #flow-svg energy paths -->
+
+  <!-- Water pipes — own SVG behind widgets (z-index 2) -->
+  <svg id="water-pipes-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible;">
     <g id="water-pipes-g">
       <!-- wp-garten: shadow / body / highlight / flow-animation -->
       <path id="wpe-garten-shadow" fill="none" stroke="rgba(20,80,180,0.55)"    stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
@@ -719,7 +724,10 @@ html, body {
       <text class="pipe-label" id="wpl-gieskanne" x="330" y="770">GIESKANNE</text>
       <text class="pipe-label" id="wpl-pool"      x="220" y="550">POOL</text>
     </g>
+  </svg><!-- end #water-pipes-svg -->
 
+  <!-- #flow-svg energy paths (continued) -->
+  <svg id="flow-svg-labels" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;overflow:visible;">
     <!-- Flow midpoint value labels -->
     <text id="fl-pv-house"   font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#F5B14C"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
     <text id="fl-pv-batt"    font-family="system-ui,sans-serif" font-size="17" font-weight="600" fill="#6AAEFF"  opacity="0" text-anchor="middle" dominant-baseline="middle"/>
@@ -1583,7 +1591,7 @@ function snap45(fromX, fromY, toX, toY) {
 }
 
 function initPipeDrag() {
-  const svg = document.getElementById('flow-svg');
+  const svg = document.getElementById('water-pipes-svg');
   WATER_PIPE_DEFS.forEach(pipe => {
     pipe.pointIds.forEach((pid, idx) => {
       const el = document.getElementById(pid);
