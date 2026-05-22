@@ -1384,11 +1384,11 @@ function _pd(id, liveKey, pts) {
   };
 }
 const WATER_PIPE_DEFS = [
-  _pd('garten',    'gartenWasser', ['wph-garten-0',   'wph-garten-1',   'wph-garten-2',   'wph-garten-3']),
-  _pd('beregner',  'gartenWasser', ['wph-beregner-0', 'wph-beregner-1', 'wph-beregner-2', 'wph-beregner-3']),
-  _pd('hochbeet',  'gartenWasser', ['wph-hochbeet-0', 'wph-hochbeet-1', 'wph-hochbeet-2', 'wph-hochbeet-3']),
-  _pd('gieskanne', 'gartenWasser', ['wph-gieskanne-0','wph-gieskanne-1','wph-gieskanne-2','wph-gieskanne-3']),
-  _pd('pool',      'gartenWasser', ['wph-pool-0',     'wph-pool-1',     'wph-pool-2',     'wph-pool-3']),
+  _pd('garten',    'ventilGarten',    ['wph-garten-0',   'wph-garten-1',   'wph-garten-2',   'wph-garten-3']),
+  _pd('beregner',  'beregnerActive',  ['wph-beregner-0', 'wph-beregner-1', 'wph-beregner-2', 'wph-beregner-3']),
+  _pd('hochbeet',  'ventilHochbeet',  ['wph-hochbeet-0', 'wph-hochbeet-1', 'wph-hochbeet-2', 'wph-hochbeet-3']),
+  _pd('gieskanne', 'ventilGieskanne', ['wph-gieskanne-0','wph-gieskanne-1','wph-gieskanne-2','wph-gieskanne-3']),
+  _pd('pool',      'ventilPool',      ['wph-pool-0',     'wph-pool-1',     'wph-pool-2',     'wph-pool-3']),
 ];
 
 const DEFAULT_PIPE_POINTS = {
@@ -1652,7 +1652,10 @@ const OIDs = {
   alarmActivated:   'alarm.0.status.activated',
   alarmSharpInside: 'alarm.0.status.sharp_inside_activated',
   beregnerActive:   '0_userdata.0.Wasser.Gartenberegner',
-  gartenWasser:     '0_userdata.0.Test',
+  ventilGarten:     '0_userdata.0.Wasser.Gartenwasserventil',
+  ventilHochbeet:   '0_userdata.0.Wasser.Gartenwasser-Hochbeet',
+  ventilGieskanne:  '0_userdata.0.Wasser.Giesskanne',
+  ventilPool:       '0_userdata.0.Pool.Poolwasserventil',
   pvToLoad:         '0_userdata.0.Photovoltaik.PvToLoad',
   gridToLoad:       '0_userdata.0.Photovoltaik.GridToLoad',
   batToLoad:        '0_userdata.0.Photovoltaik.BatToLoad',
@@ -1666,7 +1669,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, gartenWasser: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -2011,8 +2014,23 @@ function applyState(oid, val) {
     case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
     case OIDs.alarmActivated:   live.alarmActivated   = !!val; updateShieldLabel(); break;
     case OIDs.alarmSharpInside: live.alarmSharpInside = !!val; updateShieldLabel(); break;
-    case OIDs.gartenWasser: {
-      live.gartenWasser = (val === true || val === 'true' || val === 1 || val === '1');
+    case OIDs.ventilGarten: {
+      live.ventilGarten = (val === true || val === 'true' || val === 1 || val === '1');
+      updateAllPipeFlows();
+      break;
+    }
+    case OIDs.ventilHochbeet: {
+      live.ventilHochbeet = (val === true || val === 'true' || val === 1 || val === '1');
+      updateAllPipeFlows();
+      break;
+    }
+    case OIDs.ventilGieskanne: {
+      live.ventilGieskanne = (val === true || val === 'true' || val === 1 || val === '1');
+      updateAllPipeFlows();
+      break;
+    }
+    case OIDs.ventilPool: {
+      live.ventilPool = (val === true || val === 'true' || val === 1 || val === '1');
       updateAllPipeFlows();
       break;
     }
@@ -2026,6 +2044,7 @@ function applyState(oid, val) {
       const prevActive = live.beregnerActive;
       live.beregnerActive = (val === true || val === 'true' || val === 1 || val === '1');
       updateBeregner(prevActive);
+      updateAllPipeFlows();
       break;
     }
     case OIDs.poolAbdeckung: {
