@@ -2,7 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1920">
+<meta name="viewport" content="width=1920, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Lumina Home</title>
 <link rel="shortcut icon" href="favicon32.png">
@@ -414,11 +416,17 @@ setInterval(updateClock, 10000);
 (function() {
   const wrap = document.getElementById('lcars-wrap');
   function scaleToFit() {
-    const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const s = Math.min(vw / 1920, vh / 1080);
     wrap.style.transform = s >= 1 ? '' : `scale(${s})`;
   }
   scaleToFit();
-  window.addEventListener('resize', scaleToFit);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', scaleToFit);
+  } else {
+    window.addEventListener('resize', scaleToFit);
+  }
 })();
 </script>
 

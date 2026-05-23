@@ -2629,11 +2629,17 @@ function initAnchorDrag(anchorEl) {
 (function() {
   const root = document.getElementById('dashboard-root');
   function scaleToFit() {
-    const s = Math.min(window.innerWidth / 1767, window.innerHeight / 938);
+    const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const s = Math.min(vw / 1767, vh / 938);
     root.style.transform = s >= 1 ? '' : `scale(${s})`;
   }
   scaleToFit();
-  window.addEventListener('resize', scaleToFit);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', scaleToFit);
+  } else {
+    window.addEventListener('resize', scaleToFit);
+  }
 })();
 </script>
 
