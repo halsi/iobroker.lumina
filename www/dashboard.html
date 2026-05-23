@@ -2633,8 +2633,17 @@ function initAnchorDrag(anchorEl) {
   function scaleToFit() {
     const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
     const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    const s = Math.min(vw / 1767, vh / 938);
-    root.style.transform = s >= 1 ? '' : `scale(${s})`;
+    if (vh > vw) {
+      // Portrait → rotate content 90° CW to force landscape view
+      const s = Math.min(vw / 938, vh / 1767);
+      root.style.transformOrigin = '0 0';
+      root.style.transform = `scale(${s}) rotate(90deg) translateY(-100%)`;
+    } else {
+      // Landscape → normal scaling
+      const s = Math.min(vw / 1767, vh / 938);
+      root.style.transformOrigin = 'top left';
+      root.style.transform = s >= 1 ? '' : `scale(${s})`;
+    }
   }
   scaleToFit();
   if (window.visualViewport) {
