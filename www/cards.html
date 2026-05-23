@@ -488,6 +488,24 @@ body {
           </div>
           <span class="val" id="w-moisture"><span class="loading">…</span></span>
         </div>
+        <div class="row">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="lbl">Tomaten</span>
+            <span class="batt-icon" style="vertical-align:middle;">
+              <span class="batt-fill" id="w-batt-fill-tomaten" style="width:30px;background:#44AA44;"></span>
+            </span>
+          </div>
+          <span class="val" id="w-moisture-tomaten"><span class="loading">…</span></span>
+        </div>
+        <div class="row">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="lbl">Gurken</span>
+            <span class="batt-icon" style="vertical-align:middle;">
+              <span class="batt-fill" id="w-batt-fill-gurken" style="width:30px;background:#44AA44;"></span>
+            </span>
+          </div>
+          <span class="val" id="w-moisture-gurken"><span class="loading">…</span></span>
+        </div>
       </div>
     </div>
 
@@ -585,10 +603,14 @@ const CAR_OIDs = {
 };
 
 const WASSER_OIDs = {
-  'w-moisture': '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.moisture',
-  'w-batt':     '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.battery_ok',
-  'pool-ph':    '0_userdata.0.Pool.Pool-PH-Wert',
-  'pool-orp':   '0_userdata.0.Pool.PoolORP',
+  'w-moisture':         '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.moisture',
+  'w-batt':             '0_userdata.0.Wetter.Bodenfeuchte.0f22d0.battery_ok',
+  'w-moisture-tomaten': '0_userdata.0.Wetter.Bodenfeuchte.0f6c8d.moisture',
+  'w-batt-tomaten':     '0_userdata.0.Wetter.Bodenfeuchte.0f6c8d.battery_ok',
+  'w-moisture-gurken':  '0_userdata.0.Wetter.Bodenfeuchte.0f74c2.moisture',
+  'w-batt-gurken':      '0_userdata.0.Wetter.Bodenfeuchte.0f74c2.battery_ok',
+  'pool-ph':            '0_userdata.0.Pool.Pool-PH-Wert',
+  'pool-orp':           '0_userdata.0.Pool.PoolORP',
 };
 const VALVE_OIDs = {
   'v-garten':     '0_userdata.0.Wasser.Gartenwasserventil',
@@ -748,6 +770,18 @@ function setWasser(elId, val) {
     if (el) el.textContent = isNaN(n)?'–':Math.round(n)+' %';
   } else if (elId==='w-batt') {
     const pct=parseFloat(val), fill=document.getElementById('w-batt-fill');
+    if (!isNaN(pct)&&fill) { const w=Math.max(2,Math.round(pct*30/100)); fill.style.width=w+'px'; fill.style.background=pct<=25?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; }
+  } else if (elId==='w-moisture-tomaten') {
+    const el=document.getElementById('w-moisture-tomaten'), n=parseFloat(val);
+    if (el) el.textContent = isNaN(n)?'–':Math.round(n)+' %';
+  } else if (elId==='w-batt-tomaten') {
+    const pct=parseFloat(val), fill=document.getElementById('w-batt-fill-tomaten');
+    if (!isNaN(pct)&&fill) { const w=Math.max(2,Math.round(pct*30/100)); fill.style.width=w+'px'; fill.style.background=pct<=25?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; }
+  } else if (elId==='w-moisture-gurken') {
+    const el=document.getElementById('w-moisture-gurken'), n=parseFloat(val);
+    if (el) el.textContent = isNaN(n)?'–':Math.round(n)+' %';
+  } else if (elId==='w-batt-gurken') {
+    const pct=parseFloat(val), fill=document.getElementById('w-batt-fill-gurken');
     if (!isNaN(pct)&&fill) { const w=Math.max(2,Math.round(pct*30/100)); fill.style.width=w+'px'; fill.style.background=pct<=25?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; }
   } else if (elId==='pool-ph') {
     const el=document.getElementById('pool-ph'), n=parseFloat(val);
