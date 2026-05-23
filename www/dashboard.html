@@ -1780,10 +1780,10 @@ function updateFlows() {
   setFlow('fp-batt-house', batHouseOn, false);
   setFlowLabel('fl-batt-house', batHouseOn ? fmtW(live.batToLoad) : '', batHouseOn);
 
-  // Solar → Netz (Einspeisung)
-  const pvGridOn = live.pvToGrid > THRESH;
+  // Solar → Netz (Einspeisung) — direkt aus Smartmeter OID
+  const pvGridOn = effEinsp > THRESH;
   setFlow('fp-pv-grid', pvGridOn, false);
-  setFlowLabel('fl-pv-grid', pvGridOn ? fmtW(live.pvToGrid) : '', pvGridOn);
+  setFlowLabel('fl-pv-grid', pvGridOn ? fmtW(effEinsp) : '', pvGridOn);
 
   // Netz → Haus (Bezug)
   const houseGridImp = live.gridToLoad > THRESH;
