@@ -2391,6 +2391,7 @@ function applyState(oid, val) {
     case OIDs.ventilHochbeet: {
       live.ventilHochbeet = (val === true || val === 'true' || val === 1 || val === '1');
       updateAllPipeFlows();
+      if (window.hbpUpdateBtn) window.hbpUpdateBtn();
       break;
     }
     case OIDs.ventilGieskanne: {
@@ -2401,6 +2402,7 @@ function applyState(oid, val) {
     case OIDs.ventilPool: {
       live.ventilPool = (val === true || val === 'true' || val === 1 || val === '1');
       updateAllPipeFlows();
+      if (window.pppUpdateValveBtn) window.pppUpdateValveBtn();
       break;
     }
     case OIDs.pvToLoad:   live.pvToLoad   = isNaN(n) ? 0 : n; updateFlows(); break;
@@ -2899,7 +2901,7 @@ function initAnchorDrag(anchorEl) {
   }
 
   // ── Pool popup ─────────────────────────────────────────────────────────────
-  function pppUpdateValveBtn() {
+  window.pppUpdateValveBtn = function pppUpdateValveBtn() {
     const el = document.getElementById('ppp-valve-status'); if (!el) return;
     const on = live.ventilPool;
     el.textContent = on ? 'AKTIV' : 'INAKTIV';
@@ -2946,7 +2948,7 @@ function initAnchorDrag(anchorEl) {
   }
 
   // ── Hochbeet popup ─────────────────────────────────────────────────────────
-  function hbpUpdateBtn() {
+  window.hbpUpdateBtn = function hbpUpdateBtn() {
     const on = live.ventilHochbeet;
     const statusEl = document.getElementById('hbp-status-val');
     if (statusEl) {
