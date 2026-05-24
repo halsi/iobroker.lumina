@@ -490,6 +490,63 @@ html, body {
 }
 .edit-mode #water-pipes-svg .pipe-label-rot-hint { display: block; }
 
+/* ── House popup (Fenster & Türen) ─────────────────────────────── */
+#house-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#house-popup-backdrop.open { display: flex; }
+#house-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(111,134,255,0.45);
+  border-radius: 18px;
+  width: 380px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(111,134,255,0.18), 0 0 80px rgba(111,134,255,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.hpp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(111,134,255,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #6F86FF;
+  border-bottom: 1px solid rgba(111,134,255,0.2);
+}
+.hpp-dot { width:8px; height:8px; border-radius:50%; background:#6F86FF; flex-shrink:0; }
+.hpp-nuki-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.hpp-nuki-label { font-size:14px; font-weight:700; color:#6F86FF; flex:1; }
+.hpp-nuki-batt  { display:flex; align-items:center; gap:5px; }
+.hpp-batt-icon  { display:inline-flex; align-items:center; padding:2px; border:1.5px solid rgba(255,255,255,0.3); border-radius:3px; position:relative; }
+.hpp-batt-icon::after { content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); width:3px; height:7px; background:rgba(255,255,255,0.3); border-radius:0 2px 2px 0; }
+.hpp-batt-fill  { display:block; width:20px; height:8px; border-radius:1px; background:#44AA44; transition:width 0.3s,background 0.3s; }
+.hpp-batt-pct   { font-size:13px; color:#ccc; }
+.hpp-nuki-lock  { font-size:13px; font-weight:700; padding:3px 10px; border-radius:99px; }
+.hpp-nuki-locked   { background:rgba(68,170,68,0.2); color:#44AA44; }
+.hpp-nuki-unlocked { background:rgba(204,34,0,0.2);  color:#CC2200; }
+.hpp-sensor-grid { padding: 6px 0 10px; }
+.hpp-sensor-cell {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 7px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.hpp-sensor-cell:last-child { border-bottom: none; }
+.hpp-sensor-name  { font-size:14px; color:#aaa; }
+.hpp-sensor-state { font-size:13px; font-weight:700; padding:3px 10px; border-radius:99px; }
+.hpp-sensor-open    { background:rgba(204,34,0,0.2);  color:#ee4444; }
+.hpp-sensor-closed  { background:rgba(68,170,68,0.2); color:#44AA44; }
+.hpp-sensor-unknown { background:rgba(255,255,255,0.04); color:#555; }
+
 /* ── Beregner popup ───────────────────────────────────────────────── */
 #beregner-popup-backdrop {
   display: none;
@@ -999,6 +1056,34 @@ html, body {
 </div><!-- /#scene -->
 
 </div><!-- /#dashboard-root -->
+
+<!-- ── House popup modal (Fenster & Türen) ─────────────────────── -->
+<div id="house-popup-backdrop" onclick="closeHousePopup()">
+  <div id="house-popup-card" onclick="event.stopPropagation()">
+    <div class="hpp-header"><span class="hpp-dot"></span>FENSTER · TÜREN</div>
+    <div class="hpp-nuki-row">
+      <span class="hpp-nuki-label">Haustür</span>
+      <span class="hpp-nuki-batt">
+        <span class="hpp-batt-icon"><span class="hpp-batt-fill" id="hpp-batt-fill"></span></span>
+        <span class="hpp-batt-pct" id="hpp-batt-pct">–</span>
+      </span>
+      <span class="hpp-nuki-lock hpp-nuki-unknown" id="hpp-nuki-lock">–</span>
+    </div>
+    <div class="hpp-sensor-grid">
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Eingang</span>    <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-eingang">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Terrasse</span>   <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-terrasse">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Schlafzimmer</span><span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-schlafzimmer">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Bad</span>        <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-bad">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">WC</span>         <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-wc">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Büro</span>       <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-buero">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Garage</span>     <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-garage">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Zimmer</span>     <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-zimmer">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Hobbyraum</span>  <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-hobbyraum">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">WC Keller</span>  <span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-wckeller">–</span></div>
+      <div class="hpp-sensor-cell"><span class="hpp-sensor-name">Technikraum</span><span class="hpp-sensor-state hpp-sensor-unknown" id="hpp-s-technikraum">–</span></div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Car popup modal ─────────────────────────────────────────────── -->
 <div id="car-popup-backdrop" onclick="closeCarPopup()">
@@ -2624,6 +2709,110 @@ function initAnchorDrag(anchorEl) {
     shieldLabel.style.webkitTapHighlightColor = 'transparent';
     shieldLabel.addEventListener('click', () => { if (!editMode) openShieldPopup(); });
   }
+})();
+</script>
+
+<script>
+// ── House popup (Fenster & Türen) ──────────────────────────────────────────
+(function() {
+  const HOUSE_OIDS = {
+    nukiLock: 'mqtt.0.nuki.434A70D7.state',
+    nukiBatt: 'mqtt.0.nuki.434A70D7.batteryChargeState',
+    'hpp-s-eingang':      { oid: 'shelly.0.SHDW-2#6A9B59#1.sensor.door',             type: 'shelly'  },
+    'hpp-s-terrasse':     { oid: 'shelly.0.SHDW-2#483FDA82526B#1.sensor.door',        type: 'shelly'  },
+    'hpp-s-schlafzimmer': { oid: 'shelly.0.SHDW-2#6C3B61#1.sensor.door',             type: 'shelly'  },
+    'hpp-s-bad':          { oid: 'shelly.0.SHDW-2#6C34F3#1.sensor.door',             type: 'shelly'  },
+    'hpp-s-wc':           { oid: 'shelly.0.SHDW-2#6AB984#1.sensor.door',             type: 'shelly'  },
+    'hpp-s-buero':        { oid: 'shelly.0.SHDW-2#6AA1AC#1.sensor.door',             type: 'shelly'  },
+    'hpp-s-garage':       { oid: 'shelly.0.SHSW-1#E8DB84AB43B2#1.ext.switch1',       type: 'shelly1' },
+    'hpp-s-zimmer':       { oid: 'shelly.0.SHDW-2#6A9DD8#1.sensor.door',             type: 'shelly'  },
+    'hpp-s-hobbyraum':    { oid: '0_userdata.0.Alarm.Fenstersensoren-BLE.Hobbyraum',  type: 'ble'     },
+    'hpp-s-wckeller':     { oid: '0_userdata.0.Alarm.Fenstersensoren-BLE.WC-Keller',  type: 'ble'     },
+    'hpp-s-technikraum':  { oid: '0_userdata.0.Alarm.Fenstersensoren-BLE.Technikraum',type: 'ble'     },
+  };
+
+  // Build reverse map: oid → {elId, type}
+  const oidMap = {};
+  oidMap[HOUSE_OIDS.nukiLock] = { type: 'nuki-lock' };
+  oidMap[HOUSE_OIDS.nukiBatt] = { type: 'nuki-batt' };
+  Object.entries(HOUSE_OIDS).forEach(([k, v]) => {
+    if (v && v.oid) oidMap[v.oid] = { elId: k, type: v.type };
+  });
+
+  function hppIsOpen(val, type) {
+    if (type === 'shelly')  return val === true;
+    if (type === 'shelly1') return val === 0 || val === '0';
+    return val === 'true' || val === true;
+  }
+
+  function applyHouseState(oid, val) {
+    const meta = oidMap[oid]; if (!meta) return;
+    if (meta.type === 'nuki-lock') {
+      const el = document.getElementById('hpp-nuki-lock'); if (!el) return;
+      if (val===1||val==='1') { el.textContent='LOCKED';   el.className='hpp-nuki-lock hpp-nuki-locked'; }
+      else if (val!==null&&val!==undefined) { el.textContent='UNLOCKED'; el.className='hpp-nuki-lock hpp-nuki-unlocked'; }
+    } else if (meta.type === 'nuki-batt') {
+      const pct = parseInt(val); if (isNaN(pct)) return;
+      const fill = document.getElementById('hpp-batt-fill'), pctEl = document.getElementById('hpp-batt-pct');
+      if (pctEl) pctEl.textContent = pct + '%';
+      if (fill) { const w = Math.max(2, Math.round(pct*20/100)); fill.style.width=w+'px'; fill.style.background=pct<=20?'#CC2200':pct<=50?'#FFAA00':'#44AA44'; }
+    } else {
+      const el = document.getElementById(meta.elId); if (!el) return;
+      if (val===null||val===undefined) { el.textContent='–'; el.className='hpp-sensor-state hpp-sensor-unknown'; return; }
+      if (hppIsOpen(val, meta.type)) { el.textContent='OPEN';   el.className='hpp-sensor-state hpp-sensor-open'; }
+      else                           { el.textContent='CLOSED'; el.className='hpp-sensor-state hpp-sensor-closed'; }
+    }
+  }
+
+  let subscribed = false;
+  function subscribeHouseOids() {
+    if (subscribed) return;
+    const sock = window._dashSocket; if (!sock || !sock.connected) return;
+    subscribed = true;
+    const allOids = [HOUSE_OIDS.nukiLock, HOUSE_OIDS.nukiBatt,
+      ...Object.values(HOUSE_OIDS).filter(v => v && v.oid).map(v => v.oid)];
+    allOids.forEach(oid => {
+      sock.emit('subscribe', oid, { ack: true }, () => {});
+      sock.emit('getStates', [oid], (err, states) => {
+        if (!states) return;
+        const e = states[oid];
+        if (!e || e.val === null || e.val === undefined) return;
+        applyHouseState(oid, e.val);
+      });
+    });
+    sock.on('stateChange', (oid, state) => {
+      if (!oidMap[oid]) return;
+      if (!state || state.val === null) return;
+      applyHouseState(oid, state.val);
+    });
+  }
+
+  window.openHousePopup = function() {
+    document.getElementById('house-popup-backdrop').classList.add('open');
+    subscribeHouseOids();
+  };
+  window.closeHousePopup = function() {
+    document.getElementById('house-popup-backdrop').classList.remove('open');
+  };
+
+  // Click on house node (not pool/shield — those stopPropagation)
+  const houseNode = document.getElementById('n-house');
+  if (houseNode) {
+    houseNode.style.cursor = 'pointer';
+    houseNode.style.webkitTapHighlightColor = 'transparent';
+    houseNode.addEventListener('click', () => { if (!editMode) openHousePopup(); });
+  }
+  // Also lb-house label
+  const houseLabel = document.getElementById('lb-house');
+  if (houseLabel) {
+    if (!editMode) houseLabel.style.cursor = 'pointer';
+    houseLabel.addEventListener('click', e => { if (editMode) return; e.stopPropagation(); openHousePopup(); });
+  }
+
+  // Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') window.closeHousePopup();
+  });
 })();
 </script>
 
