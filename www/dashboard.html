@@ -796,6 +796,7 @@ html, body {
 .bep-btn:active { transform: scale(0.96); filter: brightness(90%); }
 .bep-btn-on  { background: #44AA44; color: #000; }
 .bep-btn-off { background: #FF5555; color: #000; }
+.bep-btn-dim { background: rgba(255,255,255,0.06); color: #555; border: 1px solid rgba(255,255,255,0.1); }
 
 /* ── Alarm fog ────────────────────────────────────────────────────── */
 /* ── Alarm fog — radial-gradient approach, zero filter, zero clip issues ── */
@@ -1376,7 +1377,10 @@ html, body {
   <div id="hochbeet-popup-card" onclick="event.stopPropagation()">
     <div class="hbp-header"><span class="hbp-dot"></span>HOCHBEET · WASSER</div>
     <div class="hbp-body">
-      <button class="vpp-valve-btn vpp-valve-off" id="hbp-valve-btn" onclick="hbpToggleValve()">VENTIL</button>
+      <div style="display:flex;gap:10px;">
+        <button class="bep-btn bep-btn-off" id="hbp-btn-ein" style="flex:1;" onclick="hbpSetValve(true)">EIN</button>
+        <button class="bep-btn bep-btn-off" id="hbp-btn-aus" style="flex:1;" onclick="hbpSetValve(false)">AUS</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2932,14 +2936,17 @@ function initAnchorDrag(anchorEl) {
 
   // ── Hochbeet popup ─────────────────────────────────────────────────────────
   function hbpUpdateBtn() {
-    const btn = document.getElementById('hbp-valve-btn'); if (!btn) return;
     const on = live.ventilHochbeet;
-    btn.className = 'vpp-valve-btn ' + (on ? 'vpp-valve-on' : 'vpp-valve-off');
-    btn.textContent = on ? 'VENTIL: EIN' : 'VENTIL: AUS';
+    const btnEin = document.getElementById('hbp-btn-ein');
+    const btnAus = document.getElementById('hbp-btn-aus');
+    // EIN: grün wenn aktiv, gedimmt wenn inaktiv
+    // AUS: rot wenn aktiv (= Aktion zum Stoppen), gedimmt wenn bereits aus
+    if (btnEin) btnEin.className = 'bep-btn ' + (on ? 'bep-btn-on' : 'bep-btn-dim');
+    if (btnAus) btnAus.className = 'bep-btn ' + (on ? 'bep-btn-off' : 'bep-btn-dim');
   }
-  window.hbpToggleValve = function() {
+  window.hbpSetValve = function(val) {
     const sock = window._dashSocket; if (!sock) return;
-    sock.emit('setState', '0_userdata.0.Wasser.Gartenwasser-Hochbeet', { val: !live.ventilHochbeet, ack: false });
+    sock.emit('setState', '0_userdata.0.Wasser.Gartenwasser-Hochbeet', { val, ack: false });
   };
   window.openHochbeetPopup = function() {
     hbpUpdateBtn();
