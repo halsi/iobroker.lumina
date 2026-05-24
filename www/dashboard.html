@@ -541,6 +541,45 @@ html, body {
 .hzp-btn:hover   { filter: brightness(120%); }
 .hzp-btn:active  { transform: scale(0.96); }
 
+/* ── Wallbox popup ─────────────────────────────────────────────── */
+#wb-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#wb-popup-backdrop.open { display: flex; }
+#wb-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(153,204,255,0.45);
+  border-radius: 18px;
+  width: 320px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(153,204,255,0.18), 0 0 80px rgba(153,204,255,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.wbp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(153,204,255,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #99CCFF;
+  border-bottom: 1px solid rgba(153,204,255,0.2);
+}
+.wbp-dot { width:8px; height:8px; border-radius:50%; background:#99CCFF; flex-shrink:0; }
+.wbp-body { padding: 8px 16px 14px; }
+.wbp-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 14px;
+}
+.wbp-lbl { color: #99CCFF; font-weight: 600; }
+.wbp-val { color: #fff; font-weight: 700; }
+
 /* ── Hochbeet popup ────────────────────────────────────────────── */
 #hochbeet-popup-backdrop {
   display: none;
@@ -1314,6 +1353,20 @@ html, body {
       <div class="cpp-row"><span class="cpp-lbl">pH-Wert</span><span class="cpp-val" id="ppp-ph">–</span></div>
       <div class="cpp-row" style="border-bottom:none;"><span class="cpp-lbl">ORP</span><span class="cpp-val" id="ppp-orp">–</span></div>
       <button class="vpp-valve-btn vpp-valve-off" id="ppp-valve-btn" style="margin-top:12px;" onclick="pppTogglePoolValve()">POOLVENTIL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Wallbox popup modal ───────────────────────────────────────── -->
+<div id="wb-popup-backdrop" onclick="closeWbPopup()">
+  <div id="wb-popup-card" onclick="event.stopPropagation()">
+    <div class="wbp-header"><span class="wbp-dot"></span>WALLBOX</div>
+    <div class="wbp-body">
+      <div class="wbp-row"><span class="wbp-lbl">Verbunden</span><span class="wbp-val" id="wbp-connected">–</span></div>
+      <div class="wbp-row"><span class="wbp-lbl">Status</span>   <span class="wbp-val" id="wbp-status">–</span></div>
+      <div class="wbp-row"><span class="wbp-lbl">Leistung</span> <span class="wbp-val" id="wbp-power">–</span></div>
+      <div class="wbp-row"><span class="wbp-lbl">davon PV</span> <span class="wbp-val" id="wbp-pv">–</span></div>
+      <div class="wbp-row" style="border-bottom:none;"><span class="wbp-lbl">Aktiv</span><span class="wbp-val" id="wbp-aktiv">–</span></div>
     </div>
   </div>
 </div>
@@ -2961,6 +3014,81 @@ function initAnchorDrag(anchorEl) {
 </script>
 
 <script>
+// ── Wallbox popup ──────────────────────────────────────────────────────────
+(function() {
+  const WB_OIDS = {
+    connected: '0_userdata.0.Auto.BYD-Sealion7.Wallbox-Connected',
+    status:    '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Status',
+    power:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
+    pv:        '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
+    aktiv:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Aktiv',
+  };
+
+  function applyWbState(oid, val) {
+    if (oid === WB_OIDS.connected) {
+      const el = document.getElementById('wbp-connected'); if (!el) return;
+      const on = val === true || val === 'true' || val === 1;
+      el.textContent = on ? 'VERBUNDEN' : 'GETRENNT';
+      el.style.color = on ? '#44AA44' : '#555';
+    } else if (oid === WB_OIDS.status) {
+      const el = document.getElementById('wbp-status'); if (el) el.textContent = val ?? '–';
+    } else if (oid === WB_OIDS.power) {
+      const el = document.getElementById('wbp-power'); const n = parseFloat(val);
+      if (el) el.textContent = isNaN(n) ? '–' : (n/1000).toFixed(2) + ' kW';
+    } else if (oid === WB_OIDS.pv) {
+      const el = document.getElementById('wbp-pv'); const n = parseFloat(val);
+      if (el) el.textContent = isNaN(n) ? '–' : (n/1000).toFixed(2) + ' kW';
+    } else if (oid === WB_OIDS.aktiv) {
+      const el = document.getElementById('wbp-aktiv'); if (!el) return;
+      const on = val === true || val === 'true' || val === 1;
+      el.textContent = on ? 'AKTIV' : 'INAKTIV';
+      el.style.color = on ? '#44AA44' : '#555';
+    }
+  }
+
+  let subscribed = false;
+  function subscribeWbOids() {
+    if (subscribed) return;
+    const sock = window._dashSocket; if (!sock || !sock.connected) return;
+    subscribed = true;
+    Object.values(WB_OIDS).forEach(oid => {
+      sock.emit('subscribe', oid, { ack: true }, () => {});
+      sock.emit('getStates', [oid], (err, states) => {
+        if (!states) return;
+        const e = states[oid];
+        if (!e || e.val === null || e.val === undefined) return;
+        applyWbState(oid, e.val);
+      });
+    });
+    sock.on('stateChange', (oid, state) => {
+      if (!Object.values(WB_OIDS).includes(oid)) return;
+      if (!state || state.val === null) return;
+      applyWbState(oid, state.val);
+    });
+  }
+
+  window.openWbPopup = function() {
+    document.getElementById('wb-popup-backdrop').classList.add('open');
+    subscribeWbOids();
+  };
+  window.closeWbPopup = function() {
+    document.getElementById('wb-popup-backdrop').classList.remove('open');
+  };
+
+  const wbNode = document.getElementById('n-wallbox');
+  if (wbNode) {
+    wbNode.style.cursor = 'pointer';
+    wbNode.style.webkitTapHighlightColor = 'transparent';
+    wbNode.addEventListener('click', () => { if (!editMode) openWbPopup(); });
+  }
+  const wbLabel = document.getElementById('lb-wallbox');
+  if (wbLabel) {
+    if (!editMode) wbLabel.style.cursor = 'pointer';
+    wbLabel.addEventListener('click', e => { if (editMode) return; e.stopPropagation(); openWbPopup(); });
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeWbPopup(); });
+})();
+
 // ── Heizung popup ──────────────────────────────────────────────────────────
 (function() {
   const HEIZ_OIDS = {
