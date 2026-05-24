@@ -1376,10 +1376,14 @@ html, body {
 <div id="hochbeet-popup-backdrop" onclick="closeHochbeetPopup()">
   <div id="hochbeet-popup-card" onclick="event.stopPropagation()">
     <div class="hbp-header"><span class="hbp-dot"></span>HOCHBEET · WASSER</div>
-    <div class="hbp-body">
-      <div style="display:flex;gap:10px;">
-        <button class="bep-btn bep-btn-off" id="hbp-btn-ein" style="flex:1;" onclick="hbpSetValve(true)">EIN</button>
-        <button class="bep-btn bep-btn-off" id="hbp-btn-aus" style="flex:1;" onclick="hbpSetValve(false)">AUS</button>
+    <div class="bep-status-block">
+      <div class="bep-status-lbl">STATUS</div>
+      <div class="bep-status-val" id="hbp-status-val">–</div>
+    </div>
+    <div class="bep-body">
+      <div class="bep-btn-row">
+        <button class="bep-btn bep-btn-on"  id="hbp-btn-ein" onclick="hbpSetValve(true)">AKTIVIEREN</button>
+        <button class="bep-btn bep-btn-off" id="hbp-btn-aus" onclick="hbpSetValve(false)">DEAKTIVIEREN</button>
       </div>
     </div>
   </div>
@@ -2937,12 +2941,11 @@ function initAnchorDrag(anchorEl) {
   // ── Hochbeet popup ─────────────────────────────────────────────────────────
   function hbpUpdateBtn() {
     const on = live.ventilHochbeet;
-    const btnEin = document.getElementById('hbp-btn-ein');
-    const btnAus = document.getElementById('hbp-btn-aus');
-    // EIN: grün wenn aktiv, gedimmt wenn inaktiv
-    // AUS: rot wenn aktiv (= Aktion zum Stoppen), gedimmt wenn bereits aus
-    if (btnEin) btnEin.className = 'bep-btn ' + (on ? 'bep-btn-on' : 'bep-btn-dim');
-    if (btnAus) btnAus.className = 'bep-btn ' + (on ? 'bep-btn-off' : 'bep-btn-dim');
+    const statusEl = document.getElementById('hbp-status-val');
+    if (statusEl) {
+      statusEl.textContent = on ? 'AKTIV' : 'INAKTIV';
+      statusEl.style.color = on ? '#44FF64' : '#6F86FF';
+    }
   }
   window.hbpSetValve = function(val) {
     const sock = window._dashSocket; if (!sock) return;
