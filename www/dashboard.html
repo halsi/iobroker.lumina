@@ -541,6 +541,52 @@ html, body {
 .hzp-btn:hover   { filter: brightness(120%); }
 .hzp-btn:active  { transform: scale(0.96); }
 
+/* ── Hochbeet popup ────────────────────────────────────────────── */
+#hochbeet-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#hochbeet-popup-backdrop.open { display: flex; }
+#hochbeet-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(106,174,255,0.45);
+  border-radius: 18px;
+  width: 280px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(106,174,255,0.18), 0 0 80px rgba(106,174,255,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.hbp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(106,174,255,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #6AAEFF;
+  border-bottom: 1px solid rgba(106,174,255,0.2);
+}
+.hbp-dot { width:8px; height:8px; border-radius:50%; background:#6AAEFF; flex-shrink:0; }
+.hbp-body { padding: 14px 16px 16px; }
+
+/* shared valve toggle button (pool + hochbeet) */
+.vpp-valve-btn {
+  display: block; width: 100%;
+  border-radius: 10px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 9px 0; cursor: pointer; transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.vpp-valve-on  { background: rgba(68,170,68,0.2); color: #44AA44; border-color: rgba(68,170,68,0.4); }
+.vpp-valve-off { background: rgba(255,255,255,0.06); color: #777; border-color: rgba(255,255,255,0.12); }
+.vpp-valve-btn:hover  { filter: brightness(125%); }
+.vpp-valve-btn:active { transform: scale(0.97); }
+
 /* ── Battery popup ─────────────────────────────────────────────── */
 #batt-popup-backdrop {
   display: none;
@@ -1266,7 +1312,18 @@ html, body {
     <div class="cpp-body">
       <div class="cpp-row"><span class="cpp-lbl">Wassertemperatur</span><span class="cpp-val" id="ppp-temp">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">pH-Wert</span><span class="cpp-val" id="ppp-ph">–</span></div>
-      <div class="cpp-row"><span class="cpp-lbl">ORP</span><span class="cpp-val" id="ppp-orp">–</span></div>
+      <div class="cpp-row" style="border-bottom:none;"><span class="cpp-lbl">ORP</span><span class="cpp-val" id="ppp-orp">–</span></div>
+      <button class="vpp-valve-btn vpp-valve-off" id="ppp-valve-btn" style="margin-top:12px;" onclick="pppTogglePoolValve()">POOLVENTIL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Hochbeet popup modal ──────────────────────────────────────── -->
+<div id="hochbeet-popup-backdrop" onclick="closeHochbeetPopup()">
+  <div id="hochbeet-popup-card" onclick="event.stopPropagation()">
+    <div class="hbp-header"><span class="hbp-dot"></span>HOCHBEET · WASSER</div>
+    <div class="hbp-body">
+      <button class="vpp-valve-btn vpp-valve-off" id="hbp-valve-btn" onclick="hbpToggleValve()">VENTIL</button>
     </div>
   </div>
 </div>
@@ -2724,7 +2781,7 @@ function initAnchorDrag(anchorEl) {
 
   // Close on Escape key
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); window.closeShieldPopup(); window.closeBeregnerPopup(); }
+    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); window.closeShieldPopup(); window.closeBeregnerPopup(); window.closeHochbeetPopup(); }
   });
 
   // ── Edit-mode connector lines ──────────────────────────────────────────────
@@ -2774,6 +2831,16 @@ function initAnchorDrag(anchorEl) {
   }
 
   // ── Pool popup ─────────────────────────────────────────────────────────────
+  function pppUpdateValveBtn() {
+    const btn = document.getElementById('ppp-valve-btn'); if (!btn) return;
+    const on = live.ventilPool;
+    btn.className = 'vpp-valve-btn ' + (on ? 'vpp-valve-on' : 'vpp-valve-off');
+    btn.textContent = on ? 'POOLVENTIL: EIN' : 'POOLVENTIL: AUS';
+  }
+  window.pppTogglePoolValve = function() {
+    const sock = window._dashSocket; if (!sock) return;
+    sock.emit('setState', '0_userdata.0.Pool.Poolwasserventil', { val: !live.ventilPool, ack: false });
+  };
   window.updatePoolPopup = function updatePoolPopup() {
     const fmtTemp = v => v != null ? v.toFixed(1) + ' °C' : '–';
     const fmtPH   = v => v != null ? v.toFixed(1) + ' pH' : '–';
@@ -2781,6 +2848,7 @@ function initAnchorDrag(anchorEl) {
     const t = document.getElementById('ppp-temp'); if (t) t.textContent = fmtTemp(live.poolTemp);
     const p = document.getElementById('ppp-ph');   if (p) p.textContent = fmtPH(live.poolPH);
     const o = document.getElementById('ppp-orp');  if (o) o.textContent = fmtORP(live.poolORP);
+    pppUpdateValveBtn();
   }
 
   window.openPoolPopup = function() {
@@ -2807,6 +2875,37 @@ function initAnchorDrag(anchorEl) {
     poolLabel.style.cursor = 'pointer';
     poolLabel.style.webkitTapHighlightColor = 'transparent';
     poolLabel.addEventListener('click', () => { if (!editMode) openPoolPopup(); });
+  }
+
+  // ── Hochbeet popup ─────────────────────────────────────────────────────────
+  function hbpUpdateBtn() {
+    const btn = document.getElementById('hbp-valve-btn'); if (!btn) return;
+    const on = live.ventilHochbeet;
+    btn.className = 'vpp-valve-btn ' + (on ? 'vpp-valve-on' : 'vpp-valve-off');
+    btn.textContent = on ? 'VENTIL: EIN' : 'VENTIL: AUS';
+  }
+  window.hbpToggleValve = function() {
+    const sock = window._dashSocket; if (!sock) return;
+    sock.emit('setState', '0_userdata.0.Wasser.Gartenwasser-Hochbeet', { val: !live.ventilHochbeet, ack: false });
+  };
+  window.openHochbeetPopup = function() {
+    hbpUpdateBtn();
+    document.getElementById('hochbeet-popup-backdrop').classList.add('open');
+  };
+  window.closeHochbeetPopup = function() {
+    document.getElementById('hochbeet-popup-backdrop').classList.remove('open');
+  };
+
+  const hochbeetNode = document.getElementById('n-hochbeet');
+  if (hochbeetNode) {
+    hochbeetNode.style.cursor = 'pointer';
+    hochbeetNode.style.webkitTapHighlightColor = 'transparent';
+    hochbeetNode.addEventListener('click', () => { if (!editMode) openHochbeetPopup(); });
+  }
+  const hochbeetLabel = document.getElementById('lb-hochbeet');
+  if (hochbeetLabel) {
+    if (!editMode) hochbeetLabel.style.cursor = 'pointer';
+    hochbeetLabel.addEventListener('click', e => { if (editMode) return; e.stopPropagation(); openHochbeetPopup(); });
   }
 
   // ── Beregner popup ─────────────────────────────────────────────────────────
