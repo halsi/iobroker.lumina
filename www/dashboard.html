@@ -2452,7 +2452,7 @@ function initAnchorDrag(anchorEl) {
       }
       case CAR_OIDS.distance: {
         const el = document.getElementById('cpp-distance');
-        if (el) el.textContent = isNaN(n) ? '–' : Math.round(n) + ' m';
+        if (el) el.textContent = isNaN(n) ? '–' : n >= 1000 ? (n / 1000).toFixed(1) + ' km' : Math.round(n) + ' m';
         break;
       }
     }
