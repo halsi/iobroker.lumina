@@ -490,6 +490,51 @@ html, body {
 }
 .edit-mode #water-pipes-svg .pipe-label-rot-hint { display: block; }
 
+/* ── Energie popup ─────────────────────────────────────────────── */
+#energie-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#energie-popup-backdrop.open { display: flex; }
+#energie-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(245,177,76,0.45);
+  border-radius: 18px;
+  width: 340px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(245,177,76,0.18), 0 0 80px rgba(245,177,76,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.enp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(245,177,76,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #F5B14C;
+  border-bottom: 1px solid rgba(245,177,76,0.2);
+}
+.enp-dot { width:8px; height:8px; border-radius:50%; background:#F5B14C; flex-shrink:0; }
+.enp-section-lbl {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(245,177,76,0.5);
+  padding: 10px 16px 4px;
+}
+.enp-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 7px 16px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 14px;
+}
+.enp-row:last-child { border-bottom: none; }
+.enp-lbl { color: #F5B14C; font-weight: 600; }
+.enp-val { color: #fff; font-weight: 700; }
+.enp-divider { height:1px; background: rgba(245,177,76,0.15); margin: 4px 0; }
+
 /* ── Heizung popup ─────────────────────────────────────────────── */
 #heiz-popup-backdrop {
   display: none;
@@ -1249,6 +1294,26 @@ html, body {
 </div><!-- /#scene -->
 
 </div><!-- /#dashboard-root -->
+
+<!-- ── Energie popup modal ──────────────────────────────────────── -->
+<div id="energie-popup-backdrop" onclick="closeEnergiePopup()">
+  <div id="energie-popup-card" onclick="event.stopPropagation()">
+    <div class="enp-header"><span class="enp-dot"></span>ENERGIE · ÜBERSICHT</div>
+    <div class="enp-section-lbl">AKTUELL</div>
+    <div class="enp-row"><span class="enp-lbl">Netzbezug</span>    <span class="enp-val" id="enp-bezug">–</span></div>
+    <div class="enp-row"><span class="enp-lbl">Einspeisung</span>  <span class="enp-val" id="enp-einsp">–</span></div>
+    <div class="enp-row"><span class="enp-lbl">PV</span>           <span class="enp-val" id="enp-pv">–</span></div>
+    <div class="enp-row"><span class="enp-lbl">Hausverbrauch</span><span class="enp-val" id="enp-load">–</span></div>
+    <div class="enp-row"><span class="enp-lbl">Wallbox</span>      <span class="enp-val" id="enp-wb">–</span></div>
+    <div class="enp-row"><span class="enp-lbl">Autarkie</span>     <span class="enp-val" id="enp-autarkie">–</span></div>
+    <div class="enp-divider"></div>
+    <div class="enp-section-lbl">HEUTE</div>
+    <div class="enp-row"><span class="enp-lbl">PV Ertrag</span>    <span class="enp-val" id="enp-pv-day">–</span></div>
+    <div class="enp-row"><span class="enp-lbl">Netzbezug</span>    <span class="enp-val" id="enp-bezug-day">–</span></div>
+    <div class="enp-row"><span class="enp-lbl">Hausverbrauch</span><span class="enp-val" id="enp-load-day">–</span></div>
+    <div class="enp-row"><span class="enp-lbl">PV Forecast</span>  <span class="enp-val" id="enp-forecast">–</span></div>
+  </div>
+</div>
 
 <!-- ── Heizung popup modal ──────────────────────────────────────── -->
 <div id="heiz-popup-backdrop" onclick="closeHeizPopup()">
@@ -2073,6 +2138,7 @@ function setFlowLabel(id, text, visible) {
 
 // ── Update node labels and flow animations from live state ─────────────────
 function updateFlows() {
+  if (window.enpRefreshIfOpen) window.enpRefreshIfOpen();
   const { pv, load, bezug, einspeisung, wbPower, wbPowerGrid, wbPowerPV } = live;
 
   // Net grid value: positive = importing, negative = exporting
@@ -3032,6 +3098,93 @@ function initAnchorDrag(anchorEl) {
 </script>
 
 <script>
+// ── Energie popup ──────────────────────────────────────────────────────────
+(function() {
+  const ENP_OIDS = {
+    autarkie:  '0_userdata.0.Photovoltaik.Autarkie',
+    pvDay:     'modbus.0.inputRegisters.13001_Daily_PV_Generation',
+    bezugDay:  'modbus.0.inputRegisters.13035_Daily_Import_Energy',
+    loadDay:   'sourceanalytix.0.modbus__0__inputRegisters__13007_Load_power_.currentYear.consumed.01_currentDay',
+    forecast:  '0_userdata.0.Photovoltaik.PV-Forecast',
+  };
+
+  function fmtW(v)   { const n=parseFloat(v); return isNaN(n)?'–':Math.round(n)+' W'; }
+  function fmtKW(v)  { const n=parseFloat(v); return isNaN(n)?'–':(n/1000).toFixed(2)+' kW'; }
+  function fmtKWh(v) { const n=parseFloat(v); return isNaN(n)?'–':n.toFixed(1)+' kWh'; }
+  function fmtPct(v) { const n=parseFloat(v); return isNaN(n)?'–':Math.round(n)+' %'; }
+
+  function enpRefreshLive() {
+    const s = el => document.getElementById(el);
+    // Aktuell — from live object
+    if (s('enp-bezug'))    s('enp-bezug').textContent    = fmtW(live.bezug);
+    if (s('enp-einsp'))    s('enp-einsp').textContent    = fmtW(live.einspeisung);
+    if (s('enp-pv'))       s('enp-pv').textContent       = fmtW(live.pv);
+    if (s('enp-load'))     s('enp-load').textContent     = fmtW(live.load);
+    if (s('enp-wb'))       s('enp-wb').textContent       = fmtKW(live.wbPower);
+  }
+
+  function applyEnpState(oid, val) {
+    if (oid === ENP_OIDS.autarkie)  { const el=document.getElementById('enp-autarkie'); if(el) el.textContent=fmtPct(val); }
+    if (oid === ENP_OIDS.pvDay)     { const el=document.getElementById('enp-pv-day');   if(el) el.textContent=fmtKWh(val); }
+    if (oid === ENP_OIDS.bezugDay)  { const el=document.getElementById('enp-bezug-day');if(el) el.textContent=fmtKWh(val); }
+    if (oid === ENP_OIDS.loadDay)   { const el=document.getElementById('enp-load-day'); if(el) el.textContent=fmtKWh(val); }
+    if (oid === ENP_OIDS.forecast)  { const el=document.getElementById('enp-forecast'); if(el) el.textContent=fmtKWh(val); }
+  }
+
+  let subscribed = false;
+  function subscribeEnpOids() {
+    if (subscribed) return;
+    const sock = window._dashSocket; if (!sock || !sock.connected) return;
+    subscribed = true;
+    Object.values(ENP_OIDS).forEach(oid => {
+      sock.emit('subscribe', oid, { ack: true }, () => {});
+      sock.emit('getStates', [oid], (err, states) => {
+        if (!states) return;
+        const e = states[oid];
+        if (!e || e.val === null || e.val === undefined) return;
+        applyEnpState(oid, e.val);
+      });
+    });
+    sock.on('stateChange', (oid, state) => {
+      if (!Object.values(ENP_OIDS).includes(oid)) return;
+      if (!state || state.val === null) return;
+      applyEnpState(oid, state.val);
+    });
+  }
+
+  // Called from main stateChange to keep Aktuell live while popup is open
+  window.enpRefreshIfOpen = function() {
+    if (document.getElementById('energie-popup-backdrop').classList.contains('open')) enpRefreshLive();
+  };
+
+  window.openEnergiePopup = function() {
+    enpRefreshLive();
+    subscribeEnpOids();
+    document.getElementById('energie-popup-backdrop').classList.add('open');
+  };
+  window.closeEnergiePopup = function() {
+    document.getElementById('energie-popup-backdrop').classList.remove('open');
+  };
+
+  // Click on solar node + label
+  ['n-solar', 'n-grid'].forEach(id => {
+    const node = document.getElementById(id);
+    if (node) {
+      node.style.cursor = 'pointer';
+      node.style.webkitTapHighlightColor = 'transparent';
+      node.addEventListener('click', () => { if (!editMode) openEnergiePopup(); });
+    }
+  });
+  ['lb-solar', 'lb-grid'].forEach(id => {
+    const lbl = document.getElementById(id);
+    if (lbl) {
+      if (!editMode) lbl.style.cursor = 'pointer';
+      lbl.addEventListener('click', e => { if (editMode) return; e.stopPropagation(); openEnergiePopup(); });
+    }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeEnergiePopup(); });
+})();
+
 // ── Wallbox popup ──────────────────────────────────────────────────────────
 (function() {
   const WB_OIDS = {
