@@ -490,6 +490,62 @@ html, body {
 }
 .edit-mode #water-pipes-svg .pipe-label-rot-hint { display: block; }
 
+/* ── Battery popup ─────────────────────────────────────────────── */
+#batt-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#batt-popup-backdrop.open { display: flex; }
+#batt-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(204,153,255,0.45);
+  border-radius: 18px;
+  width: 320px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(204,153,255,0.18), 0 0 80px rgba(204,153,255,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.bpp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(204,153,255,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #CC99FF;
+  border-bottom: 1px solid rgba(204,153,255,0.2);
+}
+.bpp-dot { width:8px; height:8px; border-radius:50%; background:#CC99FF; flex-shrink:0; }
+.bpp-body { padding: 8px 16px 16px; }
+.bpp-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 14px;
+}
+.bpp-row:last-of-type { border-bottom: none; }
+.bpp-lbl { color: #CC99FF; font-weight: 600; }
+.bpp-val { color: #fff; font-weight: 700; }
+.bpp-bar-wrap { width:80px; height:7px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; }
+.bpp-bar { height:100%; border-radius:4px; background:#44AA44; transition:width 0.4s,background 0.4s; }
+.bpp-soc-right { display:flex; align-items:center; gap:10px; }
+.bpp-btn {
+  display:block; width:100%; margin-top:14px;
+  background: rgba(204,153,255,0.12);
+  color: #CC99FF;
+  border: 1px solid rgba(204,153,255,0.25);
+  border-radius: 10px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 9px 0; cursor: pointer;
+  transition: background 0.15s;
+}
+.bpp-btn:hover   { background: rgba(204,153,255,0.22); }
+.bpp-btn:active  { background: rgba(204,153,255,0.30); transform: scale(0.97); }
+
 /* ── House popup (Fenster & Türen) ─────────────────────────────── */
 #house-popup-backdrop {
   display: none;
@@ -1056,6 +1112,27 @@ html, body {
 </div><!-- /#scene -->
 
 </div><!-- /#dashboard-root -->
+
+<!-- ── Battery popup modal ──────────────────────────────────────── -->
+<div id="batt-popup-backdrop" onclick="closeBattPopup()">
+  <div id="batt-popup-card" onclick="event.stopPropagation()">
+    <div class="bpp-header"><span class="bpp-dot"></span>ENERGIE · BATTERIE</div>
+    <div class="bpp-body">
+      <div class="bpp-row">
+        <span class="bpp-lbl">Ladestand</span>
+        <div class="bpp-soc-right">
+          <div class="bpp-bar-wrap"><div class="bpp-bar" id="bpp-bar"></div></div>
+          <span class="bpp-val" id="bpp-soc">–</span>
+        </div>
+      </div>
+      <div class="bpp-row">
+        <span class="bpp-lbl">Restkapazität</span>
+        <span class="bpp-val" id="bpp-rem">–</span>
+      </div>
+      <button class="bpp-btn" id="bpp-charge-btn" onclick="bppForceCharge()">Manual Charge</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── House popup modal (Fenster & Türen) ─────────────────────── -->
 <div id="house-popup-backdrop" onclick="closeHousePopup()">
@@ -2713,6 +2790,75 @@ function initAnchorDrag(anchorEl) {
 </script>
 
 <script>
+// ── Battery popup ──────────────────────────────────────────────────────────
+(function() {
+  const BATT_OIDS = {
+    soc:    'bydhvs.0.State.SOC',
+    rem:    '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
+    force:  '0_userdata.0.Photovoltaik.Battery.ForceFillUp',
+  };
+
+  function applyBattState(oid, val) {
+    const n = parseFloat(val);
+    if (oid === BATT_OIDS.soc) {
+      const pct = isNaN(n) ? 0 : Math.round(n);
+      const socEl = document.getElementById('bpp-soc');
+      const bar   = document.getElementById('bpp-bar');
+      if (socEl) socEl.textContent = isNaN(n) ? '–' : pct + ' %';
+      if (bar) { bar.style.width = pct + '%'; bar.style.background = pct<=20?'#FF5555':pct<=40?'#FFAA00':'#44AA44'; }
+    } else if (oid === BATT_OIDS.rem) {
+      const el = document.getElementById('bpp-rem');
+      if (el) el.textContent = isNaN(n) ? '–' : n.toFixed(1) + ' kWh';
+    }
+  }
+
+  let subscribed = false;
+  function subscribeBattOids() {
+    if (subscribed) return;
+    const sock = window._dashSocket; if (!sock || !sock.connected) return;
+    subscribed = true;
+    [BATT_OIDS.soc, BATT_OIDS.rem].forEach(oid => {
+      sock.emit('subscribe', oid, { ack: true }, () => {});
+      sock.emit('getStates', [oid], (err, states) => {
+        if (!states) return;
+        const e = states[oid];
+        if (!e || e.val === null || e.val === undefined) return;
+        applyBattState(oid, e.val);
+      });
+    });
+    sock.on('stateChange', (oid, state) => {
+      if (oid !== BATT_OIDS.soc && oid !== BATT_OIDS.rem) return;
+      if (!state || state.val === null) return;
+      applyBattState(oid, state.val);
+    });
+  }
+
+  window.bppForceCharge = function() {
+    const sock = window._dashSocket; if (!sock) return;
+    sock.emit('setState', BATT_OIDS.force, { val: true, ack: false });
+  };
+  window.openBattPopup = function() {
+    document.getElementById('batt-popup-backdrop').classList.add('open');
+    subscribeBattOids();
+  };
+  window.closeBattPopup = function() {
+    document.getElementById('batt-popup-backdrop').classList.remove('open');
+  };
+
+  const battNode = document.getElementById('n-battery');
+  if (battNode) {
+    battNode.style.cursor = 'pointer';
+    battNode.style.webkitTapHighlightColor = 'transparent';
+    battNode.addEventListener('click', () => { if (!editMode) openBattPopup(); });
+  }
+  const battLabel = document.getElementById('lb-battery');
+  if (battLabel) {
+    if (!editMode) battLabel.style.cursor = 'pointer';
+    battLabel.addEventListener('click', e => { if (editMode) return; e.stopPropagation(); openBattPopup(); });
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeBattPopup(); });
+})();
+
 // ── House popup (Fenster & Türen) ──────────────────────────────────────────
 (function() {
   const HOUSE_OIDS = {
