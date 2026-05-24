@@ -2279,10 +2279,10 @@ function updateBeregnerPopup() {
   if (!statusEl) return;
   if (live.beregnerActive) {
     statusEl.textContent = 'AKTIV';
-    statusEl.style.color = '#44AA44';
+    statusEl.style.color = '#44FF64';
   } else {
     statusEl.textContent = 'INAKTIV';
-    statusEl.style.color = '#6AAEFF';
+    statusEl.style.color = '#6F86FF';
   }
 }
 
@@ -2290,7 +2290,6 @@ window.beregnerAction = function(val) {
   if (window._dashSocket && window._dashSocket.connected) {
     window._dashSocket.emit('setState', '0_userdata.0.Wasser.Gartenberegner', { val: val, ack: false }, () => {});
   }
-  closeBeregnerPopup();
 };
 
 // ── Beregner countdown timer ──────────────────────────────────────────────
