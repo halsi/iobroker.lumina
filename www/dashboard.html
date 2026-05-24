@@ -1352,8 +1352,15 @@ html, body {
     <div class="cpp-body">
       <div class="cpp-row"><span class="cpp-lbl">Wassertemperatur</span><span class="cpp-val" id="ppp-temp">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">pH-Wert</span><span class="cpp-val" id="ppp-ph">–</span></div>
-      <div class="cpp-row" style="border-bottom:none;"><span class="cpp-lbl">ORP</span><span class="cpp-val" id="ppp-orp">–</span></div>
-      <button class="vpp-valve-btn vpp-valve-off" id="ppp-valve-btn" style="margin-top:12px;" onclick="pppTogglePoolValve()">POOLVENTIL</button>
+      <div class="cpp-row"><span class="cpp-lbl">ORP</span><span class="cpp-val" id="ppp-orp">–</span></div>
+      <div style="border-top:1px solid rgba(68,136,255,0.15);margin:4px -16px 0;padding:14px 16px 0;">
+        <div class="bep-status-lbl" style="text-align:center;">POOLWASSER NACHFÜLLEN</div>
+        <div class="bep-status-val" id="ppp-valve-status" style="text-align:center;font-size:22px;margin:6px 0 10px;">–</div>
+        <div class="bep-btn-row">
+          <button class="bep-btn bep-btn-on"  onclick="pppSetPoolValve(true)">AKTIVIEREN</button>
+          <button class="bep-btn bep-btn-off" onclick="pppSetPoolValve(false)">DEAKTIVIEREN</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2893,14 +2900,14 @@ function initAnchorDrag(anchorEl) {
 
   // ── Pool popup ─────────────────────────────────────────────────────────────
   function pppUpdateValveBtn() {
-    const btn = document.getElementById('ppp-valve-btn'); if (!btn) return;
+    const el = document.getElementById('ppp-valve-status'); if (!el) return;
     const on = live.ventilPool;
-    btn.className = 'vpp-valve-btn ' + (on ? 'vpp-valve-on' : 'vpp-valve-off');
-    btn.textContent = on ? 'POOLVENTIL: EIN' : 'POOLVENTIL: AUS';
+    el.textContent = on ? 'AKTIV' : 'INAKTIV';
+    el.style.color = on ? '#44FF64' : '#6F86FF';
   }
-  window.pppTogglePoolValve = function() {
+  window.pppSetPoolValve = function(val) {
     const sock = window._dashSocket; if (!sock) return;
-    sock.emit('setState', '0_userdata.0.Pool.Poolwasserventil', { val: !live.ventilPool, ack: false });
+    sock.emit('setState', '0_userdata.0.Pool.Poolwasserventil', { val, ack: false });
   };
   window.updatePoolPopup = function updatePoolPopup() {
     const fmtTemp = v => v != null ? v.toFixed(1) + ' °C' : '–';
