@@ -490,6 +490,57 @@ html, body {
 }
 .edit-mode #water-pipes-svg .pipe-label-rot-hint { display: block; }
 
+/* ── Heizung popup ─────────────────────────────────────────────── */
+#heiz-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#heiz-popup-backdrop.open { display: flex; }
+#heiz-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(255,136,102,0.45);
+  border-radius: 18px;
+  width: 320px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(255,136,102,0.18), 0 0 80px rgba(255,136,102,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.hzp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255,136,102,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #FF8866;
+  border-bottom: 1px solid rgba(255,136,102,0.2);
+}
+.hzp-dot { width:8px; height:8px; border-radius:50%; background:#FF8866; flex-shrink:0; }
+.hzp-body { padding: 8px 16px 16px; }
+.hzp-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 14px;
+}
+.hzp-lbl { color: #FF8866; font-weight: 600; }
+.hzp-val { color: #fff; font-weight: 700; }
+.hzp-btn {
+  background: rgba(255,170,136,0.08);
+  color: #FFAA88;
+  border: 1px solid rgba(255,170,136,0.2);
+  border-radius: 10px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 6px 16px; cursor: pointer; transition: background 0.15s;
+}
+.hzp-btn.hzp-on { background: rgba(255,136,102,0.2); color: #FF8866; border-color: rgba(255,136,102,0.4); }
+.hzp-btn:hover   { filter: brightness(120%); }
+.hzp-btn:active  { transform: scale(0.96); }
+
 /* ── Battery popup ─────────────────────────────────────────────── */
 #batt-popup-backdrop {
   display: none;
@@ -1112,6 +1163,27 @@ html, body {
 </div><!-- /#scene -->
 
 </div><!-- /#dashboard-root -->
+
+<!-- ── Heizung popup modal ──────────────────────────────────────── -->
+<div id="heiz-popup-backdrop" onclick="closeHeizPopup()">
+  <div id="heiz-popup-card" onclick="event.stopPropagation()">
+    <div class="hzp-header"><span class="hzp-dot"></span>HEIZUNG</div>
+    <div class="hzp-body">
+      <div class="hzp-row">
+        <span class="hzp-lbl">Heizkurve</span>
+        <span class="hzp-val" id="hzp-heizkurve">–</span>
+      </div>
+      <div class="hzp-row">
+        <span class="hzp-lbl">Sommermodus</span>
+        <button class="hzp-btn" id="hzp-sommer-btn" onclick="hzpToggleSommer()">–</button>
+      </div>
+      <div class="hzp-row" style="border-bottom:none;">
+        <span class="hzp-lbl">Urlaubsmodus</span>
+        <button class="hzp-btn" id="hzp-urlaub-btn" onclick="hzpToggleUrlaub()">–</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Battery popup modal ──────────────────────────────────────── -->
 <div id="batt-popup-backdrop" onclick="closeBattPopup()">
@@ -2790,6 +2862,81 @@ function initAnchorDrag(anchorEl) {
 </script>
 
 <script>
+// ── Heizung popup ──────────────────────────────────────────────────────────
+(function() {
+  const HEIZ_OIDS = {
+    heizkurve: '0_userdata.0.Heizung.Heizkurve',
+    sommer:    '0_userdata.0.Heizung.Heizung-Sommermodus',
+    urlaub:    '0_userdata.0.Heizung.Heizung-Urlaubsmodus',
+  };
+
+  function hzpSetBtn(id, val) {
+    const btn = document.getElementById(id); if (!btn) return;
+    const on = val === true || val === 'true' || val === 1 || val === '1';
+    btn.classList.toggle('hzp-on', on);
+    btn.textContent = on ? 'AKTIV' : 'INAKTIV';
+  }
+
+  function applyHeizState(oid, val) {
+    if (oid === HEIZ_OIDS.heizkurve) {
+      const el = document.getElementById('hzp-heizkurve'); if (el) el.textContent = val ?? '–';
+    } else if (oid === HEIZ_OIDS.sommer) { hzpSetBtn('hzp-sommer-btn', val); }
+    else if (oid === HEIZ_OIDS.urlaub)   { hzpSetBtn('hzp-urlaub-btn', val); }
+  }
+
+  let subscribed = false;
+  function subscribeHeizOids() {
+    if (subscribed) return;
+    const sock = window._dashSocket; if (!sock || !sock.connected) return;
+    subscribed = true;
+    Object.values(HEIZ_OIDS).forEach(oid => {
+      sock.emit('subscribe', oid, { ack: true }, () => {});
+      sock.emit('getStates', [oid], (err, states) => {
+        if (!states) return;
+        const e = states[oid];
+        if (!e || e.val === null || e.val === undefined) return;
+        applyHeizState(oid, e.val);
+      });
+    });
+    sock.on('stateChange', (oid, state) => {
+      if (!Object.values(HEIZ_OIDS).includes(oid)) return;
+      if (!state || state.val === null) return;
+      applyHeizState(oid, state.val);
+    });
+  }
+
+  window.hzpToggleSommer = function() {
+    const sock = window._dashSocket; if (!sock) return;
+    const btn = document.getElementById('hzp-sommer-btn');
+    sock.emit('setState', HEIZ_OIDS.sommer, { val: !btn.classList.contains('hzp-on'), ack: false });
+  };
+  window.hzpToggleUrlaub = function() {
+    const sock = window._dashSocket; if (!sock) return;
+    const btn = document.getElementById('hzp-urlaub-btn');
+    sock.emit('setState', HEIZ_OIDS.urlaub, { val: !btn.classList.contains('hzp-on'), ack: false });
+  };
+  window.openHeizPopup = function() {
+    document.getElementById('heiz-popup-backdrop').classList.add('open');
+    subscribeHeizOids();
+  };
+  window.closeHeizPopup = function() {
+    document.getElementById('heiz-popup-backdrop').classList.remove('open');
+  };
+
+  const heizNode = document.getElementById('n-heizung');
+  if (heizNode) {
+    heizNode.style.cursor = 'pointer';
+    heizNode.style.webkitTapHighlightColor = 'transparent';
+    heizNode.addEventListener('click', () => { if (!editMode) openHeizPopup(); });
+  }
+  const heizLabel = document.getElementById('lb-heizung');
+  if (heizLabel) {
+    if (!editMode) heizLabel.style.cursor = 'pointer';
+    heizLabel.addEventListener('click', e => { if (editMode) return; e.stopPropagation(); openHeizPopup(); });
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeHeizPopup(); });
+})();
+
 // ── Battery popup ──────────────────────────────────────────────────────────
 (function() {
   const BATT_OIDS = {
