@@ -1509,6 +1509,20 @@ html, body {
 // ── Edit mode ──────────────────────────────────────────────────────────────
 const editMode = new URLSearchParams(location.search).has('edit');
 
+// ── Popup auto-close ───────────────────────────────────────────────────────
+const POPUP_AUTO_CLOSE_MS = 20000; // ← zentrales Setting (ms)
+let _popupAutoCloseTimer = null;
+window.scheduleAutoClose = function(closeFn) {
+  if (_popupAutoCloseTimer) clearTimeout(_popupAutoCloseTimer);
+  _popupAutoCloseTimer = setTimeout(() => {
+    _popupAutoCloseTimer = null;
+    closeFn();
+  }, POPUP_AUTO_CLOSE_MS);
+};
+window.cancelAutoClose = function() {
+  if (_popupAutoCloseTimer) { clearTimeout(_popupAutoCloseTimer); _popupAutoCloseTimer = null; }
+};
+
 // ── Server-side config OIDs (adapter namespace, created by io-package.json) ─
 const CFG_POSITIONS   = 'lumina.0.Dashboard-Positions';
 const CFG_LABELS      = 'lumina.0.Dashboard-Labels';
@@ -2908,11 +2922,13 @@ function initAnchorDrag(anchorEl) {
   window.openCarPopup = function() {
     document.getElementById('car-popup-backdrop').classList.add('open');
     subscribeCarOids();
+    scheduleAutoClose(window.closeCarPopup);
   };
 
   window.closeCarPopup = function() {
+    cancelAutoClose();
     document.getElementById('car-popup-backdrop').classList.remove('open');
-  };
+    };
 
   // Close on Escape key
   document.addEventListener('keydown', e => {
@@ -2989,11 +3005,13 @@ function initAnchorDrag(anchorEl) {
   window.openPoolPopup = function() {
     updatePoolPopup();
     document.getElementById('pool-popup-backdrop').classList.add('open');
+    scheduleAutoClose(window.closePoolPopup);
   };
 
   window.closePoolPopup = function() {
+    cancelAutoClose();
     document.getElementById('pool-popup-backdrop').classList.remove('open');
-  };
+    };
 
   // Pool clickzone — works on both haus.png states
   const poolZone = document.getElementById('pool-clickzone');
@@ -3028,10 +3046,12 @@ function initAnchorDrag(anchorEl) {
   window.openHochbeetPopup = function() {
     hbpUpdateBtn();
     document.getElementById('hochbeet-popup-backdrop').classList.add('open');
+    scheduleAutoClose(window.closeHochbeetPopup);
   };
   window.closeHochbeetPopup = function() {
+    cancelAutoClose();
     document.getElementById('hochbeet-popup-backdrop').classList.remove('open');
-  };
+    };
 
   const hochbeetNode = document.getElementById('n-hochbeet');
   if (hochbeetNode) {
@@ -3049,10 +3069,12 @@ function initAnchorDrag(anchorEl) {
   window.openBeregnerPopup = function() {
     updateBeregnerPopup();
     document.getElementById('beregner-popup-backdrop').classList.add('open');
+    scheduleAutoClose(window.closeBeregnerPopup);
   };
   window.closeBeregnerPopup = function() {
+    cancelAutoClose();
     document.getElementById('beregner-popup-backdrop').classList.remove('open');
-  };
+    };
 
   const beregnerZone = document.getElementById('beregner-clickzone');
   if (beregnerZone) {
@@ -3073,10 +3095,12 @@ function initAnchorDrag(anchorEl) {
   window.openShieldPopup = function() {
     updateShieldPopup();
     document.getElementById('shield-popup-backdrop').classList.add('open');
+    scheduleAutoClose(window.closeShieldPopup);
   };
   window.closeShieldPopup = function() {
+    cancelAutoClose();
     document.getElementById('shield-popup-backdrop').classList.remove('open');
-  };
+    };
 
   // Shield clickzone (fog / roof area above house)
   const shieldZone = document.getElementById('shield-clickzone');
@@ -3161,10 +3185,12 @@ function initAnchorDrag(anchorEl) {
     enpRefreshLive();
     subscribeEnpOids();
     document.getElementById('energie-popup-backdrop').classList.add('open');
+    scheduleAutoClose(window.closeEnergiePopup);
   };
   window.closeEnergiePopup = function() {
+    cancelAutoClose();
     document.getElementById('energie-popup-backdrop').classList.remove('open');
-  };
+    };
 
   // Click on solar node + label
   ['n-solar', 'n-grid'].forEach(id => {
@@ -3241,10 +3267,12 @@ function initAnchorDrag(anchorEl) {
   window.openWbPopup = function() {
     document.getElementById('wb-popup-backdrop').classList.add('open');
     subscribeWbOids();
+    scheduleAutoClose(window.closeWbPopup);
   };
   window.closeWbPopup = function() {
+    cancelAutoClose();
     document.getElementById('wb-popup-backdrop').classList.remove('open');
-  };
+    };
 
   const wbNode = document.getElementById('n-wallbox');
   if (wbNode) {
@@ -3316,10 +3344,12 @@ function initAnchorDrag(anchorEl) {
   window.openHeizPopup = function() {
     document.getElementById('heiz-popup-backdrop').classList.add('open');
     subscribeHeizOids();
+    scheduleAutoClose(window.closeHeizPopup);
   };
   window.closeHeizPopup = function() {
+    cancelAutoClose();
     document.getElementById('heiz-popup-backdrop').classList.remove('open');
-  };
+    };
 
   const heizNode = document.getElementById('n-heizung');
   if (heizNode) {
@@ -3385,10 +3415,12 @@ function initAnchorDrag(anchorEl) {
   window.openBattPopup = function() {
     document.getElementById('batt-popup-backdrop').classList.add('open');
     subscribeBattOids();
+    scheduleAutoClose(window.closeBattPopup);
   };
   window.closeBattPopup = function() {
+    cancelAutoClose();
     document.getElementById('batt-popup-backdrop').classList.remove('open');
-  };
+    };
 
   const battNode = document.getElementById('n-battery');
   if (battNode) {
@@ -3481,10 +3513,12 @@ function initAnchorDrag(anchorEl) {
   window.openHousePopup = function() {
     document.getElementById('house-popup-backdrop').classList.add('open');
     subscribeHouseOids();
+    scheduleAutoClose(window.closeHousePopup);
   };
   window.closeHousePopup = function() {
+    cancelAutoClose();
     document.getElementById('house-popup-backdrop').classList.remove('open');
-  };
+    };
 
   // Click on house node (not pool/shield — those stopPropagation)
   const houseNode = document.getElementById('n-house');
