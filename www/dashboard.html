@@ -192,6 +192,27 @@ html, body {
   margin-top: -0.6em;
 }
 
+/* ── HWC heat button ──────────────────────────────────────────────────── */
+#hwc-heat-btn {
+  display: none;
+  margin-top: 6px;
+  background: var(--orange);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(245,177,76,0.5);
+  transition: filter 0.15s;
+}
+#hwc-heat-btn:hover  { filter: brightness(115%); }
+#hwc-heat-btn:active { filter: brightness(85%); }
+
 /* ── Boiler water overlay ─────────────────────────────────────────────── */
 #n-boiler { isolation: isolate; }
 #n-boiler img { position: relative; z-index: 2; }
@@ -1306,6 +1327,7 @@ html, body {
     </div>
     <span class="node-name" style="color:#FF6347;">WARMWASSER</span><br>
     <span class="node-value" id="v-boiler">–</span>
+    <button id="hwc-heat-btn" onclick="activateHwcHeating()">▲ HEIZEN</button>
   </div>
   <div id="lb-hochbeet" class="holo-label" data-size="22">
     <div class="label-controls">
@@ -2374,6 +2396,17 @@ function updateBoilerWater() {
   el.style.setProperty('--boiler-color', temp != null ? boilerWaterColor(temp) : '#8899ff');
 }
 
+function updateHwcUI() {
+  const btn = document.getElementById('hwc-heat-btn');
+  if (!btn) return;
+  const show = live.hwcStorageTemp !== null && live.hwcStorageTemp < 50 && !live.hwcHeating;
+  btn.style.display = show ? 'inline-block' : 'none';
+}
+
+function activateHwcHeating() {
+  socket.emit('setState', OIDs.hwcHeating, { val: true, ack: false });
+}
+
 function updateSensors() {
   const fmt = v => v != null ? v.toFixed(1) + ' °C' : '–';
   const pool = document.getElementById('v-pool');    if (pool)    pool.textContent    = fmt(live.poolTemp);
@@ -2564,7 +2597,7 @@ function applyState(oid, val) {
     case OIDs.tempOut:     live.tempOut     = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.tempIn:      live.tempIn      = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.vorlaufTemp:    live.vorlaufTemp    = isNaN(n) ? null : n; updateSensors(); break;
-    case OIDs.hwcStorageTemp: live.hwcStorageTemp = isNaN(n) ? null : n; updateSensors(); updateBoilerWater(); break;
+    case OIDs.hwcStorageTemp: live.hwcStorageTemp = isNaN(n) ? null : n; updateSensors(); updateBoilerWater(); updateHwcUI(); break;
     case OIDs.poolHeizTarget: live.poolHeizTarget = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.bodenfeuchte:        live.bodenfeuchte        = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.bodenfeuchteGurken:  live.bodenfeuchteGurken  = isNaN(n) ? null : n; updateSensors(); break;
@@ -2598,6 +2631,7 @@ function applyState(oid, val) {
     case OIDs.hwcHeating: {
       live.hwcHeating = (val === true || val === 'true' || val === 1 || val === '1');
       updateAllPipeFlows();
+      updateHwcUI();
       break;
     }
     case OIDs.pvToLoad:   live.pvToLoad   = isNaN(n) ? 0 : n; updateFlows(); break;
