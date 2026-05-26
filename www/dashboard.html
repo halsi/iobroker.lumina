@@ -1014,12 +1014,42 @@ html, body {
       <text class="pipe-handle-label" id="wphl-pool-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
       <text class="pipe-handle-label" id="wphl-pool-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
 
+      <!-- wp-warmwasser (Heizung Speicherladung — hot water, orange-red) -->
+      <path id="wpe-warmwasser-shadow" fill="none" stroke="rgba(180,60,0,0.55)"      stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-warmwasser-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-warmwasser-hi"     fill="none" stroke="rgba(255,200,150,0.0)"    stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-warmwasser-flow"   fill="none" stroke="rgba(220,80,20,0.92)"     stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <circle class="pipe-handle" id="wph-warmwasser-0" r="10" fill="#CC5522" stroke="#FFBB88" stroke-width="2"/>
+      <circle class="pipe-handle" id="wph-warmwasser-1" r="8"  fill="#AA3308" stroke="#EE8855" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-warmwasser-2" r="8"  fill="#AA3308" stroke="#EE8855" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-warmwasser-3" r="10" fill="#CC5522" stroke="#FFBB88" stroke-width="2"/>
+      <text class="pipe-handle-label" id="wphl-warmwasser-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
+      <text class="pipe-handle-label" id="wphl-warmwasser-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
+      <text class="pipe-handle-label" id="wphl-warmwasser-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
+      <text class="pipe-handle-label" id="wphl-warmwasser-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+
+      <!-- wp-kaltwasser (Heizung Speicherladung — cold water, cyan-blue) -->
+      <path id="wpe-kaltwasser-shadow" fill="none" stroke="rgba(20,80,180,0.55)"     stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-kaltwasser-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-kaltwasser-hi"     fill="none" stroke="rgba(200,235,255,0.0)"    stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-kaltwasser-flow"   fill="none" stroke="rgba(40,140,255,0.92)"    stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <circle class="pipe-handle" id="wph-kaltwasser-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <circle class="pipe-handle" id="wph-kaltwasser-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-kaltwasser-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-kaltwasser-3" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <text class="pipe-handle-label" id="wphl-kaltwasser-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
+      <text class="pipe-handle-label" id="wphl-kaltwasser-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
+      <text class="pipe-handle-label" id="wphl-kaltwasser-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
+      <text class="pipe-handle-label" id="wphl-kaltwasser-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+
       <!-- Pipe labels (draggable + rotatable in edit mode) -->
-      <text class="pipe-label" id="wpl-garten"    x="550" y="470">GARTEN</text>
-      <text class="pipe-label" id="wpl-beregner"  x="420" y="590">BEREGNER</text>
-      <text class="pipe-label" id="wpl-hochbeet"  x="500" y="700">HOCHBEET</text>
-      <text class="pipe-label" id="wpl-gieskanne" x="330" y="770">GIESKANNE</text>
-      <text class="pipe-label" id="wpl-pool"      x="220" y="550">POOL</text>
+      <text class="pipe-label" id="wpl-garten"     x="550" y="470">GARTEN</text>
+      <text class="pipe-label" id="wpl-beregner"   x="420" y="590">BEREGNER</text>
+      <text class="pipe-label" id="wpl-hochbeet"   x="500" y="700">HOCHBEET</text>
+      <text class="pipe-label" id="wpl-gieskanne"  x="330" y="770">GIESKANNE</text>
+      <text class="pipe-label" id="wpl-pool"       x="220" y="550">POOL</text>
+      <text class="pipe-label" id="wpl-warmwasser" x="1600" y="259">WARMWASSER</text>
+      <text class="pipe-label" id="wpl-kaltwasser" x="1738" y="259">KALTWASSER</text>
     </g>
   </svg><!-- end #water-pipes-svg -->
 
@@ -1822,21 +1852,24 @@ function initFlowLabelDrag() {
 
 // ── Water pipes ───────────────────────────────────────────────────────────
 // helper to build pipe def
-function _pd(id, liveKey, pts) {
+function _pd(id, liveKey, pts, activeBodyColor) {
   return {
     id, liveKey,
     pointIds: pts,
     pathIds:  { shadow:`wpe-${id}-shadow`, body:`wpe-${id}-body`, hi:`wpe-${id}-hi`, flow:`wpe-${id}-flow` },
     hlIds:    pts.map((_, i) => `wphl-${id}-${i}`),
     labelId:  `wpl-${id}`,
+    activeBodyColor: activeBodyColor || 'rgba(126,207,255,0.65)',
   };
 }
 const WATER_PIPE_DEFS = [
-  _pd('garten',    'ventilGarten',    ['wph-garten-0',   'wph-garten-1',   'wph-garten-2',   'wph-garten-3']),
-  _pd('beregner',  'beregnerActive',  ['wph-beregner-0', 'wph-beregner-1', 'wph-beregner-2', 'wph-beregner-3']),
-  _pd('hochbeet',  'ventilHochbeet',  ['wph-hochbeet-0', 'wph-hochbeet-1', 'wph-hochbeet-2', 'wph-hochbeet-3']),
-  _pd('gieskanne', 'ventilGieskanne', ['wph-gieskanne-0','wph-gieskanne-1','wph-gieskanne-2','wph-gieskanne-3']),
-  _pd('pool',      'ventilPool',      ['wph-pool-0',     'wph-pool-1',     'wph-pool-2',     'wph-pool-3']),
+  _pd('garten',     'ventilGarten',    ['wph-garten-0',    'wph-garten-1',    'wph-garten-2',    'wph-garten-3']),
+  _pd('beregner',   'beregnerActive',  ['wph-beregner-0',  'wph-beregner-1',  'wph-beregner-2',  'wph-beregner-3']),
+  _pd('hochbeet',   'ventilHochbeet',  ['wph-hochbeet-0',  'wph-hochbeet-1',  'wph-hochbeet-2',  'wph-hochbeet-3']),
+  _pd('gieskanne',  'ventilGieskanne', ['wph-gieskanne-0', 'wph-gieskanne-1', 'wph-gieskanne-2', 'wph-gieskanne-3']),
+  _pd('pool',       'ventilPool',      ['wph-pool-0',      'wph-pool-1',      'wph-pool-2',      'wph-pool-3']),
+  _pd('warmwasser', 'hwcHeating',      ['wph-warmwasser-0','wph-warmwasser-1','wph-warmwasser-2','wph-warmwasser-3'], 'rgba(220,110,50,0.70)'),
+  _pd('kaltwasser', 'hwcHeating',      ['wph-kaltwasser-0','wph-kaltwasser-1','wph-kaltwasser-2','wph-kaltwasser-3'], 'rgba(90,180,255,0.65)'),
 ];
 
 const DEFAULT_PIPE_POINTS = {
@@ -1848,17 +1881,23 @@ const DEFAULT_PIPE_POINTS = {
   'wph-hochbeet-2':  { x: 1261, y: 579 }, 'wph-hochbeet-3':  { x: 1311, y: 579 },
   'wph-gieskanne-0': { x:  885, y: 729 }, 'wph-gieskanne-1': { x:  885, y: 637 },
   'wph-gieskanne-2': { x:  755, y: 637 }, 'wph-gieskanne-3': { x:  755, y: 724 },
-  'wph-pool-0':      { x:  643, y: 929 }, 'wph-pool-1':      { x:  643, y: 553 },
-  'wph-pool-2':      { x:  901, y: 553 }, 'wph-pool-3':      { x: 1034, y: 427 },
+  'wph-pool-0':        { x:  643, y: 929 }, 'wph-pool-1':        { x:  643, y: 553 },
+  'wph-pool-2':        { x:  901, y: 553 }, 'wph-pool-3':        { x: 1034, y: 427 },
+  'wph-warmwasser-0':  { x: 1658, y: 235 }, 'wph-warmwasser-1':  { x: 1658, y: 255 },
+  'wph-warmwasser-2':  { x: 1658, y: 268 }, 'wph-warmwasser-3':  { x: 1658, y: 282 },
+  'wph-kaltwasser-0':  { x: 1718, y: 282 }, 'wph-kaltwasser-1':  { x: 1718, y: 268 },
+  'wph-kaltwasser-2':  { x: 1718, y: 255 }, 'wph-kaltwasser-3':  { x: 1718, y: 235 },
 };
 
 // ── Pipe label state ───────────────────────────────────────────────────────
 const DEFAULT_PIPE_LABELS = {
-  'wpl-garten':    { x:  970, y: 737, rot: 0 },
-  'wpl-beregner':  { x: 1110, y: 838, rot: 0 },
-  'wpl-hochbeet':  { x: 1137, y: 563, rot: 0 },
-  'wpl-gieskanne': { x:  820, y: 618, rot: 0 },
-  'wpl-pool':      { x:  729, y: 538, rot: 0 },
+  'wpl-garten':      { x:  970, y: 737, rot: 0 },
+  'wpl-beregner':    { x: 1110, y: 838, rot: 0 },
+  'wpl-hochbeet':    { x: 1137, y: 563, rot: 0 },
+  'wpl-gieskanne':   { x:  820, y: 618, rot: 0 },
+  'wpl-pool':        { x:  729, y: 538, rot: 0 },
+  'wpl-warmwasser':  { x: 1600, y: 259, rot: 0 },
+  'wpl-kaltwasser':  { x: 1738, y: 259, rot: 0 },
 };
 const pipeLabelState = {};
 
@@ -2006,7 +2045,7 @@ function updatePipeFlow(pipeId, active) {
   }
   if (bodyEl) {
     bodyEl.setAttribute('stroke', on
-      ? 'rgba(126,207,255,0.65)'
+      ? (pipe.activeBodyColor || 'rgba(126,207,255,0.65)')
       : 'rgba(5,7,13,0.95)');  /* dark knockout → hollow tube look */
   }
 }
@@ -2104,6 +2143,7 @@ const OIDs = {
   ventilHochbeet:   '0_userdata.0.Wasser.Gartenwasser-Hochbeet',
   ventilGieskanne:  '0_userdata.0.Wasser.Giesskanne',
   ventilPool:       '0_userdata.0.Pool.Poolwasserventil',
+  hwcHeating:       '0_userdata.0.Heizung.Warmwaser-Speicherladung',
   pvToLoad:         '0_userdata.0.Photovoltaik.PvToLoad',
   gridToLoad:       '0_userdata.0.Photovoltaik.GridToLoad',
   batToLoad:        '0_userdata.0.Photovoltaik.BatToLoad',
@@ -2117,7 +2157,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -2482,6 +2522,11 @@ function applyState(oid, val) {
       live.ventilPool = (val === true || val === 'true' || val === 1 || val === '1');
       updateAllPipeFlows();
       if (window.pppUpdateValveBtn) window.pppUpdateValveBtn();
+      break;
+    }
+    case OIDs.hwcHeating: {
+      live.hwcHeating = (val === true || val === 'true' || val === 1 || val === '1');
+      updateAllPipeFlows();
       break;
     }
     case OIDs.pvToLoad:   live.pvToLoad   = isNaN(n) ? 0 : n; updateFlows(); break;
