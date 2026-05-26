@@ -1548,7 +1548,7 @@ html, body {
   <div id="wb-popup-card" onclick="event.stopPropagation()">
     <div class="wbp-header"><span class="wbp-dot"></span>WALLBOX</div>
     <div class="wbp-body">
-      <div class="wbp-row"><span class="wbp-lbl">Verbunden</span><span class="wbp-val" id="wbp-connected">–</span></div>
+      <div class="wbp-row"><span class="wbp-lbl">Auto</span><span class="wbp-val" id="wbp-connected">–</span></div>
       <div class="wbp-row"><span class="wbp-lbl">Status</span>   <span class="wbp-val" id="wbp-status">–</span></div>
       <div class="wbp-row"><span class="wbp-lbl">Leistung</span> <span class="wbp-val" id="wbp-power">–</span></div>
       <div class="wbp-row"><span class="wbp-lbl">davon PV</span> <span class="wbp-val" id="wbp-pv">–</span></div>
@@ -3363,7 +3363,7 @@ function initAnchorDrag(anchorEl) {
 // ── Wallbox popup ──────────────────────────────────────────────────────────
 (function() {
   const WB_OIDS = {
-    connected: '0_userdata.0.Auto.BYD-Sealion7.Wallbox-Connected',
+    connected: 'go-e.0.car',
     status:    '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Status',
     power:     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
     pv:        '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
@@ -3373,9 +3373,16 @@ function initAnchorDrag(anchorEl) {
   function applyWbState(oid, val) {
     if (oid === WB_OIDS.connected) {
       const el = document.getElementById('wbp-connected'); if (!el) return;
-      const on = val === true || val === 'true' || val === 1;
-      el.textContent = on ? 'VERBUNDEN' : 'GETRENNT';
-      el.style.color = on ? '#44AA44' : '#555';
+      const n = parseInt(val);
+      const states = {
+        1: { text: 'STANDBY',        color: '#555'    },
+        2: { text: 'LÄDT',           color: '#44FF64' },
+        3: { text: 'WARTE AUF AUTO', color: '#F5B14C' },
+        4: { text: 'VERBUNDEN',      color: '#6AAEFF' },
+      };
+      const s = states[n] || { text: val ?? '–', color: '#888' };
+      el.textContent = s.text;
+      el.style.color = s.color;
     } else if (oid === WB_OIDS.status) {
       const el = document.getElementById('wbp-status'); if (el) el.textContent = val ?? '–';
     } else if (oid === WB_OIDS.power) {
