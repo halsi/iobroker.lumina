@@ -192,6 +192,44 @@ html, body {
   margin-top: -0.6em;
 }
 
+/* ── Boiler water overlay ─────────────────────────────────────────────── */
+#n-boiler { isolation: isolate; }
+#n-boiler img { position: relative; z-index: 2; }
+.boiler-water {
+  position: absolute;
+  left: 16%;
+  bottom: 7%;
+  width: 68%;
+  height: var(--boiler-level, 0%);
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--boiler-color, #8899ff) 70%, white),
+    var(--boiler-color, #8899ff)
+  );
+  opacity: 0.52;
+  border-radius: 0 0 38% 38%;
+  pointer-events: none;
+  overflow: hidden;
+  transition: height 1.2s ease, background 1.5s ease;
+}
+.boiler-water::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 10px,
+    rgba(200,230,255,0.28) 11px,
+    transparent 12px
+  );
+  animation: boilerWaterScan 2s linear infinite;
+}
+@keyframes boilerWaterScan {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-12px); }
+}
+
 /* ── Edit mode ────────────────────────────────────────────────────────── */
 .edit-mode .holo-node {
   cursor: grab;
@@ -1145,6 +1183,7 @@ html, body {
   </div>
 
   <div id="n-boiler" class="holo-node">
+    <div class="boiler-water" id="boiler-water"></div>
     <img src="img/dashboard/boiler.png" alt="Warmwasser-Boiler" style="width:120px;">
     <div class="resize-handle"></div>
   </div>
@@ -2299,6 +2338,26 @@ function updateFlows() {
 }
 
 // ── Sensor label updates ───────────────────────────────────────────────────
+// ── Boiler water overlay ───────────────────────────────────────────────────
+function boilerWaterColor(temp) {
+  // Smooth interpolation: #8899ff (cold ≤30°C) → #ff5555 (hot ≥55°C)
+  const t = Math.max(0, Math.min(1, (temp - 30) / (55 - 30)));
+  const r = Math.round(136 + (255 - 136) * t);
+  const g = Math.round(153 + (85  - 153) * t);
+  const b = Math.round(255 + (85  - 255) * t);
+  return `rgb(${r},${g},${b})`;
+}
+function updateBoilerWater() {
+  const el = document.getElementById('boiler-water');
+  if (!el) return;
+  const temp = live.hwcStorageTemp;
+  if (temp == null) { el.style.setProperty('--boiler-level', '0%'); return; }
+  // Map 20°C → 8%, 80°C → 86%
+  const level = Math.max(8, Math.min(86, ((temp - 20) / 60) * 78 + 8));
+  el.style.setProperty('--boiler-level', level.toFixed(1) + '%');
+  el.style.setProperty('--boiler-color', boilerWaterColor(temp));
+}
+
 function updateSensors() {
   const fmt = v => v != null ? v.toFixed(1) + ' °C' : '–';
   const pool = document.getElementById('v-pool');    if (pool)    pool.textContent    = fmt(live.poolTemp);
@@ -2489,7 +2548,7 @@ function applyState(oid, val) {
     case OIDs.tempOut:     live.tempOut     = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.tempIn:      live.tempIn      = isNaN(n) ? null : n;       updateSensors();  break;
     case OIDs.vorlaufTemp:    live.vorlaufTemp    = isNaN(n) ? null : n; updateSensors(); break;
-    case OIDs.hwcStorageTemp: live.hwcStorageTemp = isNaN(n) ? null : n; updateSensors(); break;
+    case OIDs.hwcStorageTemp: live.hwcStorageTemp = isNaN(n) ? null : n; updateSensors(); updateBoilerWater(); break;
     case OIDs.poolHeizTarget: live.poolHeizTarget = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.bodenfeuchte:        live.bodenfeuchte        = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.bodenfeuchteGurken:  live.bodenfeuchteGurken  = isNaN(n) ? null : n; updateSensors(); break;
