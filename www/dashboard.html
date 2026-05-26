@@ -197,10 +197,10 @@ html, body {
 #n-boiler img { position: relative; z-index: 2; }
 .boiler-water {
   position: absolute;
-  top: 9%;          /* align with top ellipse of cylinder */
-  left: 12%;        /* left inner wall */
-  width: 58%;       /* inner cylinder width (right wall ~70%, minus left 12%) */
-  height: 81%;      /* top ellipse centre to bottom ellipse centre */
+  top: 10%;         /* below top ellipse rim (incl. glass thickness) */
+  left: 15%;        /* left inner wall incl. glass thickness */
+  width: 50%;       /* inner transparent area: right edge ~65% - left 15% */
+  height: 77%;      /* top ellipse to bottom ellipse, inside glass */
   z-index: 1;
   background: linear-gradient(
     180deg,
