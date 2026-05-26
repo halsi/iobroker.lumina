@@ -212,6 +212,7 @@ html, body {
 }
 #hwc-heat-btn:hover  { filter: brightness(115%); }
 #hwc-heat-btn:active { filter: brightness(85%); }
+.edit-mode #lb-hwc-heat { display: block !important; }
 .edit-mode #hwc-heat-btn { display: inline-block !important; }
 
 /* ── Boiler water overlay ─────────────────────────────────────────────── */
@@ -1328,8 +1329,11 @@ html, body {
     </div>
     <span class="node-name" style="color:#FF6347;">WARMWASSER</span><br>
     <span class="node-value" id="v-boiler">–</span>
+  </div>
+  <div id="lb-hwc-heat" class="holo-label" data-size="22" style="display:none">
     <button id="hwc-heat-btn" onclick="activateHwcHeating()">▲ HEIZEN</button>
   </div>
+
   <div id="lb-hochbeet" class="holo-label" data-size="22">
     <div class="label-controls">
       <button class="lbl-btn lbl-minus">−</button>
@@ -2398,10 +2402,11 @@ function updateBoilerWater() {
 }
 
 function updateHwcUI() {
-  const btn = document.getElementById('hwc-heat-btn');
-  if (!btn) return;
+  const lbl = document.getElementById('lb-hwc-heat');
+  if (!lbl) return;
   const show = live.hwcStorageTemp !== null && live.hwcStorageTemp < 50 && !live.hwcHeating;
-  btn.style.display = show ? 'inline-block' : 'none';
+  // In edit mode visibility is handled by CSS; only control in normal mode
+  if (!editMode) lbl.style.display = show ? 'block' : 'none';
 }
 
 function activateHwcHeating() {
@@ -2743,6 +2748,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-shield':      { x: 1372, y:  65, size: 22 },
   'lb-beregner':    { x: 1123, y: 729, size: 22 },
   'lb-boiler':      { x: 1679, y:  64, size: 22 },
+  'lb-hwc-heat':    { x: 1679, y: 140, size: 22 },
 };
 
 function loadLabelState() {
@@ -2799,7 +2805,7 @@ function initLabelDrag(labelEl) {
   let dragging = false, startX, startY, origX, origY;
 
   labelEl.addEventListener('mousedown', e => {
-    if (!editMode || e.target.classList.contains('lbl-btn')) return;
+    if (!editMode || e.target.classList.contains('lbl-btn') || e.target.tagName === 'BUTTON') return;
     dragging = true;
     startX = e.clientX; startY = e.clientY;
     origX = parseFloat(labelEl.style.left) || 0;
