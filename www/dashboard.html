@@ -197,22 +197,25 @@ html, body {
 #n-boiler img { position: relative; z-index: 2; }
 .boiler-water {
   position: absolute;
-  left: 16%;
-  bottom: 7%;
-  width: 68%;
-  height: var(--boiler-level, 0%);
+  top: 9%;          /* align with top ellipse of cylinder */
+  left: 12%;        /* left inner wall */
+  width: 58%;       /* inner cylinder width (right wall ~70%, minus left 12%) */
+  height: 81%;      /* top ellipse centre to bottom ellipse centre */
   z-index: 1;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--boiler-color, #8899ff) 70%, white),
-    var(--boiler-color, #8899ff)
+    color-mix(in srgb, var(--boiler-color, #8899ff) 65%, white) 0%,
+    var(--boiler-color, #8899ff) 40%,
+    color-mix(in srgb, var(--boiler-color, #8899ff) 80%, black) 100%
   );
-  opacity: 0.52;
-  border-radius: 0 0 38% 38%;
+  opacity: 0.54;
+  /* Flat cylinder ellipses: horizontal radius 50%, vertical radius 5% */
+  border-radius: 50% 50% 50% 50% / 5% 5% 5% 5%;
   pointer-events: none;
   overflow: hidden;
-  transition: height 1.2s ease, background 1.5s ease;
+  transition: background 1.8s ease;
 }
+/* Horizontal scan lines (LCARS look) */
 .boiler-water::before {
   content: "";
   position: absolute;
@@ -220,14 +223,31 @@ html, body {
   background: repeating-linear-gradient(
     0deg,
     transparent 0 10px,
-    rgba(200,230,255,0.28) 11px,
+    rgba(200,230,255,0.22) 11px,
     transparent 12px
   );
-  animation: boilerWaterScan 2s linear infinite;
+  animation: boilerWaterScan 2.2s linear infinite;
+}
+/* Shimmer highlight on water surface */
+.boiler-water::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 20%;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 30%,
+    rgba(255,255,255,0.20) 0%,
+    transparent 70%
+  );
+  animation: boilerWaterShimmer 3s ease-in-out infinite alternate;
 }
 @keyframes boilerWaterScan {
   from { transform: translateY(0); }
   to   { transform: translateY(-12px); }
+}
+@keyframes boilerWaterShimmer {
+  from { opacity: 0.5; transform: scaleX(0.88); }
+  to   { opacity: 1.0; transform: scaleX(1.08); }
 }
 
 /* ── Edit mode ────────────────────────────────────────────────────────── */
@@ -2350,11 +2370,8 @@ function updateBoilerWater() {
   const el = document.getElementById('boiler-water');
   if (!el) return;
   const temp = live.hwcStorageTemp;
-  if (temp == null) { el.style.setProperty('--boiler-level', '0%'); return; }
-  // Map 20°C → 8%, 80°C → 86%
-  const level = Math.max(8, Math.min(86, ((temp - 20) / 60) * 78 + 8));
-  el.style.setProperty('--boiler-level', level.toFixed(1) + '%');
-  el.style.setProperty('--boiler-color', boilerWaterColor(temp));
+  // Always full — only color changes with temperature
+  el.style.setProperty('--boiler-color', temp != null ? boilerWaterColor(temp) : '#8899ff');
 }
 
 function updateSensors() {
