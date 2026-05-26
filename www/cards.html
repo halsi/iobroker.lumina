@@ -463,7 +463,7 @@ body {
     <div class="card card-lblue">
       <div class="card-header"><span class="ch-dot"></span>Wallbox</div>
       <div class="card-body">
-        <div class="row double-sep"><span class="lbl">Verbunden</span><span class="val" id="car-wb-connected"><span class="loading">…</span></span></div>
+        <div class="row double-sep"><span class="lbl">Auto</span><span class="val" id="car-wb-connected"><span class="loading">…</span></span></div>
         <div class="row"><span class="lbl">Status</span><span class="val" id="e-wb-status"><span class="loading">…</span></span></div>
         <div class="row"><span class="lbl">Leistung</span><span class="val" id="e-wb-power"><span class="loading">…</span></span></div>
         <div class="row"><span class="lbl">davon PV</span><span class="val" id="e-wb-pv"><span class="loading">…</span></span></div>
@@ -598,7 +598,7 @@ const CAR_OIDs = {
   'car-temp':         '0_userdata.0.Auto.BYD-Sealion7.CurrentInsideTemp',
   'car-km':           '0_userdata.0.Auto.BYD-Sealion7.KM-Stand',
   'car-cost':         '0_userdata.0.Auto.BYD-Sealion7.Kosten100km',
-  'car-wb-connected': '0_userdata.0.Auto.BYD-Sealion7.Wallbox-Connected',
+  'car-wb-connected': 'go-e.0.car',
   'car-distance':     '0_userdata.0.Auto.BYD-Sealion7.distance-from-home-actual',
 };
 
@@ -756,8 +756,14 @@ function setCar(elId, val) {
       break;
     }
     case 'car-wb-connected': {
-      const on=val===true||val==='true'||val===1;
-      el.innerHTML=on?'<span style="color:#44AA44;font-weight:bold;">VERBUNDEN</span>':'<span style="color:#333;">GETRENNT</span>';
+      const states = {
+        1: { text: 'STANDBY',        color: '#555'    },
+        2: { text: 'LÄDT',           color: '#44FF64' },
+        3: { text: 'WARTE AUF AUTO', color: '#F5B14C' },
+        4: { text: 'VERBUNDEN',      color: '#6AAEFF' },
+      };
+      const s = states[parseInt(val)] || { text: val ?? '–', color: '#888' };
+      el.innerHTML = `<span style="color:${s.color};font-weight:bold;">${s.text}</span>`;
       break;
     }
   }
