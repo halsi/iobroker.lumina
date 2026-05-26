@@ -1015,10 +1015,10 @@ html, body {
       <text class="pipe-handle-label" id="wphl-pool-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
 
       <!-- wp-warmwasser (Heizung Speicherladung — hot water, orange-red) -->
-      <path id="wpe-warmwasser-shadow" fill="none" stroke="rgba(180,60,0,0.55)"      stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-warmwasser-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-warmwasser-hi"     fill="none" stroke="rgba(255,200,150,0.0)"    stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-warmwasser-flow"   fill="none" stroke="rgba(220,80,20,0.92)"     stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <path id="wpe-warmwasser-shadow" fill="none" stroke="rgba(180,60,0,0.55)"      stroke-width="8"  stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-warmwasser-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="5"  stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-warmwasser-hi"     fill="none" stroke="rgba(255,200,150,0.0)"    stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-warmwasser-flow"   fill="none" stroke="rgba(220,80,20,0.92)"     stroke-width="2.5" stroke-linecap="round" stroke-dasharray="8 14" opacity="0"/>
       <circle class="pipe-handle" id="wph-warmwasser-0" r="10" fill="#CC5522" stroke="#FFBB88" stroke-width="2"/>
       <circle class="pipe-handle" id="wph-warmwasser-1" r="8"  fill="#AA3308" stroke="#EE8855" stroke-width="1.5"/>
       <circle class="pipe-handle" id="wph-warmwasser-2" r="8"  fill="#AA3308" stroke="#EE8855" stroke-width="1.5"/>
@@ -1029,10 +1029,10 @@ html, body {
       <text class="pipe-handle-label" id="wphl-warmwasser-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
 
       <!-- wp-kaltwasser (Heizung Speicherladung — cold water, cyan-blue) -->
-      <path id="wpe-kaltwasser-shadow" fill="none" stroke="rgba(20,80,180,0.55)"     stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-kaltwasser-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-kaltwasser-hi"     fill="none" stroke="rgba(200,235,255,0.0)"    stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-kaltwasser-flow"   fill="none" stroke="rgba(40,140,255,0.92)"    stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <path id="wpe-kaltwasser-shadow" fill="none" stroke="rgba(20,80,180,0.55)"     stroke-width="8"  stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-kaltwasser-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="5"  stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-kaltwasser-hi"     fill="none" stroke="rgba(200,235,255,0.0)"    stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-kaltwasser-flow"   fill="none" stroke="rgba(40,140,255,0.92)"    stroke-width="2.5" stroke-linecap="round" stroke-dasharray="8 14" opacity="0"/>
       <circle class="pipe-handle" id="wph-kaltwasser-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
       <circle class="pipe-handle" id="wph-kaltwasser-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
       <circle class="pipe-handle" id="wph-kaltwasser-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
@@ -1048,8 +1048,6 @@ html, body {
       <text class="pipe-label" id="wpl-hochbeet"   x="500" y="700">HOCHBEET</text>
       <text class="pipe-label" id="wpl-gieskanne"  x="330" y="770">GIESKANNE</text>
       <text class="pipe-label" id="wpl-pool"       x="220" y="550">POOL</text>
-      <text class="pipe-label" id="wpl-warmwasser" x="1600" y="259">WARMWASSER</text>
-      <text class="pipe-label" id="wpl-kaltwasser" x="1738" y="259">KALTWASSER</text>
     </g>
   </svg><!-- end #water-pipes-svg -->
 
@@ -1896,8 +1894,6 @@ const DEFAULT_PIPE_LABELS = {
   'wpl-hochbeet':    { x: 1137, y: 563, rot: 0 },
   'wpl-gieskanne':   { x:  820, y: 618, rot: 0 },
   'wpl-pool':        { x:  729, y: 538, rot: 0 },
-  'wpl-warmwasser':  { x: 1600, y: 259, rot: 0 },
-  'wpl-kaltwasser':  { x: 1738, y: 259, rot: 0 },
 };
 const pipeLabelState = {};
 
