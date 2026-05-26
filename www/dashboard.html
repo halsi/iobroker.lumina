@@ -1472,7 +1472,6 @@ html, body {
       <div class="cpp-row"><span class="cpp-lbl">Innentemperatur</span><span class="cpp-val" id="cpp-temp">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">KM-Stand</span><span class="cpp-val" id="cpp-km">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">EUR / 100 km</span><span class="cpp-val" id="cpp-cost">–</span></div>
-      <div class="cpp-row"><span class="cpp-lbl">Wallbox verbunden</span><span class="cpp-val" id="cpp-wb">–</span></div>
     </div>
   </div>
 </div>
@@ -2980,14 +2979,6 @@ function initAnchorDrag(anchorEl) {
       case CAR_OIDS.cost: {
         const el = document.getElementById('cpp-cost');
         if (el) el.textContent = isNaN(n) ? '–' : n.toFixed(2) + ' €';
-        break;
-      }
-      case CAR_OIDS.wbConnected: {
-        const el = document.getElementById('cpp-wb');
-        if (!el) break;
-        const on = val === true || val === 'true' || val === 1 || val === '1';
-        el.textContent = on ? 'Ja' : 'Nein';
-        el.style.color = on ? '#44FF64' : '#FF6464';
         break;
       }
       case CAR_OIDS.distance: {
