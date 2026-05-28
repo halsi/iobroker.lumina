@@ -261,6 +261,39 @@ body {
 .valve-on  { background: rgba(255,102,102,0.2); color: #ff8888; border-color: rgba(255,102,102,0.4); }
 .valve-off { background: rgba(153,204,255,0.08); color: var(--lblue); border-color: rgba(153,204,255,0.2); }
 
+/* ── Klima (LG) ──────────────────────────────────────────────────── */
+.clim-section { padding: 0 16px 8px; }
+.clim-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.clim-btn-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.clim-btn {
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.4px; text-transform: uppercase;
+  padding: 5px 9px; border-radius: 5px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04); color: #444;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.clim-btn:active { transform: scale(0.95); }
+.clim-btn.active-off      { background: rgba(100,100,100,0.25); color: #777;    border-color: #555; }
+.clim-btn.active-auto     { background: rgba(0,204,170,0.20);   color: #00CCAA; border-color: rgba(0,204,170,0.45); }
+.clim-btn.active-cool     { background: rgba(106,174,255,0.22); color: #6AAEFF; border-color: rgba(106,174,255,0.5); }
+.clim-btn.active-heat     { background: rgba(255,99,71,0.22);   color: #FF6347; border-color: rgba(255,99,71,0.5); }
+.clim-btn.active-dry      { background: rgba(255,204,68,0.22);  color: #FFCC44; border-color: rgba(255,204,68,0.5); }
+.clim-btn.active-fan_only { background: rgba(200,200,200,0.12); color: #aaa;    border-color: rgba(200,200,200,0.3); }
+.clim-btn.active-fan      { background: rgba(153,204,255,0.22); color: #99CCFF; border-color: rgba(153,204,255,0.5); }
+.clim-btn.active-swing    { background: rgba(102,204,187,0.22); color: #66CCBB; border-color: rgba(102,204,187,0.5); }
+.clim-temp-btn {
+  font-family: inherit; font-size: 18px; font-weight: 500;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,255,255,0.07); color: #888;
+  border: 1px solid rgba(255,255,255,0.14); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; transition: background 0.12s;
+  line-height: 1;
+}
+.clim-temp-btn:active { background: rgba(255,255,255,0.18); }
+
 /* ── Heizung buttons ─────────────────────────────────────────────── */
 .h-ctrl-btn {
   background: rgba(255,170,136,0.08);
@@ -536,6 +569,103 @@ body {
 
   </div>
 
+  <!-- ── KLIMA ────────────────────────────── -->
+  <div class="col">
+
+    <!-- Wohnzimmer -->
+    <div class="card card-teal">
+      <div class="card-header"><span class="ch-dot"></span>Klima · Wohnzimmer</div>
+      <div class="card-body">
+        <div class="row"><span class="lbl">Ist</span><span class="val" id="lg-lv-temp-cur">–</span></div>
+        <div class="row">
+          <span class="lbl">Soll</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button class="clim-temp-btn" onclick="lgTempAdj('lv',-0.5)">−</button>
+            <span class="val" id="lg-lv-temp-set">–</span>
+            <button class="clim-temp-btn" onclick="lgTempAdj('lv',+0.5)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="clim-section">
+        <div class="clim-label">Modus</div>
+        <div class="clim-btn-row">
+          <button class="clim-btn" id="lg-lv-mode-off"      onclick="lgSet('lv','mode','off')">Aus</button>
+          <button class="clim-btn" id="lg-lv-mode-auto"     onclick="lgSet('lv','mode','auto')">Auto</button>
+          <button class="clim-btn" id="lg-lv-mode-cool"     onclick="lgSet('lv','mode','cool')">Kühlen</button>
+          <button class="clim-btn" id="lg-lv-mode-heat"     onclick="lgSet('lv','mode','heat')">Heizen</button>
+          <button class="clim-btn" id="lg-lv-mode-dry"      onclick="lgSet('lv','mode','dry')">Trocken</button>
+          <button class="clim-btn" id="lg-lv-mode-fan_only" onclick="lgSet('lv','mode','fan_only')">Lüften</button>
+        </div>
+      </div>
+      <div class="clim-section">
+        <div class="clim-label">Lüfter</div>
+        <div class="clim-btn-row">
+          <button class="clim-btn" id="lg-lv-fan-auto"   onclick="lgSet('lv','fan_mode','auto')">Auto</button>
+          <button class="clim-btn" id="lg-lv-fan-slow"   onclick="lgSet('lv','fan_mode','slow')">Slow</button>
+          <button class="clim-btn" id="lg-lv-fan-low"    onclick="lgSet('lv','fan_mode','low')">Low</button>
+          <button class="clim-btn" id="lg-lv-fan-medium" onclick="lgSet('lv','fan_mode','medium')">Med</button>
+          <button class="clim-btn" id="lg-lv-fan-high"   onclick="lgSet('lv','fan_mode','high')">High</button>
+        </div>
+      </div>
+      <div class="clim-section" style="padding-bottom:14px;">
+        <div class="clim-label">Swing</div>
+        <div class="clim-btn-row">
+          <button class="clim-btn" id="lg-lv-swing-off"        onclick="lgSet('lv','swing_mode','off')">Aus</button>
+          <button class="clim-btn" id="lg-lv-swing-vertical"   onclick="lgSet('lv','swing_mode','vertical')">Vertikal</button>
+          <button class="clim-btn" id="lg-lv-swing-horizontal" onclick="lgSet('lv','swing_mode','horizontal')">Horiz</button>
+          <button class="clim-btn" id="lg-lv-swing-both"       onclick="lgSet('lv','swing_mode','both')">Beide</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schlafzimmer -->
+    <div class="card card-teal2">
+      <div class="card-header"><span class="ch-dot"></span>Klima · Schlafzimmer</div>
+      <div class="card-body">
+        <div class="row"><span class="lbl">Ist</span><span class="val" id="lg-sr-temp-cur">–</span></div>
+        <div class="row">
+          <span class="lbl">Soll</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button class="clim-temp-btn" onclick="lgTempAdj('sr',-0.5)">−</button>
+            <span class="val" id="lg-sr-temp-set">–</span>
+            <button class="clim-temp-btn" onclick="lgTempAdj('sr',+0.5)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="clim-section">
+        <div class="clim-label">Modus</div>
+        <div class="clim-btn-row">
+          <button class="clim-btn" id="lg-sr-mode-off"      onclick="lgSet('sr','mode','off')">Aus</button>
+          <button class="clim-btn" id="lg-sr-mode-auto"     onclick="lgSet('sr','mode','auto')">Auto</button>
+          <button class="clim-btn" id="lg-sr-mode-cool"     onclick="lgSet('sr','mode','cool')">Kühlen</button>
+          <button class="clim-btn" id="lg-sr-mode-heat"     onclick="lgSet('sr','mode','heat')">Heizen</button>
+          <button class="clim-btn" id="lg-sr-mode-dry"      onclick="lgSet('sr','mode','dry')">Trocken</button>
+          <button class="clim-btn" id="lg-sr-mode-fan_only" onclick="lgSet('sr','mode','fan_only')">Lüften</button>
+        </div>
+      </div>
+      <div class="clim-section">
+        <div class="clim-label">Lüfter</div>
+        <div class="clim-btn-row">
+          <button class="clim-btn" id="lg-sr-fan-auto"   onclick="lgSet('sr','fan_mode','auto')">Auto</button>
+          <button class="clim-btn" id="lg-sr-fan-slow"   onclick="lgSet('sr','fan_mode','slow')">Slow</button>
+          <button class="clim-btn" id="lg-sr-fan-low"    onclick="lgSet('sr','fan_mode','low')">Low</button>
+          <button class="clim-btn" id="lg-sr-fan-medium" onclick="lgSet('sr','fan_mode','medium')">Med</button>
+          <button class="clim-btn" id="lg-sr-fan-high"   onclick="lgSet('sr','fan_mode','high')">High</button>
+        </div>
+      </div>
+      <div class="clim-section" style="padding-bottom:14px;">
+        <div class="clim-label">Swing</div>
+        <div class="clim-btn-row">
+          <button class="clim-btn" id="lg-sr-swing-off"        onclick="lgSet('sr','swing_mode','off')">Aus</button>
+          <button class="clim-btn" id="lg-sr-swing-vertical"   onclick="lgSet('sr','swing_mode','vertical')">Vertikal</button>
+          <button class="clim-btn" id="lg-sr-swing-horizontal" onclick="lgSet('sr','swing_mode','horizontal')">Horiz</button>
+          <button class="clim-btn" id="lg-sr-swing-both"       onclick="lgSet('sr','swing_mode','both')">Beide</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
 
 </main>
 
@@ -619,6 +749,22 @@ const VALVE_OIDs = {
   'v-hochbeet':   '0_userdata.0.Wasser.Gartenwasser-Hochbeet',
   'v-giesskanne': '0_userdata.0.Wasser.Giesskanne',
 };
+
+// ── LG Klimaanlagen ────────────────────────────────────────────────────────
+const LG_ROOMS = {
+  lv: { base: 'mqtt.0.esphome.LG.Climate.LivingRoom.climate.lg-climate-livingroom',  targetTemp: null },
+  sr: { base: 'mqtt.0.esphome.LG.Climate.SleepRoom.climate.lg-climate-sleeproom',    targetTemp: null },
+};
+const LG_OIDs = {};
+Object.entries(LG_ROOMS).forEach(([room, cfg]) => {
+  LG_OIDs[`${room}-cur-temp`] = `${cfg.base}.current_temperature.state`;
+  LG_OIDs[`${room}-set-temp`] = `${cfg.base}.target_temperature.state`;
+  LG_OIDs[`${room}-mode`]     = `${cfg.base}.mode.state`;
+  LG_OIDs[`${room}-fan`]      = `${cfg.base}.fan_mode.state`;
+  LG_OIDs[`${room}-swing`]    = `${cfg.base}.swing_mode.state`;
+});
+const oidToLG = {};
+Object.entries(LG_OIDs).forEach(([key, oid]) => { oidToLG[oid] = key; });
 
 const NUKI_LOCK_OID   = 'mqtt.0.nuki.434A70D7.state';
 const NUKI_BATT_OID   = 'mqtt.0.nuki.434A70D7.batteryChargeState';
@@ -827,6 +973,51 @@ function toggleSommermodus()  { const b=document.getElementById('h-sommer-btn');
 function toggleUrlaubsmodus() { const b=document.getElementById('h-urlaub-btn'); socket.emit('setState',URLAUB_OID,{val:!b.classList.contains('h-on'),ack:false}); }
 
 // ── Reverse maps ───────────────────────────────────────────────────────────
+// ── LG apply + commands ───────────────────────────────────────────────────
+function lgApply(key, val) {
+  const dash = key.indexOf('-');
+  const room = key.slice(0, dash);
+  const type = key.slice(dash + 1);
+  if (type === 'cur-temp') {
+    const el = document.getElementById(`lg-${room}-temp-cur`);
+    const n = parseFloat(val);
+    if (el) el.innerHTML = isNaN(n) ? '–' : `${n.toFixed(1)}<span class="u"> °C</span>`;
+  } else if (type === 'set-temp') {
+    const n = parseFloat(val);
+    LG_ROOMS[room].targetTemp = isNaN(n) ? null : n;
+    const el = document.getElementById(`lg-${room}-temp-set`);
+    if (el) el.innerHTML = isNaN(n) ? '–' : `${n.toFixed(1)}<span class="u"> °C</span>`;
+  } else if (type === 'mode') {
+    ['off','auto','cool','heat','dry','fan_only'].forEach(m => {
+      const btn = document.getElementById(`lg-${room}-mode-${m}`);
+      if (btn) btn.className = 'clim-btn' + (m === String(val) ? ` active-${m}` : '');
+    });
+  } else if (type === 'fan') {
+    ['auto','slow','low','medium','high'].forEach(m => {
+      const btn = document.getElementById(`lg-${room}-fan-${m}`);
+      if (btn) btn.className = 'clim-btn' + (m === String(val) ? ' active-fan' : '');
+    });
+  } else if (type === 'swing') {
+    ['off','vertical','horizontal','both'].forEach(m => {
+      const btn = document.getElementById(`lg-${room}-swing-${m}`);
+      if (btn) btn.className = 'clim-btn' + (m === String(val) ? ' active-swing' : '');
+    });
+  }
+}
+function lgSet(room, param, val) {
+  pressEffect(event.target);
+  socket.emit('setState', `${LG_ROOMS[room].base}.${param}.command`, { val, ack: false });
+}
+function lgTempAdj(room, delta) {
+  const cur = LG_ROOMS[room].targetTemp;
+  if (cur === null) return;
+  const next = Math.round((cur + delta) * 2) / 2;
+  LG_ROOMS[room].targetTemp = next;
+  const el = document.getElementById(`lg-${room}-temp-set`);
+  if (el) el.innerHTML = `${next.toFixed(1)}<span class="u"> °C</span>`;
+  socket.emit('setState', `${LG_ROOMS[room].base}.target_temperature.command`, { val: next, ack: false });
+}
+
 const oidToTemp    = {}; Object.entries(TEMP_OIDs).forEach(([id,oid])=>{ oidToTemp[oid]=id; });
 const oidToSensor  = {}; Object.entries(SENSOR_OIDs).forEach(([id,cfg])=>{ if(!oidToSensor[cfg.oid])oidToSensor[cfg.oid]=[]; oidToSensor[cfg.oid].push({id,type:cfg.type}); });
 const oidToEnergie = {}; Object.entries(ENERGIE_OIDs).forEach(([id,oid])=>{ if(!oidToEnergie[oid])oidToEnergie[oid]=[]; oidToEnergie[oid].push(id); });
@@ -841,12 +1032,14 @@ const allOids = [...new Set([
   ...Object.values(CAR_OIDs),
   ...Object.values(WASSER_OIDs),
   ...Object.values(VALVE_OIDs),
+  ...Object.values(LG_OIDs),
   NUKI_LOCK_OID, NUKI_BATT_OID, SHIELD_OID, HWC_HEAT_OID,
   BATT_CHARGE_OID, SOMMER_OID, URLAUB_OID, HEIZKURVE_OID,
 ])];
 
 // ── applyState ─────────────────────────────────────────────────────────────
 function applyState(oid, val) {
+  if (oidToLG[oid])      lgApply(oidToLG[oid], val);
   if (oidToTemp[oid])    setTemp(oidToTemp[oid], val);
   if (oidToSensor[oid])  oidToSensor[oid].forEach(cfg=>setSensor(cfg.id,val,cfg.type));
   if (oidToEnergie[oid]) oidToEnergie[oid].forEach(id=>setEnergie(id,val));
