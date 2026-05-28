@@ -1237,7 +1237,7 @@ html, body {
       <path id="wpe-warmwasser-shadow" fill="none" stroke="rgba(180,60,0,0.55)"      stroke-width="8"  stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-warmwasser-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="5"  stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-warmwasser-hi"     fill="none" stroke="rgba(255,200,150,0.0)"    stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-warmwasser-flow"   fill="none" stroke="rgba(220,80,20,0.92)"     stroke-width="2.5" stroke-linecap="round" stroke-dasharray="8 14" opacity="0"/>
+      <path id="wpe-warmwasser-flow"   fill="none" stroke="rgba(255,220,120,0.95)"   stroke-width="3"   stroke-linecap="round" stroke-dasharray="8 14" opacity="0"/>
       <circle class="pipe-handle" id="wph-warmwasser-0" r="10" fill="#CC5522" stroke="#FFBB88" stroke-width="2"/>
       <circle class="pipe-handle" id="wph-warmwasser-1" r="8"  fill="#AA3308" stroke="#EE8855" stroke-width="1.5"/>
       <circle class="pipe-handle" id="wph-warmwasser-2" r="8"  fill="#AA3308" stroke="#EE8855" stroke-width="1.5"/>
@@ -1251,7 +1251,7 @@ html, body {
       <path id="wpe-kaltwasser-shadow" fill="none" stroke="rgba(20,80,180,0.55)"     stroke-width="8"  stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-kaltwasser-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="5"  stroke-linecap="butt" stroke-linejoin="round"/>
       <path id="wpe-kaltwasser-hi"     fill="none" stroke="rgba(200,235,255,0.0)"    stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round"/>
-      <path id="wpe-kaltwasser-flow"   fill="none" stroke="rgba(40,140,255,0.92)"    stroke-width="2.5" stroke-linecap="round" stroke-dasharray="8 14" opacity="0"/>
+      <path id="wpe-kaltwasser-flow"   fill="none" stroke="rgba(160,235,255,0.95)"   stroke-width="3"   stroke-linecap="round" stroke-dasharray="8 14" opacity="0"/>
       <circle class="pipe-handle" id="wph-kaltwasser-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
       <circle class="pipe-handle" id="wph-kaltwasser-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
       <circle class="pipe-handle" id="wph-kaltwasser-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
@@ -2660,7 +2660,7 @@ function updateBoilerWater() {
 function updateHwcUI() {
   const lbl = document.getElementById('lb-hwc-heat');
   if (!lbl) return;
-  const show = live.hwcStorageTemp !== null && live.hwcStorageTemp < 50;
+  const show = live.hwcStorageTemp !== null && live.hwcStorageTemp < 50 && !live.hwcHeating;
   // In edit mode visibility is handled by CSS; only control in normal mode
   if (!editMode) lbl.style.display = show ? 'block' : 'none';
 }
