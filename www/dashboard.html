@@ -924,6 +924,60 @@ html, body {
 .bep-btn-off { background: #FF5555; color: #000; }
 .bep-btn-dim { background: rgba(255,255,255,0.06); color: #555; border: 1px solid rgba(255,255,255,0.1); }
 
+/* ── Gartenwasser popup ─────────────────────────────────────────── */
+#gartenwasser-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#gartenwasser-popup-backdrop.open { display: flex; }
+#gartenwasser-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(68,187,136,0.45);
+  border-radius: 18px;
+  width: 320px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(68,187,136,0.18), 0 0 80px rgba(68,187,136,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.gwp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(68,187,136,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #44BB88;
+  border-bottom: 1px solid rgba(68,187,136,0.2);
+}
+.gwp-dot { width:8px; height:8px; border-radius:50%; background:#44BB88; flex-shrink:0; }
+.gwp-section {
+  padding: 10px 16px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.gwp-section:last-child { border-bottom: none; padding-bottom: 14px; }
+.gwp-section-lbl {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  margin-bottom: 8px;
+}
+.gwp-btn-row { display: flex; gap: 10px; }
+.gwp-btn {
+  flex: 1; padding: 10px 4px;
+  border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
+  text-transform: uppercase; cursor: pointer;
+  transition: filter 0.12s, transform 0.1s;
+}
+.gwp-btn:hover  { filter: brightness(120%); }
+.gwp-btn:active { transform: scale(0.96); filter: brightness(90%); }
+.gwp-btn-on  { background: #44AA44; color: #000; }
+.gwp-btn-off { background: #FF5555; color: #000; }
+.gwp-btn-dim { background: rgba(255,255,255,0.06); color: #555; border: 1px solid rgba(255,255,255,0.1); }
+
 /* ── Alarm fog ────────────────────────────────────────────────────── */
 /* ── Alarm fog — radial-gradient approach, zero filter, zero clip issues ── */
 /* @property enables CSS transitions on the custom color variable          */
@@ -1702,6 +1756,34 @@ html, body {
       <div class="bep-btn-row">
         <button class="bep-btn bep-btn-on"  onclick="beregnerAction(true)">AKTIVIEREN</button>
         <button class="bep-btn bep-btn-off" onclick="beregnerAction(false)">DEAKTIVIEREN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Gartenwasser popup modal ───────────────────────────────── -->
+<div id="gartenwasser-popup-backdrop" onclick="closeGartenwasserPopup()">
+  <div id="gartenwasser-popup-card" onclick="event.stopPropagation()">
+    <div class="gwp-header"><span class="gwp-dot"></span>GARTENWASSER</div>
+    <div class="gwp-section">
+      <div class="gwp-section-lbl">Garten</div>
+      <div class="gwp-btn-row">
+        <button class="gwp-btn" id="gwp-garten-on"       onclick="gartenwasserSet('garten',true)">EIN</button>
+        <button class="gwp-btn" id="gwp-garten-off"      onclick="gartenwasserSet('garten',false)">AUS</button>
+      </div>
+    </div>
+    <div class="gwp-section">
+      <div class="gwp-section-lbl">Hochbeet</div>
+      <div class="gwp-btn-row">
+        <button class="gwp-btn" id="gwp-hochbeet-on"     onclick="gartenwasserSet('hochbeet',true)">EIN</button>
+        <button class="gwp-btn" id="gwp-hochbeet-off"    onclick="gartenwasserSet('hochbeet',false)">AUS</button>
+      </div>
+    </div>
+    <div class="gwp-section">
+      <div class="gwp-section-lbl">Gießkanne</div>
+      <div class="gwp-btn-row">
+        <button class="gwp-btn" id="gwp-gieskanne-on"    onclick="gartenwasserSet('gieskanne',true)">EIN</button>
+        <button class="gwp-btn" id="gwp-gieskanne-off"   onclick="gartenwasserSet('gieskanne',false)">AUS</button>
       </div>
     </div>
   </div>
@@ -2789,17 +2871,20 @@ function applyState(oid, val) {
     case OIDs.ventilGarten: {
       live.ventilGarten = (val === true || val === 'true' || val === 1 || val === '1');
       updateAllPipeFlows();
+      if (window.gwpUpdate) window.gwpUpdate();
       break;
     }
     case OIDs.ventilHochbeet: {
       live.ventilHochbeet = (val === true || val === 'true' || val === 1 || val === '1');
       updateAllPipeFlows();
       if (window.hbpUpdateBtn) window.hbpUpdateBtn();
+      if (window.gwpUpdate) window.gwpUpdate();
       break;
     }
     case OIDs.ventilGieskanne: {
       live.ventilGieskanne = (val === true || val === 'true' || val === 1 || val === '1');
       updateAllPipeFlows();
+      if (window.gwpUpdate) window.gwpUpdate();
       break;
     }
     case OIDs.ventilPool: {
@@ -3256,7 +3341,7 @@ function initAnchorDrag(anchorEl) {
 
   // Close on Escape key
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); window.closeShieldPopup(); window.closeBeregnerPopup(); window.closeHochbeetPopup(); }
+    if (e.key === 'Escape') { window.closeCarPopup(); window.closePoolPopup(); window.closeShieldPopup(); window.closeBeregnerPopup(); window.closeHochbeetPopup(); window.closeGartenwasserPopup && window.closeGartenwasserPopup(); }
   });
 
   // ── Edit-mode connector lines ──────────────────────────────────────────────
@@ -3441,6 +3526,55 @@ function initAnchorDrag(anchorEl) {
     shieldLabel.style.cursor = 'pointer';
     shieldLabel.style.webkitTapHighlightColor = 'transparent';
     shieldLabel.addEventListener('click', () => { if (!editMode) openShieldPopup(); });
+  }
+
+  // ── Gartenwasser popup ─────────────────────────────────────────────────────
+  const GW_OIDS = {
+    garten:    '0_userdata.0.Wasser.Gartenwasserventil',
+    hochbeet:  '0_userdata.0.Wasser.Gartenwasser-Hochbeet',
+    gieskanne: '0_userdata.0.Wasser.Giesskanne',
+  };
+
+  function gwpApplyButtons(key, isOn) {
+    const onBtn  = document.getElementById('gwp-' + key + '-on');
+    const offBtn = document.getElementById('gwp-' + key + '-off');
+    if (!onBtn || !offBtn) return;
+    if (isOn) {
+      onBtn.className  = 'gwp-btn gwp-btn-dim';
+      offBtn.className = 'gwp-btn gwp-btn-off';
+    } else {
+      onBtn.className  = 'gwp-btn gwp-btn-on';
+      offBtn.className = 'gwp-btn gwp-btn-dim';
+    }
+  }
+
+  window.gwpUpdate = function() {
+    gwpApplyButtons('garten',    live.ventilGarten);
+    gwpApplyButtons('hochbeet',  live.ventilHochbeet);
+    gwpApplyButtons('gieskanne', live.ventilGieskanne);
+  };
+
+  window.gartenwasserSet = function(key, val) {
+    const sock = window._dashSocket; if (!sock) return;
+    sock.emit('setState', GW_OIDS[key], { val, ack: false });
+    scheduleAutoClose(window.closeGartenwasserPopup);
+  };
+
+  window.openGartenwasserPopup = function() {
+    window.gwpUpdate();
+    document.getElementById('gartenwasser-popup-backdrop').classList.add('open');
+    scheduleAutoClose(window.closeGartenwasserPopup);
+  };
+  window.closeGartenwasserPopup = function() {
+    cancelAutoClose();
+    document.getElementById('gartenwasser-popup-backdrop').classList.remove('open');
+  };
+
+  const gartenwasserNode = document.getElementById('n-verteiler-wasser');
+  if (gartenwasserNode) {
+    gartenwasserNode.style.cursor = 'pointer';
+    gartenwasserNode.style.webkitTapHighlightColor = 'transparent';
+    gartenwasserNode.addEventListener('click', () => { if (!editMode) openGartenwasserPopup(); });
   }
 })();
 </script>
