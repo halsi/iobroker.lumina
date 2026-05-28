@@ -2660,7 +2660,7 @@ function updateBoilerWater() {
 function updateHwcUI() {
   const lbl = document.getElementById('lb-hwc-heat');
   if (!lbl) return;
-  const show = live.hwcStorageTemp !== null && live.hwcStorageTemp < 50 && !live.hwcHeating;
+  const show = live.hwcStorageTemp !== null && live.hwcStorageTemp < 50;
   // In edit mode visibility is handled by CSS; only control in normal mode
   if (!editMode) lbl.style.display = show ? 'block' : 'none';
 }
