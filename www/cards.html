@@ -261,46 +261,27 @@ body {
 .valve-on  { background: rgba(255,102,102,0.2); color: #ff8888; border-color: rgba(255,102,102,0.4); }
 .valve-off { background: rgba(153,204,255,0.08); color: var(--lblue); border-color: rgba(153,204,255,0.2); }
 
-/* ── Klima (LG) ──────────────────────────────────────────────────── */
-.clim-selectors { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px 14px; }
-.clim-select-wrap { position: relative; }
-.clim-select-btn {
-  width: 100%;
-  padding: 14px 16px;
-  display: flex; align-items: center;
-  font-family: inherit; font-size: 13px; font-weight: 700;
+/* ── Klima toggle buttons ────────────────────────────────────────── */
+.clim-controls { padding: 8px 16px 14px; display: flex; flex-direction: column; gap: 7px; }
+.clim-row { display: flex; gap: 6px; }
+.clim-tog-btn {
+  flex: 1;
+  padding: 14px 6px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
   letter-spacing: 1px; text-transform: uppercase;
-  border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
-  background: rgba(255,255,255,0.04); color: #aaa;
-  cursor: pointer; text-align: left;
+  border: 1px solid rgba(255,255,255,0.10); border-radius: 12px;
+  background: rgba(255,255,255,0.04); color: #444;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s;
 }
-.clim-select-btn:active { background: rgba(255,255,255,0.09); }
-.clim-sel-lbl { color: var(--muted); font-size: 12px; font-weight: 600; min-width: 60px; }
-.clim-sel-val { flex: 1; text-align: right; margin-right: 10px; font-size: 13px; font-weight: 700; }
-.clim-sel-arrow { font-size: 11px; color: #555; }
-.clim-dropdown {
-  display: none; position: absolute;
-  top: calc(100% + 4px); left: 0; right: 0; z-index: 200;
-  background: #16162a; border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 12px; overflow: hidden;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.55);
-}
-.clim-dropdown.open { display: block; }
-.clim-dd-item {
-  width: 100%; padding: 13px 18px;
-  text-align: left; font-family: inherit; font-size: 14px; font-weight: 600;
-  letter-spacing: 0.5px; text-transform: uppercase;
-  background: none; border: none;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  color: #555; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.1s;
-}
-.clim-dd-item:last-child { border-bottom: none; }
-.clim-dd-item:active { background: rgba(255,255,255,0.07); }
-.clim-dd-item.dd-active { color: #fff; }
+.clim-tog-btn:active { filter: brightness(1.4); }
+.clim-tog-btn.tog-cool-on  { background: rgba(106,174,255,0.2);  color: #6AAEFF; border-color: rgba(106,174,255,0.4); }
+.clim-tog-btn.tog-heat-on  { background: rgba(255,110,60,0.2);   color: #FF7755; border-color: rgba(255,110,60,0.4); }
+.clim-tog-btn.tog-fan-on   { background: rgba(153,204,255,0.2);  color: #99CCFF; border-color: rgba(153,204,255,0.4); }
+.clim-tog-btn.tog-swing-on { background: rgba(102,204,187,0.2);  color: #66CCBB; border-color: rgba(102,204,187,0.4); }
+
+/* ── Klima temp button ───────────────────────────────────────────── */
 .clim-temp-btn {
   font-family: inherit; font-size: 18px; font-weight: 500;
   width: 32px; height: 32px; border-radius: 50%;
@@ -604,48 +585,18 @@ body {
           </div>
         </div>
       </div>
-      <div class="clim-selectors">
-        <div class="clim-select-wrap">
-          <button class="clim-select-btn" onclick="lgDropdown(this,'lv','mode')">
-            <span class="clim-sel-lbl">Modus</span>
-            <span class="clim-sel-val" id="lg-lv-mode-val">–</span>
-            <span class="clim-sel-arrow">▾</span>
-          </button>
-          <div class="clim-dropdown" id="lg-lv-mode-dd">
-            <button class="clim-dd-item" data-val="off"      onclick="lgSetClose('lv','mode','off')">Aus</button>
-            <button class="clim-dd-item" data-val="auto"     onclick="lgSetClose('lv','mode','auto')">Auto</button>
-            <button class="clim-dd-item" data-val="cool"     onclick="lgSetClose('lv','mode','cool')">Kühlen</button>
-            <button class="clim-dd-item" data-val="heat"     onclick="lgSetClose('lv','mode','heat')">Heizen</button>
-            <button class="clim-dd-item" data-val="dry"      onclick="lgSetClose('lv','mode','dry')">Trocken</button>
-            <button class="clim-dd-item" data-val="fan_only" onclick="lgSetClose('lv','mode','fan_only')">Lüften</button>
-          </div>
+      <div class="clim-controls">
+        <div class="clim-row">
+          <button class="clim-tog-btn" id="lg-lv-mode-cool" onclick="pressEffect(this);lgToggle('lv','mode','cool')">Kühlen</button>
+          <button class="clim-tog-btn" id="lg-lv-mode-heat" onclick="pressEffect(this);lgToggle('lv','mode','heat')">Heizen</button>
         </div>
-        <div class="clim-select-wrap">
-          <button class="clim-select-btn" onclick="lgDropdown(this,'lv','fan_mode')">
-            <span class="clim-sel-lbl">Lüfter</span>
-            <span class="clim-sel-val" id="lg-lv-fan-val">–</span>
-            <span class="clim-sel-arrow">▾</span>
-          </button>
-          <div class="clim-dropdown" id="lg-lv-fan_mode-dd">
-            <button class="clim-dd-item" data-val="auto"   onclick="lgSetClose('lv','fan_mode','auto')">Auto</button>
-            <button class="clim-dd-item" data-val="slow"   onclick="lgSetClose('lv','fan_mode','slow')">Slow</button>
-            <button class="clim-dd-item" data-val="low"    onclick="lgSetClose('lv','fan_mode','low')">Low</button>
-            <button class="clim-dd-item" data-val="medium" onclick="lgSetClose('lv','fan_mode','medium')">Medium</button>
-            <button class="clim-dd-item" data-val="high"   onclick="lgSetClose('lv','fan_mode','high')">High</button>
-          </div>
+        <div class="clim-row">
+          <button class="clim-tog-btn" id="lg-lv-fan-low"    onclick="pressEffect(this);lgToggle('lv','fan_mode','low')">Low</button>
+          <button class="clim-tog-btn" id="lg-lv-fan-medium" onclick="pressEffect(this);lgToggle('lv','fan_mode','medium')">Med</button>
+          <button class="clim-tog-btn" id="lg-lv-fan-high"   onclick="pressEffect(this);lgToggle('lv','fan_mode','high')">High</button>
         </div>
-        <div class="clim-select-wrap">
-          <button class="clim-select-btn" onclick="lgDropdown(this,'lv','swing_mode')">
-            <span class="clim-sel-lbl">Swing</span>
-            <span class="clim-sel-val" id="lg-lv-swing-val">–</span>
-            <span class="clim-sel-arrow">▾</span>
-          </button>
-          <div class="clim-dropdown" id="lg-lv-swing_mode-dd">
-            <button class="clim-dd-item" data-val="off"        onclick="lgSetClose('lv','swing_mode','off')">Aus</button>
-            <button class="clim-dd-item" data-val="vertical"   onclick="lgSetClose('lv','swing_mode','vertical')">Vertikal</button>
-            <button class="clim-dd-item" data-val="horizontal" onclick="lgSetClose('lv','swing_mode','horizontal')">Horizontal</button>
-            <button class="clim-dd-item" data-val="both"       onclick="lgSetClose('lv','swing_mode','both')">Beide</button>
-          </div>
+        <div class="clim-row">
+          <button class="clim-tog-btn" id="lg-lv-swing-btn" style="flex:1" onclick="pressEffect(this);lgSwingCycle('lv')">Swing: –</button>
         </div>
       </div>
     </div>
@@ -664,48 +615,18 @@ body {
           </div>
         </div>
       </div>
-      <div class="clim-selectors">
-        <div class="clim-select-wrap">
-          <button class="clim-select-btn" onclick="lgDropdown(this,'sr','mode')">
-            <span class="clim-sel-lbl">Modus</span>
-            <span class="clim-sel-val" id="lg-sr-mode-val">–</span>
-            <span class="clim-sel-arrow">▾</span>
-          </button>
-          <div class="clim-dropdown" id="lg-sr-mode-dd">
-            <button class="clim-dd-item" data-val="off"      onclick="lgSetClose('sr','mode','off')">Aus</button>
-            <button class="clim-dd-item" data-val="auto"     onclick="lgSetClose('sr','mode','auto')">Auto</button>
-            <button class="clim-dd-item" data-val="cool"     onclick="lgSetClose('sr','mode','cool')">Kühlen</button>
-            <button class="clim-dd-item" data-val="heat"     onclick="lgSetClose('sr','mode','heat')">Heizen</button>
-            <button class="clim-dd-item" data-val="dry"      onclick="lgSetClose('sr','mode','dry')">Trocken</button>
-            <button class="clim-dd-item" data-val="fan_only" onclick="lgSetClose('sr','mode','fan_only')">Lüften</button>
-          </div>
+      <div class="clim-controls">
+        <div class="clim-row">
+          <button class="clim-tog-btn" id="lg-sr-mode-cool" onclick="pressEffect(this);lgToggle('sr','mode','cool')">Kühlen</button>
+          <button class="clim-tog-btn" id="lg-sr-mode-heat" onclick="pressEffect(this);lgToggle('sr','mode','heat')">Heizen</button>
         </div>
-        <div class="clim-select-wrap">
-          <button class="clim-select-btn" onclick="lgDropdown(this,'sr','fan_mode')">
-            <span class="clim-sel-lbl">Lüfter</span>
-            <span class="clim-sel-val" id="lg-sr-fan-val">–</span>
-            <span class="clim-sel-arrow">▾</span>
-          </button>
-          <div class="clim-dropdown" id="lg-sr-fan_mode-dd">
-            <button class="clim-dd-item" data-val="auto"   onclick="lgSetClose('sr','fan_mode','auto')">Auto</button>
-            <button class="clim-dd-item" data-val="slow"   onclick="lgSetClose('sr','fan_mode','slow')">Slow</button>
-            <button class="clim-dd-item" data-val="low"    onclick="lgSetClose('sr','fan_mode','low')">Low</button>
-            <button class="clim-dd-item" data-val="medium" onclick="lgSetClose('sr','fan_mode','medium')">Medium</button>
-            <button class="clim-dd-item" data-val="high"   onclick="lgSetClose('sr','fan_mode','high')">High</button>
-          </div>
+        <div class="clim-row">
+          <button class="clim-tog-btn" id="lg-sr-fan-low"    onclick="pressEffect(this);lgToggle('sr','fan_mode','low')">Low</button>
+          <button class="clim-tog-btn" id="lg-sr-fan-medium" onclick="pressEffect(this);lgToggle('sr','fan_mode','medium')">Med</button>
+          <button class="clim-tog-btn" id="lg-sr-fan-high"   onclick="pressEffect(this);lgToggle('sr','fan_mode','high')">High</button>
         </div>
-        <div class="clim-select-wrap">
-          <button class="clim-select-btn" onclick="lgDropdown(this,'sr','swing_mode')">
-            <span class="clim-sel-lbl">Swing</span>
-            <span class="clim-sel-val" id="lg-sr-swing-val">–</span>
-            <span class="clim-sel-arrow">▾</span>
-          </button>
-          <div class="clim-dropdown" id="lg-sr-swing_mode-dd">
-            <button class="clim-dd-item" data-val="off"        onclick="lgSetClose('sr','swing_mode','off')">Aus</button>
-            <button class="clim-dd-item" data-val="vertical"   onclick="lgSetClose('sr','swing_mode','vertical')">Vertikal</button>
-            <button class="clim-dd-item" data-val="horizontal" onclick="lgSetClose('sr','swing_mode','horizontal')">Horizontal</button>
-            <button class="clim-dd-item" data-val="both"       onclick="lgSetClose('sr','swing_mode','both')">Beide</button>
-          </div>
+        <div class="clim-row">
+          <button class="clim-tog-btn" id="lg-sr-swing-btn" style="flex:1" onclick="pressEffect(this);lgSwingCycle('sr')">Swing: –</button>
         </div>
       </div>
     </div>
@@ -798,8 +719,8 @@ const VALVE_OIDs = {
 
 // ── LG Klimaanlagen ────────────────────────────────────────────────────────
 const LG_ROOMS = {
-  lv: { base: 'mqtt.0.esphome.LG.Climate.LivingRoom.climate.lg-climate-livingroom',  targetTemp: null },
-  sr: { base: 'mqtt.0.esphome.LG.Climate.SleepRoom.climate.lg-climate-sleeproom',    targetTemp: null },
+  lv: { base: 'mqtt.0.esphome.LG.Climate.LivingRoom.climate.lg-climate-livingroom',  targetTemp: null, mode: 'off', fan: 'auto', swing: 'off' },
+  sr: { base: 'mqtt.0.esphome.LG.Climate.SleepRoom.climate.lg-climate-sleeproom',    targetTemp: null, mode: 'off', fan: 'auto', swing: 'off' },
 };
 const LG_OIDs = {};
 Object.entries(LG_ROOMS).forEach(([room, cfg]) => {
@@ -1018,12 +939,9 @@ function setHCtrlBtn(id, val) {
 function toggleSommermodus()  { const b=document.getElementById('h-sommer-btn'); socket.emit('setState',SOMMER_OID,{val:!b.classList.contains('h-on'),ack:false}); }
 function toggleUrlaubsmodus() { const b=document.getElementById('h-urlaub-btn'); socket.emit('setState',URLAUB_OID,{val:!b.classList.contains('h-on'),ack:false}); }
 
-// ── Reverse maps ───────────────────────────────────────────────────────────
 // ── LG apply + commands ───────────────────────────────────────────────────
-const LG_MODE_LABELS  = { off:'Aus', auto:'Auto', cool:'Kühlen', heat:'Heizen', dry:'Trocken', fan_only:'Lüften' };
-const LG_FAN_LABELS   = { auto:'Auto', slow:'Slow', low:'Low', medium:'Medium', high:'High' };
-const LG_SWING_LABELS = { off:'Aus', vertical:'Vertikal', horizontal:'Horizontal', both:'Beide' };
-const LG_MODE_COLORS  = { off:'#666', auto:'#00CCAA', cool:'#6AAEFF', heat:'#FF6347', dry:'#FFCC44', fan_only:'#aaa' };
+const LG_SWING_CYCLE  = ['off','vertical','horizontal','both'];
+const LG_SWING_LABELS = { off:'Swing: Aus', vertical:'Swing: Vertikal', horizontal:'Swing: Horiz.', both:'Swing: Beide' };
 
 function lgApply(key, val) {
   const dash = key.indexOf('-');
@@ -1040,39 +958,37 @@ function lgApply(key, val) {
     const el = document.getElementById(`lg-${room}-temp-set`);
     if (el) el.innerHTML = isNaN(n) ? '–' : `${n.toFixed(1)}<span class="u"> °C</span>`;
   } else if (type === 'mode') {
-    const valEl = document.getElementById(`lg-${room}-mode-val`);
-    if (valEl) { valEl.textContent = LG_MODE_LABELS[v] || v; valEl.style.color = LG_MODE_COLORS[v] || '#aaa'; }
-    document.querySelectorAll(`#lg-${room}-mode-dd .clim-dd-item`).forEach(item => {
-      item.classList.toggle('dd-active', item.dataset.val === v);
-      item.style.color = item.dataset.val === v ? (LG_MODE_COLORS[v] || '#fff') : '';
-    });
+    LG_ROOMS[room].mode = v;
+    const coolBtn = document.getElementById(`lg-${room}-mode-cool`);
+    const heatBtn = document.getElementById(`lg-${room}-mode-heat`);
+    if (coolBtn) coolBtn.classList.toggle('tog-cool-on', v === 'cool');
+    if (heatBtn) heatBtn.classList.toggle('tog-heat-on', v === 'heat');
   } else if (type === 'fan') {
-    const valEl = document.getElementById(`lg-${room}-fan-val`);
-    if (valEl) { valEl.textContent = LG_FAN_LABELS[v] || v; valEl.style.color = '#99CCFF'; }
-    document.querySelectorAll(`#lg-${room}-fan_mode-dd .clim-dd-item`).forEach(item => {
-      item.classList.toggle('dd-active', item.dataset.val === v);
-      item.style.color = item.dataset.val === v ? '#99CCFF' : '';
+    LG_ROOMS[room].fan = v;
+    ['low','medium','high'].forEach(level => {
+      const btn = document.getElementById(`lg-${room}-fan-${level}`);
+      if (btn) btn.classList.toggle('tog-fan-on', v === level);
     });
   } else if (type === 'swing') {
-    const valEl = document.getElementById(`lg-${room}-swing-val`);
-    if (valEl) { valEl.textContent = LG_SWING_LABELS[v] || v; valEl.style.color = v === 'off' ? '#666' : '#66CCBB'; }
-    document.querySelectorAll(`#lg-${room}-swing_mode-dd .clim-dd-item`).forEach(item => {
-      item.classList.toggle('dd-active', item.dataset.val === v);
-      item.style.color = item.dataset.val === v ? (v === 'off' ? '#666' : '#66CCBB') : '';
-    });
+    LG_ROOMS[room].swing = v;
+    const btn = document.getElementById(`lg-${room}-swing-btn`);
+    if (btn) {
+      btn.textContent = LG_SWING_LABELS[v] || `Swing: ${v}`;
+      btn.classList.toggle('tog-swing-on', v !== 'off');
+    }
   }
 }
-function lgDropdown(btn, room, param) {
-  const dd = document.getElementById(`lg-${room}-${param}-dd`);
-  if (!dd) return;
-  const isOpen = dd.classList.contains('open');
-  document.querySelectorAll('.clim-dropdown.open').forEach(d => d.classList.remove('open'));
-  if (!isOpen) dd.classList.add('open');
+function lgToggle(room, param, val) {
+  const stateKey = param === 'fan_mode' ? 'fan' : param === 'swing_mode' ? 'swing' : 'mode';
+  const cur = LG_ROOMS[room][stateKey];
+  const next = cur === val ? (param === 'mode' ? 'off' : 'auto') : val;
+  lgSet(room, param, next);
 }
-function lgSetClose(room, param, val) {
-  socket.emit('setState', `${LG_ROOMS[room].base}.${param}.command`, { val, ack: false });
-  const dd = document.getElementById(`lg-${room}-${param}-dd`);
-  if (dd) dd.classList.remove('open');
+function lgSwingCycle(room) {
+  const cur = LG_ROOMS[room].swing || 'off';
+  const idx = LG_SWING_CYCLE.indexOf(cur);
+  const next = LG_SWING_CYCLE[(idx + 1) % LG_SWING_CYCLE.length];
+  lgSet(room, 'swing_mode', next);
 }
 function lgSet(room, param, val) {
   socket.emit('setState', `${LG_ROOMS[room].base}.${param}.command`, { val, ack: false });
@@ -1086,11 +1002,6 @@ function lgTempAdj(room, delta) {
   if (el) el.innerHTML = `${next.toFixed(1)}<span class="u"> °C</span>`;
   socket.emit('setState', `${LG_ROOMS[room].base}.target_temperature.command`, { val: next, ack: false });
 }
-document.addEventListener('click', e => {
-  if (!e.target.closest('.clim-select-wrap')) {
-    document.querySelectorAll('.clim-dropdown.open').forEach(d => d.classList.remove('open'));
-  }
-});
 
 const oidToTemp    = {}; Object.entries(TEMP_OIDs).forEach(([id,oid])=>{ oidToTemp[oid]=id; });
 const oidToSensor  = {}; Object.entries(SENSOR_OIDs).forEach(([id,cfg])=>{ if(!oidToSensor[cfg.oid])oidToSensor[cfg.oid]=[]; oidToSensor[cfg.oid].push({id,type:cfg.type}); });
