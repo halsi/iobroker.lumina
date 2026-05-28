@@ -329,7 +329,7 @@ html, body {
       <div id="bar-top">
         <div class="bar b1"></div>
         <div class="bar b2"></div>
-        <div class="bar b3">KW-01</div>
+        <div class="bar b3" id="bar-kw">KW-01</div>
         <div class="bar b4"></div>
         <div class="bar b5">4710-SYS</div>
         <div class="bar b6"></div>
@@ -373,6 +373,14 @@ document.querySelectorAll('.nav-item').forEach(btn => {
   });
 });
 
+function getISOWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
 function updateClock() {
   const now = new Date();
   document.getElementById('hdr-time').textContent =
@@ -384,6 +392,8 @@ function updateClock() {
   const year    = now.getFullYear();
   document.getElementById('hdr-date').textContent =
     `${weekday}, ${day}. ${month} ${year}`;
+  document.getElementById('bar-kw').textContent =
+    'KW-' + getISOWeek(now).toString().padStart(2, '0');
 }
 updateClock();
 setInterval(updateClock, 10000);
