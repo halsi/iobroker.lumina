@@ -2372,10 +2372,13 @@ function updatePipeFlow(pipeId, active) {
   const bodyEl = document.getElementById(pipe.pathIds.body);
   const on = editMode || active;
   if (flowEl) {
-    if (on) {
-      flowEl.style.animation = 'water-flow 2.5s linear infinite';
+    // Only touch animation when state actually changes — avoids restarting
+    // the animation on every unrelated OID update (which causes stuttering)
+    const currentlyOn = flowEl.getAttribute('opacity') === '1';
+    if (on && !currentlyOn) {
       flowEl.setAttribute('opacity', '1');
-    } else {
+      flowEl.style.animation = 'water-flow 2.5s linear infinite';
+    } else if (!on && currentlyOn) {
       flowEl.style.animation = 'none';
       flowEl.setAttribute('opacity', '0');
     }
