@@ -580,9 +580,9 @@ body {
         <div class="row">
           <span class="lbl">Soll</span>
           <div style="display:flex;align-items:center;gap:8px;">
-            <button class="clim-temp-btn" onclick="lgTempAdj('lv',-0.5)">−</button>
+            <button class="clim-temp-btn" onclick="lgTempAdj('lv',-1)">−</button>
             <span class="val" id="lg-lv-temp-set">–</span>
-            <button class="clim-temp-btn" onclick="lgTempAdj('lv',+0.5)">+</button>
+            <button class="clim-temp-btn" onclick="lgTempAdj('lv',+1)">+</button>
           </div>
         </div>
       </div>
@@ -626,9 +626,9 @@ body {
         <div class="row">
           <span class="lbl">Soll</span>
           <div style="display:flex;align-items:center;gap:8px;">
-            <button class="clim-temp-btn" onclick="lgTempAdj('sr',-0.5)">−</button>
+            <button class="clim-temp-btn" onclick="lgTempAdj('sr',-1)">−</button>
             <span class="val" id="lg-sr-temp-set">–</span>
-            <button class="clim-temp-btn" onclick="lgTempAdj('sr',+0.5)">+</button>
+            <button class="clim-temp-btn" onclick="lgTempAdj('sr',+1)">+</button>
           </div>
         </div>
       </div>
@@ -1011,7 +1011,7 @@ function lgSet(room, param, val) {
 function lgTempAdj(room, delta) {
   const cur = LG_ROOMS[room].targetTemp;
   if (cur === null) return;
-  const next = Math.round((cur + delta) * 2) / 2;
+  const next = Math.round(cur + delta);
   LG_ROOMS[room].targetTemp = next;
   const el = document.getElementById(`lg-${room}-temp-set`);
   if (el) el.innerHTML = `${next.toFixed(1)}<span class="u"> °C</span>`;
