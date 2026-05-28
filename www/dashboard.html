@@ -977,6 +977,11 @@ html, body {
 .gwp-btn-on  { background: #44AA44; color: #000; }
 .gwp-btn-off { background: #FF5555; color: #000; }
 .gwp-btn-dim { background: rgba(255,255,255,0.06); color: #555; border: 1px solid rgba(255,255,255,0.1); }
+.gwp-section-hdr {
+  padding: 8px 16px 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #44BB88;
+}
 
 /* ── Alarm fog ────────────────────────────────────────────────────── */
 /* ── Alarm fog — radial-gradient approach, zero filter, zero clip issues ── */
@@ -1765,25 +1770,40 @@ html, body {
 <div id="gartenwasser-popup-backdrop" onclick="closeGartenwasserPopup()">
   <div id="gartenwasser-popup-card" onclick="event.stopPropagation()">
     <div class="gwp-header"><span class="gwp-dot"></span>GARTENWASSER</div>
-    <div class="gwp-section">
-      <div class="gwp-section-lbl">Garten</div>
-      <div class="gwp-btn-row">
-        <button class="gwp-btn" id="gwp-garten-on"       onclick="gartenwasserSet('garten',true)">AKTIVIEREN</button>
-        <button class="gwp-btn" id="gwp-garten-off"      onclick="gartenwasserSet('garten',false)">DEAKTIVIEREN</button>
+
+    <div class="gwp-section-hdr">GARTEN</div>
+    <div class="bep-status-block">
+      <div class="bep-status-lbl">STATUS</div>
+      <div class="bep-status-val" id="gwp-garten-status">–</div>
+    </div>
+    <div class="bep-body">
+      <div class="bep-btn-row">
+        <button class="bep-btn bep-btn-on"  onclick="gartenwasserSet('garten',true)">AKTIVIEREN</button>
+        <button class="bep-btn bep-btn-off" onclick="gartenwasserSet('garten',false)">DEAKTIVIEREN</button>
       </div>
     </div>
-    <div class="gwp-section">
-      <div class="gwp-section-lbl">Hochbeet</div>
-      <div class="gwp-btn-row">
-        <button class="gwp-btn" id="gwp-hochbeet-on"     onclick="gartenwasserSet('hochbeet',true)">AKTIVIEREN</button>
-        <button class="gwp-btn" id="gwp-hochbeet-off"    onclick="gartenwasserSet('hochbeet',false)">DEAKTIVIEREN</button>
+
+    <div class="gwp-section-hdr" style="border-top:1px solid rgba(255,255,255,0.06);">HOCHBEET</div>
+    <div class="bep-status-block">
+      <div class="bep-status-lbl">STATUS</div>
+      <div class="bep-status-val" id="gwp-hochbeet-status">–</div>
+    </div>
+    <div class="bep-body">
+      <div class="bep-btn-row">
+        <button class="bep-btn bep-btn-on"  onclick="gartenwasserSet('hochbeet',true)">AKTIVIEREN</button>
+        <button class="bep-btn bep-btn-off" onclick="gartenwasserSet('hochbeet',false)">DEAKTIVIEREN</button>
       </div>
     </div>
-    <div class="gwp-section">
-      <div class="gwp-section-lbl">Gießkanne</div>
-      <div class="gwp-btn-row">
-        <button class="gwp-btn" id="gwp-gieskanne-on"    onclick="gartenwasserSet('gieskanne',true)">AKTIVIEREN</button>
-        <button class="gwp-btn" id="gwp-gieskanne-off"   onclick="gartenwasserSet('gieskanne',false)">DEAKTIVIEREN</button>
+
+    <div class="gwp-section-hdr" style="border-top:1px solid rgba(255,255,255,0.06);">GIESSKANNE</div>
+    <div class="bep-status-block">
+      <div class="bep-status-lbl">STATUS</div>
+      <div class="bep-status-val" id="gwp-gieskanne-status">–</div>
+    </div>
+    <div class="bep-body">
+      <div class="bep-btn-row">
+        <button class="bep-btn bep-btn-on"  onclick="gartenwasserSet('gieskanne',true)">AKTIVIEREN</button>
+        <button class="bep-btn bep-btn-off" onclick="gartenwasserSet('gieskanne',false)">DEAKTIVIEREN</button>
       </div>
     </div>
   </div>
@@ -3539,15 +3559,10 @@ function initAnchorDrag(anchorEl) {
   };
 
   function gwpApplyButtons(key, isOn) {
-    const onBtn  = document.getElementById('gwp-' + key + '-on');
-    const offBtn = document.getElementById('gwp-' + key + '-off');
-    if (!onBtn || !offBtn) return;
-    if (isOn) {
-      onBtn.className  = 'gwp-btn gwp-btn-dim';
-      offBtn.className = 'gwp-btn gwp-btn-off';
-    } else {
-      onBtn.className  = 'gwp-btn gwp-btn-on';
-      offBtn.className = 'gwp-btn gwp-btn-dim';
+    const statusEl = document.getElementById('gwp-' + key + '-status');
+    if (statusEl) {
+      statusEl.textContent = isOn ? 'AKTIV' : 'INAKTIV';
+      statusEl.style.color = isOn ? '#44FF64' : '#6F86FF';
     }
   }
 
