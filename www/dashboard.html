@@ -973,6 +973,90 @@ html, body {
   0%,100% { transform: translate( 0px,  0px) scale(1.00); }
   50%     { transform: translate(18px, 28px) scale(0.91); }
 }
+/* ── Klima popup ─────────────────────────────────────────────── */
+#klima-popup-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(5,7,13,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+#klima-popup-backdrop.open { display: flex; }
+#klima-popup-card {
+  background: rgba(10,16,32,0.97);
+  border: 1.5px solid rgba(0,170,204,0.45);
+  border-radius: 18px;
+  width: 380px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(0,170,204,0.18), 0 0 80px rgba(0,170,204,0.08);
+  animation: cpp-in 0.18s ease;
+}
+.klp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  background: rgba(0,170,204,0.10);
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #00AACC;
+  border-bottom: 1px solid rgba(0,170,204,0.2);
+  position: sticky; top: 0; z-index: 1;
+  backdrop-filter: blur(8px);
+}
+.klp-dot { width:8px; height:8px; border-radius:50%; background:#00AACC; flex-shrink:0; }
+.klp-close {
+  margin-left: auto; background: none; border: none;
+  color: rgba(255,255,255,0.4); cursor: pointer;
+  font-size: 18px; line-height: 1; padding: 2px 4px; border-radius: 4px;
+}
+.klp-close:hover { color: #fff; }
+.klp-room-hdr {
+  padding: 9px 16px 7px;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.klp-room-hdr.teal  { color: #00AACC; background: rgba(0,170,204,0.06); }
+.klp-room-hdr.teal2 { color: #66CCBB; background: rgba(102,204,187,0.06); }
+.klp-body { padding: 4px 16px 6px; }
+.klp-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 14px;
+}
+.klp-row:last-child { border-bottom: none; }
+.klp-lbl { font-weight: 600; }
+.klp-lbl-teal  { color: #00AACC; }
+.klp-lbl-teal2 { color: #66CCBB; }
+.klp-val { color: #fff; font-weight: 700; font-size: 16px; }
+.klp-temp-btn {
+  font-family: inherit; font-size: 18px; font-weight: 500;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.07); color: #888;
+  border: 1px solid rgba(255,255,255,0.14); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background 0.12s; line-height: 1;
+}
+.klp-temp-btn:active { background: rgba(255,255,255,0.18); }
+.klp-controls { padding: 6px 16px 14px; display: flex; flex-direction: column; gap: 7px; }
+.klp-ctrl-row { display: flex; gap: 7px; }
+.klp-tog-btn {
+  flex: 1; padding: 13px 6px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.10); border-radius: 10px;
+  background: rgba(255,255,255,0.04); color: #444;
+  cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.klp-tog-btn:active { filter: brightness(1.4); }
+.klp-tog-btn.tog-cool-on  { background: rgba(106,174,255,0.2); color: #6AAEFF; border-color: rgba(106,174,255,0.4); }
+.klp-tog-btn.tog-heat-on  { background: rgba(255,110,60,0.2);  color: #FF7755; border-color: rgba(255,110,60,0.4); }
+.klp-tog-btn.tog-fan-on   { background: rgba(153,204,255,0.2); color: #99CCFF; border-color: rgba(153,204,255,0.4); }
+.klp-tog-btn.tog-swing-on { background: rgba(102,204,187,0.2); color: #66CCBB; border-color: rgba(102,204,187,0.4); }
+.klp-divider { height:1px; background: rgba(255,255,255,0.08); margin: 2px 0; }
+
 #dashboard-root.edit-mode::before {
   content: '';
   position: absolute;
@@ -1334,6 +1418,15 @@ html, body {
     <button id="hwc-heat-btn" onclick="activateHwcHeating()">▲ HEIZEN</button>
   </div>
 
+  <div id="lb-klima" class="holo-label" data-size="22">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#00AACC;">KLIMA</span><br>
+    <span class="node-value" id="v-klima">–</span>
+  </div>
+
   <div id="lb-hochbeet" class="holo-label" data-size="22">
     <div class="label-controls">
       <button class="lbl-btn lbl-minus">−</button>
@@ -1604,6 +1697,80 @@ html, body {
       <div class="bep-btn-row">
         <button class="bep-btn bep-btn-on"  onclick="beregnerAction(true)">AKTIVIEREN</button>
         <button class="bep-btn bep-btn-off" onclick="beregnerAction(false)">DEAKTIVIEREN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Klima popup modal ──────────────────────────────────────── -->
+<div id="klima-popup-backdrop" onclick="closeKlimaPopup()">
+  <div id="klima-popup-card" onclick="event.stopPropagation()">
+    <div class="klp-header">
+      <span class="klp-dot"></span>KLIMA
+      <button class="klp-close" onclick="closeKlimaPopup()">✕</button>
+    </div>
+
+    <!-- Wohnzimmer -->
+    <div class="klp-room-hdr teal">● Wohnzimmer</div>
+    <div class="klp-body">
+      <div class="klp-row">
+        <span class="klp-lbl klp-lbl-teal">Ist</span>
+        <span class="klp-val" id="klp-lv-cur">–</span>
+      </div>
+      <div class="klp-row">
+        <span class="klp-lbl klp-lbl-teal">Soll</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="klp-temp-btn" onclick="klpTempAdj('lv',-1)">−</button>
+          <span class="klp-val" id="klp-lv-set">–</span>
+          <button class="klp-temp-btn" onclick="klpTempAdj('lv',+1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="klp-controls">
+      <div class="klp-ctrl-row">
+        <button class="klp-tog-btn" id="klp-lv-mode-cool" onclick="klpToggle('lv','mode','cool')">Kühlen</button>
+        <button class="klp-tog-btn" id="klp-lv-mode-heat" onclick="klpToggle('lv','mode','heat')">Heizen</button>
+      </div>
+      <div class="klp-ctrl-row">
+        <button class="klp-tog-btn" id="klp-lv-fan-low"    onclick="klpToggle('lv','fan_mode','low')">Low</button>
+        <button class="klp-tog-btn" id="klp-lv-fan-medium" onclick="klpToggle('lv','fan_mode','medium')">Med</button>
+        <button class="klp-tog-btn" id="klp-lv-fan-high"   onclick="klpToggle('lv','fan_mode','high')">High</button>
+      </div>
+      <div class="klp-ctrl-row">
+        <button class="klp-tog-btn" id="klp-lv-swing-btn" style="flex:1" onclick="klpSwingCycle('lv')">Swing: –</button>
+      </div>
+    </div>
+
+    <div class="klp-divider"></div>
+
+    <!-- Schlafzimmer -->
+    <div class="klp-room-hdr teal2">● Schlafzimmer</div>
+    <div class="klp-body">
+      <div class="klp-row">
+        <span class="klp-lbl klp-lbl-teal2">Ist</span>
+        <span class="klp-val" id="klp-sr-cur">–</span>
+      </div>
+      <div class="klp-row">
+        <span class="klp-lbl klp-lbl-teal2">Soll</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="klp-temp-btn" onclick="klpTempAdj('sr',-1)">−</button>
+          <span class="klp-val" id="klp-sr-set">–</span>
+          <button class="klp-temp-btn" onclick="klpTempAdj('sr',+1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="klp-controls">
+      <div class="klp-ctrl-row">
+        <button class="klp-tog-btn" id="klp-sr-mode-cool" onclick="klpToggle('sr','mode','cool')">Kühlen</button>
+        <button class="klp-tog-btn" id="klp-sr-mode-heat" onclick="klpToggle('sr','mode','heat')">Heizen</button>
+      </div>
+      <div class="klp-ctrl-row">
+        <button class="klp-tog-btn" id="klp-sr-fan-low"    onclick="klpToggle('sr','fan_mode','low')">Low</button>
+        <button class="klp-tog-btn" id="klp-sr-fan-medium" onclick="klpToggle('sr','fan_mode','medium')">Med</button>
+        <button class="klp-tog-btn" id="klp-sr-fan-high"   onclick="klpToggle('sr','fan_mode','high')">High</button>
+      </div>
+      <div class="klp-ctrl-row">
+        <button class="klp-tog-btn" id="klp-sr-swing-btn" style="flex:1" onclick="klpSwingCycle('sr')">Swing: –</button>
       </div>
     </div>
   </div>
@@ -2749,6 +2916,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-beregner':    { x: 1123, y: 729, size: 22 },
   'lb-boiler':      { x: 1679, y:  64, size: 22 },
   'lb-hwc-heat':    { x: 1679, y: 140, size: 22 },
+  'lb-klima':       { x: 1390, y: 415, size: 22 },
 };
 
 function loadLabelState() {
@@ -3694,6 +3862,157 @@ function initAnchorDrag(anchorEl) {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') window.closeHousePopup();
   });
+})();
+</script>
+
+<script>
+// ── Klima popup ────────────────────────────────────────────────────────────
+(function() {
+  const LG_BASE = {
+    lv: 'mqtt.0.esphome.LG.Climate.LivingRoom.climate.lg-climate-livingroom',
+    sr: 'mqtt.0.esphome.LG.Climate.SleepRoom.climate.lg-climate-sleeproom',
+  };
+  const LG_STATE = {
+    lv: { targetTemp: null, mode: 'off', fan: 'auto', swing: 'off' },
+    sr: { targetTemp: null, mode: 'off', fan: 'auto', swing: 'off' },
+  };
+  const LG_SWING_CYCLE  = ['off','vertical','horizontal','both'];
+  const LG_SWING_LABELS = { off:'Swing: Aus', vertical:'Swing: Vertikal', horizontal:'Swing: Horiz.', both:'Swing: Beide' };
+
+  const KLIMA_OIDS = {
+    'lv-cur':   `${LG_BASE.lv}.current_temperature.state`,
+    'lv-set':   `${LG_BASE.lv}.target_temperature.state`,
+    'lv-mode':  `${LG_BASE.lv}.mode.state`,
+    'lv-fan':   `${LG_BASE.lv}.fan_mode.state`,
+    'lv-swing': `${LG_BASE.lv}.swing_mode.state`,
+    'sr-cur':   `${LG_BASE.sr}.current_temperature.state`,
+    'sr-set':   `${LG_BASE.sr}.target_temperature.state`,
+    'sr-mode':  `${LG_BASE.sr}.mode.state`,
+    'sr-fan':   `${LG_BASE.sr}.fan_mode.state`,
+    'sr-swing': `${LG_BASE.sr}.swing_mode.state`,
+  };
+  const oidToKey = {};
+  Object.entries(KLIMA_OIDS).forEach(([k,v]) => oidToKey[v] = k);
+
+  const curTemps = { lv: null, sr: null };
+
+  function fmtT(v) { const n = parseFloat(v); return isNaN(n) ? '–' : n.toFixed(1) + ' °C'; }
+
+  function klpApply(key, val) {
+    const dash = key.indexOf('-');
+    const room = key.slice(0, dash);
+    const type = key.slice(dash + 1);
+    const v = String(val);
+    if (type === 'cur') {
+      const n = parseFloat(val);
+      curTemps[room] = isNaN(n) ? null : n;
+      const el = document.getElementById(`klp-${room}-cur`);
+      if (el) el.textContent = fmtT(val);
+      updateKlimaLabel();
+    } else if (type === 'set') {
+      const n = parseFloat(val);
+      LG_STATE[room].targetTemp = isNaN(n) ? null : n;
+      const el = document.getElementById(`klp-${room}-set`);
+      if (el) el.textContent = fmtT(val);
+    } else if (type === 'mode') {
+      LG_STATE[room].mode = v;
+      const coolBtn = document.getElementById(`klp-${room}-mode-cool`);
+      const heatBtn = document.getElementById(`klp-${room}-mode-heat`);
+      if (coolBtn) coolBtn.classList.toggle('tog-cool-on', v === 'cool');
+      if (heatBtn) heatBtn.classList.toggle('tog-heat-on', v === 'heat');
+    } else if (type === 'fan') {
+      LG_STATE[room].fan = v;
+      ['low','medium','high'].forEach(level => {
+        const btn = document.getElementById(`klp-${room}-fan-${level}`);
+        if (btn) btn.classList.toggle('tog-fan-on', v === level);
+      });
+    } else if (type === 'swing') {
+      LG_STATE[room].swing = v;
+      const btn = document.getElementById(`klp-${room}-swing-btn`);
+      if (btn) {
+        btn.textContent = LG_SWING_LABELS[v] || `Swing: ${v}`;
+        btn.classList.toggle('tog-swing-on', v !== 'off');
+      }
+    }
+  }
+
+  function updateKlimaLabel() {
+    const el = document.getElementById('v-klima'); if (!el) return;
+    const parts = [];
+    if (curTemps.lv != null) parts.push(`WZ ${curTemps.lv.toFixed(1)}°`);
+    if (curTemps.sr != null) parts.push(`SZ ${curTemps.sr.toFixed(1)}°`);
+    el.textContent = parts.length ? parts.join(' / ') : '–';
+  }
+
+  window.klpToggle = function(room, param, val) {
+    const stateKey = param === 'fan_mode' ? 'fan' : param === 'swing_mode' ? 'swing' : 'mode';
+    const cur = LG_STATE[room][stateKey];
+    const next = cur === val ? (param === 'mode' ? 'off' : 'auto') : val;
+    const sock = window._dashSocket; if (!sock) return;
+    sock.emit('setState', `${LG_BASE[room]}.${param}.command`, { val: next, ack: false });
+  };
+  window.klpSwingCycle = function(room) {
+    const cur = LG_STATE[room].swing || 'off';
+    const next = LG_SWING_CYCLE[(LG_SWING_CYCLE.indexOf(cur) + 1) % LG_SWING_CYCLE.length];
+    const sock = window._dashSocket; if (!sock) return;
+    sock.emit('setState', `${LG_BASE[room]}.swing_mode.command`, { val: next, ack: false });
+  };
+  window.klpTempAdj = function(room, delta) {
+    const cur = LG_STATE[room].targetTemp; if (cur === null) return;
+    const next = Math.round(cur + delta);
+    LG_STATE[room].targetTemp = next;
+    const el = document.getElementById(`klp-${room}-set`);
+    if (el) el.textContent = next.toFixed(1) + ' °C';
+    const sock = window._dashSocket; if (!sock) return;
+    sock.emit('setState', `${LG_BASE[room]}.target_temperature.command`, { val: next, ack: false });
+  };
+
+  let subscribed = false;
+  function subscribeKlimaOids() {
+    const sock = window._dashSocket; if (!sock || !sock.connected) return;
+    if (!subscribed) {
+      subscribed = true;
+      sock.on('stateChange', (oid, state) => {
+        if (!oidToKey[oid] || !state || state.val === null) return;
+        klpApply(oidToKey[oid], state.val);
+      });
+    }
+    Object.values(KLIMA_OIDS).forEach(oid => {
+      sock.emit('subscribe', oid, { ack: true }, () => {});
+      sock.emit('getStates', [oid], (err, states) => {
+        if (!states) return;
+        const e = states[oid]; if (!e || e.val === null || e.val === undefined) return;
+        klpApply(oidToKey[oid], e.val);
+      });
+    });
+  }
+
+  window.openKlimaPopup = function() {
+    document.getElementById('klima-popup-backdrop').classList.add('open');
+    subscribeKlimaOids();
+    scheduleAutoClose(window.closeKlimaPopup);
+  };
+  window.closeKlimaPopup = function() {
+    cancelAutoClose();
+    document.getElementById('klima-popup-backdrop').classList.remove('open');
+  };
+
+  // Subscribe for label temps on connect (lazy, via socket ready)
+  const origConnect = window._dashSocket ? null : null;
+  function trySubscribeForLabel() {
+    const sock = window._dashSocket; if (!sock) return;
+    if (sock.connected) { subscribeKlimaOids(); }
+    else { sock.once('connect', () => subscribeKlimaOids()); }
+  }
+  setTimeout(trySubscribeForLabel, 500);
+
+  const klimaLabel = document.getElementById('lb-klima');
+  if (klimaLabel) {
+    if (!editMode) klimaLabel.style.cursor = 'pointer';
+    klimaLabel.addEventListener('click', e => { if (editMode) return; e.stopPropagation(); openKlimaPopup(); });
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeKlimaPopup(); });
 })();
 </script>
 
