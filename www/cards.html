@@ -495,18 +495,6 @@ body {
   <!-- ── AUTO ──────────────────────────── -->
   <div class="col">
 
-    <div class="card card-beige">
-      <div class="card-header"><span class="ch-dot"></span>Shield</div>
-      <div class="shield-row">
-        <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif" alt="">
-        <div class="shield-controls">
-          <button class="shield-btn shield-btn-disable" onclick="pressEffect(this);shieldDisable()">Disable</button>
-          <div id="shield-label" class="shield-label shield-inactive">INACTIVE</div>
-          <button class="shield-btn shield-btn-enable" onclick="pressEffect(this);shieldEnable()">Enable</button>
-        </div>
-      </div>
-    </div>
-
     <div class="card card-blue">
       <div class="card-header"><span class="ch-dot"></span>BYD Sealion 7</div>
       <div class="car-hero">
@@ -543,10 +531,33 @@ body {
       </div>
     </div>
 
+    <div class="card card-lblue">
+      <div class="card-header"><span class="ch-dot"></span>Wallbox</div>
+      <div class="card-body">
+        <div class="row double-sep"><span class="lbl">Auto</span><span class="val" id="car-wb-connected"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Status</span><span class="val" id="e-wb-status"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Leistung</span><span class="val" id="e-wb-power"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">davon PV</span><span class="val" id="e-wb-pv"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Aktiv</span><span class="val" id="e-wb-aktiv"><span class="loading">…</span></span></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ── WASSER ────────────────────────── -->
   <div class="col">
+
+    <div class="card card-beige">
+      <div class="card-header"><span class="ch-dot"></span>Shield</div>
+      <div class="shield-row">
+        <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif" alt="">
+        <div class="shield-controls">
+          <button class="shield-btn shield-btn-disable" onclick="pressEffect(this);shieldDisable()">Disable</button>
+          <div id="shield-label" class="shield-label shield-inactive">INACTIVE</div>
+          <button class="shield-btn shield-btn-enable" onclick="pressEffect(this);shieldEnable()">Enable</button>
+        </div>
+      </div>
+    </div>
 
     <div class="card card-teal">
       <div class="card-header"><span class="ch-dot"></span>Bodenfeuchte</div>
@@ -603,18 +614,6 @@ body {
         <button class="valve-btn valve-off" id="v-beregner"   onclick="pressEffect(this);toggleValve('v-beregner')"  >Beregner</button>
         <button class="valve-btn valve-off" id="v-hochbeet"   onclick="pressEffect(this);toggleValve('v-hochbeet')"  >Hochbeet</button>
         <button class="valve-btn valve-off" id="v-giesskanne" onclick="pressEffect(this);toggleValve('v-giesskanne')" style="grid-column:1/-1;">Gießkanne</button>
-      </div>
-    </div>
-
-    <div style="flex:1;min-height:0;"></div>
-    <div class="card card-lblue">
-      <div class="card-header"><span class="ch-dot"></span>Wallbox</div>
-      <div class="card-body">
-        <div class="row double-sep"><span class="lbl">Auto</span><span class="val" id="car-wb-connected"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Status</span><span class="val" id="e-wb-status"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Leistung</span><span class="val" id="e-wb-power"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">davon PV</span><span class="val" id="e-wb-pv"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Aktiv</span><span class="val" id="e-wb-aktiv"><span class="loading">…</span></span></div>
       </div>
     </div>
 
