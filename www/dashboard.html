@@ -456,6 +456,61 @@ html, body {
 .cpp-batt-wrap { width:70px; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; }
 .cpp-batt-bar  { height:100%; border-radius:4px; background:#44AA44; transition:width 0.4s, background 0.4s; }
 
+/* ── Externes Laden section (inside car popup) ──────────────────────────── */
+.ext-divider {
+  height: 1px; background: rgba(255,255,255,0.08);
+  margin: 0 0 0 0;
+}
+.ext-section-hdr {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px 6px;
+  font-size: 11px; font-weight: 800; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--orange);
+}
+.ext-section-hdr::before { content:'⚡'; font-size:13px; }
+.ext-body { padding: 4px 16px 14px; display:flex; flex-direction:column; gap:10px; }
+.ext-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.ext-lbl {
+  font-size: 13px; font-weight: 600; color: #aaa;
+  flex-shrink: 0; min-width: 64px;
+}
+.ext-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(245,177,76,0.35);
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 7px 10px;
+  text-align: right;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ext-input:focus { border-color: rgba(245,177,76,0.75); }
+.ext-unit {
+  font-size: 12px; font-weight: 600; color: #888;
+  flex-shrink: 0; min-width: 22px;
+}
+.ext-confirm-btn {
+  width: 100%; padding: 11px;
+  background: var(--orange); color: #000;
+  border: none; border-radius: 10px;
+  font-family: inherit; font-size: 13px; font-weight: 800;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  cursor: pointer; transition: filter 0.12s, transform 0.1s;
+  margin-top: 2px;
+}
+.ext-confirm-btn:hover  { filter: brightness(115%); }
+.ext-confirm-btn:active { transform: scale(0.97); filter: brightness(85%); }
+.ext-confirm-btn.confirmed {
+  background: #44AA44; color: #000;
+  pointer-events: none;
+}
+
 /* ── Shield popup modal ──────────────────────────────────────────────────── */
 #shield-popup-backdrop {
   display: none;
@@ -1678,6 +1733,21 @@ html, body {
       <div class="cpp-row"><span class="cpp-lbl">Innentemperatur</span><span class="cpp-val" id="cpp-temp">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">KM-Stand</span><span class="cpp-val" id="cpp-km">–</span></div>
       <div class="cpp-row"><span class="cpp-lbl">EUR / 100 km</span><span class="cpp-val" id="cpp-cost">–</span></div>
+    </div>
+    <div class="ext-divider"></div>
+    <div class="ext-section-hdr">Externes Laden</div>
+    <div class="ext-body">
+      <div class="ext-row">
+        <span class="ext-lbl">Energie</span>
+        <input class="ext-input" id="ext-kwh" type="number" min="0" step="0.1" placeholder="0.0">
+        <span class="ext-unit">kWh</span>
+      </div>
+      <div class="ext-row">
+        <span class="ext-lbl">Kosten</span>
+        <input class="ext-input" id="ext-cost" type="number" min="0" step="0.01" placeholder="0.00">
+        <span class="ext-unit">€</span>
+      </div>
+      <button class="ext-confirm-btn" id="ext-confirm-btn" onclick="extLadenConfirm()">ÜBERNEHMEN</button>
     </div>
   </div>
 </div>
@@ -3362,7 +3432,34 @@ function initAnchorDrag(anchorEl) {
   window.closeCarPopup = function() {
     cancelAutoClose();
     document.getElementById('car-popup-backdrop').classList.remove('open');
-    };
+  };
+
+  // ── Externes Laden ─────────────────────────────────────────────────────────
+  window.extLadenConfirm = function() {
+    const sock = window._dashSocket;
+    if (!sock) return;
+    const kwh  = parseFloat(document.getElementById('ext-kwh').value);
+    const cost = parseFloat(document.getElementById('ext-cost').value);
+    if (isNaN(kwh) || isNaN(cost)) return;
+
+    sock.emit('setState', '0_userdata.0.Photovoltaik.Wallbox.DC-VIS-Leistung', { val: kwh,  ack: false });
+    sock.emit('setState', '0_userdata.0.Photovoltaik.Wallbox.DC-VIS-Kosten',   { val: cost, ack: false });
+    sock.emit('setState', '0_userdata.0.Photovoltaik.Wallbox.DC-VIS-CONFIRM',  { val: true, ack: false });
+
+    // Visual feedback
+    const btn = document.getElementById('ext-confirm-btn');
+    btn.textContent = '✓ ÜBERNOMMEN';
+    btn.classList.add('confirmed');
+    document.getElementById('ext-kwh').value  = '';
+    document.getElementById('ext-cost').value = '';
+
+    // Close after short delay
+    setTimeout(() => {
+      window.closeCarPopup();
+      btn.textContent = 'ÜBERNEHMEN';
+      btn.classList.remove('confirmed');
+    }, 1200);
+  };
 
   // Close on Escape key
   document.addEventListener('keydown', e => {
