@@ -543,18 +543,6 @@ body {
       </div>
     </div>
 
-    <div style="flex:1;min-height:0;"></div>
-    <div class="card card-lblue">
-      <div class="card-header"><span class="ch-dot"></span>Wallbox</div>
-      <div class="card-body">
-        <div class="row double-sep"><span class="lbl">Auto</span><span class="val" id="car-wb-connected"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Status</span><span class="val" id="e-wb-status"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Leistung</span><span class="val" id="e-wb-power"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">davon PV</span><span class="val" id="e-wb-pv"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Aktiv</span><span class="val" id="e-wb-aktiv"><span class="loading">…</span></span></div>
-      </div>
-    </div>
-
   </div>
 
   <!-- ── WASSER ────────────────────────── -->
@@ -615,6 +603,18 @@ body {
         <button class="valve-btn valve-off" id="v-beregner"   onclick="pressEffect(this);toggleValve('v-beregner')"  >Beregner</button>
         <button class="valve-btn valve-off" id="v-hochbeet"   onclick="pressEffect(this);toggleValve('v-hochbeet')"  >Hochbeet</button>
         <button class="valve-btn valve-off" id="v-giesskanne" onclick="pressEffect(this);toggleValve('v-giesskanne')" style="grid-column:1/-1;">Gießkanne</button>
+      </div>
+    </div>
+
+    <div style="flex:1;min-height:0;"></div>
+    <div class="card card-lblue">
+      <div class="card-header"><span class="ch-dot"></span>Wallbox</div>
+      <div class="card-body">
+        <div class="row double-sep"><span class="lbl">Auto</span><span class="val" id="car-wb-connected"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Status</span><span class="val" id="e-wb-status"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Leistung</span><span class="val" id="e-wb-power"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">davon PV</span><span class="val" id="e-wb-pv"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Aktiv</span><span class="val" id="e-wb-aktiv"><span class="loading">…</span></span></div>
       </div>
     </div>
 
