@@ -1323,12 +1323,27 @@ html, body {
       <text class="pipe-handle-label" id="wphl-kaltwasser-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
       <text class="pipe-handle-label" id="wphl-kaltwasser-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
 
+      <!-- wp-bwt (BWT Entkalkungsanlage — active when flow > 0) -->
+      <path id="wpe-bwt-shadow" fill="none" stroke="rgba(20,80,180,0.55)"     stroke-width="16" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-bwt-body"   fill="none" stroke="rgba(5,7,13,0.95)"        stroke-width="10" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-bwt-hi"     fill="none" stroke="rgba(200,235,255,0.0)"    stroke-width="2.5" stroke-linecap="butt" stroke-linejoin="round"/>
+      <path id="wpe-bwt-flow"   fill="none" stroke="rgba(120,200,255,0.95)"   stroke-width="5"   stroke-linecap="round" stroke-dasharray="15 25" opacity="0"/>
+      <circle class="pipe-handle" id="wph-bwt-0" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <circle class="pipe-handle" id="wph-bwt-1" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-bwt-2" r="8"  fill="#2A6ECC" stroke="#7ECFFF" stroke-width="1.5"/>
+      <circle class="pipe-handle" id="wph-bwt-3" r="10" fill="#3A8EE8" stroke="#BBEEFF" stroke-width="2"/>
+      <text class="pipe-handle-label" id="wphl-bwt-0" text-anchor="middle" dominant-baseline="middle" dy="-16">START</text>
+      <text class="pipe-handle-label" id="wphl-bwt-1" text-anchor="middle" dominant-baseline="middle" dy="-14">P2</text>
+      <text class="pipe-handle-label" id="wphl-bwt-2" text-anchor="middle" dominant-baseline="middle" dy="-14">P3</text>
+      <text class="pipe-handle-label" id="wphl-bwt-3" text-anchor="middle" dominant-baseline="middle" dy="-16">END</text>
+
       <!-- Pipe labels (draggable + rotatable in edit mode) -->
       <text class="pipe-label" id="wpl-garten"     x="550" y="470">GARTEN</text>
       <text class="pipe-label" id="wpl-beregner"   x="420" y="590">BEREGNER</text>
       <text class="pipe-label" id="wpl-hochbeet"   x="500" y="700">HOCHBEET</text>
       <text class="pipe-label" id="wpl-gieskanne"  x="330" y="770">GIESKANNE</text>
       <text class="pipe-label" id="wpl-pool"       x="220" y="550">POOL</text>
+      <text class="pipe-label" id="wpl-bwt"        x="1310" y="535">BWT</text>
     </g>
   </svg><!-- end #water-pipes-svg -->
 
@@ -1433,6 +1448,11 @@ html, body {
 
   <div id="n-gieskanne" class="holo-node">
     <img src="img/dashboard/gieskanne.png" alt="Gießkanne" style="width:120px;">
+    <div class="resize-handle"></div>
+  </div>
+
+  <div id="n-bwt" class="holo-node">
+    <img src="img/dashboard/bwt.png" alt="BWT Entkalkungsanlage" style="width:100px;">
     <div class="resize-handle"></div>
   </div>
 
@@ -1580,6 +1600,16 @@ html, body {
     </div>
     <span class="node-name" style="color:#6AAEFF;">BEREGNER</span><br>
     <span class="node-value" id="v-beregner" style="display:none;">–</span>
+  </div>
+
+  <div id="lb-bwt" class="holo-label" data-size="17">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#99CCFF;">BWT</span><br>
+    <span class="node-value" id="v-bwt-salt" style="font-size:14px;color:#44CC66;">–</span><br>
+    <span class="node-value" id="v-bwt-flow" style="font-size:14px;color:#6AAEFF;">–</span>
   </div>
 
   <div id="lb-shield" class="holo-label" data-size="22">
@@ -2028,6 +2058,7 @@ const NODE_META = {
   'n-boiler':           { w: 120, h: 120 },
   'n-beregner':   { w: 160, h: 160 },
   'n-gieskanne':  { w: 120, h: 120 },
+  'n-bwt':        { w: 120, h: 160 },
 };
 
 // Default positions for ~1600×900 viewport
@@ -2047,6 +2078,7 @@ const DEFAULT_POSITIONS = {
   'n-boiler':           { x:1633,  y: 123, width: 110 },
   'n-beregner':         { x:1124,  y: 595, width: 147 },
   'n-gieskanne':        { x: 800,  y: 750, width: 110 },
+  'n-bwt':              { x:1390,  y: 440, width: 100 },
 };
 
 // ── Load/save positions ────────────────────────────────────────────────────
@@ -2301,6 +2333,7 @@ const WATER_PIPE_DEFS = [
   _pd('pool',       'ventilPool',      ['wph-pool-0',      'wph-pool-1',      'wph-pool-2',      'wph-pool-3']),
   _pd('warmwasser', 'hwcHeating',      ['wph-warmwasser-0','wph-warmwasser-1','wph-warmwasser-2','wph-warmwasser-3'], 'rgba(220,110,50,0.70)'),
   _pd('kaltwasser', 'hwcHeating',      ['wph-kaltwasser-0','wph-kaltwasser-1','wph-kaltwasser-2','wph-kaltwasser-3'], 'rgba(90,180,255,0.65)'),
+  _pd('bwt',        'bwtActive',       ['wph-bwt-0',       'wph-bwt-1',       'wph-bwt-2',       'wph-bwt-3'      ], 'rgba(100,180,255,0.65)'),
 ];
 
 const DEFAULT_PIPE_POINTS = {
@@ -2318,6 +2351,8 @@ const DEFAULT_PIPE_POINTS = {
   'wph-warmwasser-2':  { x: 1658, y: 268 }, 'wph-warmwasser-3':  { x: 1658, y: 282 },
   'wph-kaltwasser-0':  { x: 1718, y: 282 }, 'wph-kaltwasser-1':  { x: 1718, y: 268 },
   'wph-kaltwasser-2':  { x: 1718, y: 255 }, 'wph-kaltwasser-3':  { x: 1718, y: 235 },
+  'wph-bwt-0':  { x: 1240, y: 620 }, 'wph-bwt-1':  { x: 1300, y: 560 },
+  'wph-bwt-2':  { x: 1380, y: 510 }, 'wph-bwt-3':  { x: 1440, y: 470 },
 };
 
 // ── Pipe label state ───────────────────────────────────────────────────────
@@ -2327,6 +2362,7 @@ const DEFAULT_PIPE_LABELS = {
   'wpl-hochbeet':    { x: 1137, y: 563, rot: 0 },
   'wpl-gieskanne':   { x:  820, y: 618, rot: 0 },
   'wpl-pool':        { x:  729, y: 538, rot: 0 },
+  'wpl-bwt':         { x: 1310, y: 535, rot: 0 },
 };
 const pipeLabelState = {};
 
@@ -2576,6 +2612,8 @@ const OIDs = {
   ventilGieskanne:  '0_userdata.0.Wasser.Giesskanne',
   ventilPool:       '0_userdata.0.Pool.Poolwasserventil',
   hwcHeating:       '0_userdata.0.Heizung.Warmwaser-Speicherladung',
+  bwtSalt:          '0_userdata.0.Generic.BWTSalt',
+  bwtFlow:          'bwt.0.local.currentData.CurrentFlowrate_l_h',
   pvToLoad:         '0_userdata.0.Photovoltaik.PvToLoad',
   gridToLoad:       '0_userdata.0.Photovoltaik.GridToLoad',
   batToLoad:        '0_userdata.0.Photovoltaik.BatToLoad',
@@ -2589,7 +2627,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0 };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -2762,6 +2800,18 @@ function updateHwcUI() {
 
 function activateHwcHeating() {
   socket.emit('setState', OIDs.hwcHeating, { val: true, ack: false });
+}
+
+function updateBWT() {
+  const saltEl = document.getElementById('v-bwt-salt');
+  const flowEl = document.getElementById('v-bwt-flow');
+  if (saltEl) {
+    saltEl.textContent = live.bwtSalt ? 'SALZ NACHFÜLLEN !' : 'ALLES OK.';
+    saltEl.style.color = live.bwtSalt ? '#FF5555' : '#44CC66';
+  }
+  if (flowEl) {
+    flowEl.textContent = live.bwtFlow != null ? live.bwtFlow.toFixed(0) + ' l/h' : '–';
+  }
 }
 
 function updateSensors() {
@@ -3011,6 +3061,19 @@ function applyState(oid, val) {
       live.poolAbdeckung = !!val;
       const hi = document.getElementById('haus-img');
       if (hi) hi.src = live.poolAbdeckung ? 'img/dashboard/haus-pool-geschlossen.png' : 'img/dashboard/haus.png';
+      break;
+    }
+    case OIDs.bwtSalt: {
+      live.bwtSalt = (val === true || val === 'true' || val === 1 || val === '1');
+      updateBWT();
+      break;
+    }
+    case OIDs.bwtFlow: {
+      const f = parseFloat(val);
+      live.bwtFlow = isNaN(f) ? 0 : f;
+      live.bwtActive = live.bwtFlow > 0;
+      updateAllPipeFlows();
+      updateBWT();
       break;
     }
     // remaining OIDs subscribed to keep parity with energie.html
@@ -3483,6 +3546,7 @@ function initAnchorDrag(anchorEl) {
     'lb-shield':     'n-house',
     'lb-beregner':  'n-beregner',
     'lb-boiler':    'n-boiler',
+    'lb-bwt':       'n-bwt',
   };
 
   const connSvg = document.getElementById('connector-svg');
