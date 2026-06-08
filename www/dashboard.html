@@ -473,7 +473,7 @@ html, body {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
 }
 .ext-lbl {
-  font-size: 13px; font-weight: 600; color: #aaa;
+  font-size: 13px; font-weight: 600; color: #4488FF;
   flex-shrink: 0; min-width: 64px;
 }
 .ext-input {
@@ -496,18 +496,20 @@ html, body {
   flex-shrink: 0; min-width: 22px;
 }
 .ext-confirm-btn {
-  width: 100%; padding: 11px;
-  background: var(--orange); color: #000;
+  width: 100%; padding: 12px;
+  background: #F5B14C; color: #000;
   border: none; border-radius: 10px;
   font-family: inherit; font-size: 13px; font-weight: 800;
   letter-spacing: 1.5px; text-transform: uppercase;
   cursor: pointer; transition: filter 0.12s, transform 0.1s;
-  margin-top: 2px;
+  margin-top: 4px;
+  box-shadow: 0 0 16px rgba(245,177,76,0.35);
 }
 .ext-confirm-btn:hover  { filter: brightness(115%); }
 .ext-confirm-btn:active { transform: scale(0.97); filter: brightness(85%); }
 .ext-confirm-btn.confirmed {
   background: #44AA44; color: #000;
+  box-shadow: 0 0 16px rgba(68,170,68,0.35);
   pointer-events: none;
 }
 
