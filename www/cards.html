@@ -606,6 +606,14 @@ body {
       </div>
     </div>
 
+    <div class="card card-lblue">
+      <div class="card-header"><span class="ch-dot"></span>BWT · Wasseraufbereitung</div>
+      <div class="card-body">
+        <div class="row"><span class="lbl">Salz</span><span class="val" id="bwt-salt"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Durchfluss</span><span class="val" id="bwt-flow"><span class="loading">…</span></span></div>
+      </div>
+    </div>
+
     <div class="card card-teal2">
       <div class="card-header"><span class="ch-dot"></span>Wasser</div>
       <div class="valve-grid">
@@ -759,6 +767,8 @@ const WASSER_OIDs = {
   'w-batt-gurken':      '0_userdata.0.Wetter.Bodenfeuchte.0f74c2.battery_ok',
   'pool-ph':            '0_userdata.0.Pool.Pool-PH-Wert',
   'pool-orp':           '0_userdata.0.Pool.PoolORP',
+  'bwt-salt':           '0_userdata.0.Generic.BWTSalt',
+  'bwt-flow':           'bwt.0.local.currentData.CurrentFlowrate_l_h',
 };
 const VALVE_OIDs = {
   'v-garten':     '0_userdata.0.Wasser.Gartenwasserventil',
@@ -984,6 +994,16 @@ function setWasser(elId, val) {
     else                          color = '#44AA44';
     el.innerHTML = Math.round(n) + '<span class="u"> mV</span>';
     el.style.color = color;
+  } else if (elId==='bwt-salt') {
+    const el=document.getElementById('bwt-salt'); if (!el) return;
+    const needsSalt = (val===true||val==='true'||val===1||val==='1');
+    el.textContent  = needsSalt ? 'Salz nachfüllen !' : 'Alles OK.';
+    el.style.color  = needsSalt ? '#FF5555' : '#44CC66';
+    el.style.fontWeight = needsSalt ? '800' : '700';
+  } else if (elId==='bwt-flow') {
+    const el=document.getElementById('bwt-flow'), n=parseFloat(val);
+    if (!el) return;
+    el.innerHTML = isNaN(n) ? '–' : n.toFixed(0) + '<span class="u"> l/h</span>';
   }
 }
 function setValve(elId, val) {
