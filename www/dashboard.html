@@ -1739,12 +1739,12 @@ html, body {
     <div class="ext-body">
       <div class="ext-row">
         <span class="ext-lbl">Energie</span>
-        <input class="ext-input" id="ext-kwh" type="number" min="0" step="0.1" placeholder="0.0">
+        <input class="ext-input" id="ext-kwh" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0">
         <span class="ext-unit">kWh</span>
       </div>
       <div class="ext-row">
         <span class="ext-lbl">Kosten</span>
-        <input class="ext-input" id="ext-cost" type="number" min="0" step="0.01" placeholder="0.00">
+        <input class="ext-input" id="ext-cost" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0">
         <span class="ext-unit">€</span>
       </div>
       <button class="ext-confirm-btn" id="ext-confirm-btn" onclick="extLadenConfirm()">ÜBERNEHMEN</button>
@@ -3438,8 +3438,8 @@ function initAnchorDrag(anchorEl) {
   window.extLadenConfirm = function() {
     const sock = window._dashSocket;
     if (!sock) return;
-    const kwh  = parseFloat(document.getElementById('ext-kwh').value);
-    const cost = parseFloat(document.getElementById('ext-cost').value);
+    const kwh  = parseInt(document.getElementById('ext-kwh').value, 10);
+    const cost = parseInt(document.getElementById('ext-cost').value, 10);
     if (isNaN(kwh) || isNaN(cost)) return;
 
     sock.emit('setState', '0_userdata.0.Photovoltaik.Wallbox.DC-VIS-Leistung', { val: kwh,  ack: false });
