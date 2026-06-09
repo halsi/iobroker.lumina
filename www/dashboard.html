@@ -218,6 +218,25 @@ html, body {
 /* ── Boiler water overlay ─────────────────────────────────────────────── */
 #n-boiler { isolation: isolate; }
 #n-boiler img { position: relative; z-index: 2; }
+
+/* ── Wasserzähler overlay ────────────────────────────────────── */
+#n-wasserzaehler .wz-wrap { position: relative; display: inline-block; container-type: inline-size; }
+#n-wasserzaehler .wz-overlay {
+  position: absolute;
+  top: 29%; left: 21%; width: 50%; height: 17%;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; gap: 0; letter-spacing: 0.04em;
+}
+#wz-int {
+  color: #4499FF; font-weight: 900; font-size: 9.5cqw;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(68,153,255,0.9), 0 0 4px rgba(68,153,255,0.6);
+}
+#wz-dec {
+  color: #FF4444; font-weight: 900; font-size: 9.5cqw;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(255,68,68,0.9), 0 0 4px rgba(255,68,68,0.6);
+}
 .boiler-water {
   position: absolute;
   top: 13%;         /* below top ellipse rim (incl. glass thickness) */
@@ -1471,6 +1490,16 @@ html, body {
     <div class="resize-handle"></div>
   </div>
 
+  <div id="n-wasserzaehler" class="holo-node">
+    <div class="wz-wrap">
+      <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
+      <div class="wz-overlay">
+        <span id="wz-int">–</span><span id="wz-dec"></span>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
   <div id="n-bwt" class="holo-node">
     <img src="img/dashboard/bwt.png" alt="BWT Entkalkungsanlage" style="width:100px;">
     <div class="resize-handle"></div>
@@ -2087,7 +2116,8 @@ const NODE_META = {
   'n-boiler':           { w: 120, h: 120 },
   'n-beregner':   { w: 160, h: 160 },
   'n-gieskanne':  { w: 120, h: 120 },
-  'n-bwt':        { w: 120, h: 160 },
+  'n-bwt':              { w: 120, h: 160 },
+  'n-wasserzaehler':    { w: 240, h: 147 },
 };
 
 // Default positions for ~1600×900 viewport
@@ -2108,6 +2138,7 @@ const DEFAULT_POSITIONS = {
   'n-beregner':         { x:1124,  y: 595, width: 147 },
   'n-gieskanne':        { x: 800,  y: 750, width: 110 },
   'n-bwt':              { x:1490,  y: 610, width:  90 },
+  'n-wasserzaehler':    { x: 580,  y: 670, width: 240 },
 };
 
 // ── Load/save positions ────────────────────────────────────────────────────
@@ -2644,6 +2675,7 @@ const OIDs = {
   hwcHeating:       '0_userdata.0.Heizung.Warmwaser-Speicherladung',
   bwtSalt:          '0_userdata.0.Generic.BWTSalt',
   bwtFlow:          'bwt.0.local.currentData.CurrentFlowrate_l_h',
+  wasserzaehler:    '0_userdata.0.Wasser.Wasserverbrauch-Haus-Gesamt',
   pvToLoad:         '0_userdata.0.Photovoltaik.PvToLoad',
   gridToLoad:       '0_userdata.0.Photovoltaik.GridToLoad',
   batToLoad:        '0_userdata.0.Photovoltaik.BatToLoad',
@@ -2657,7 +2689,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, poolPumpModus: 4, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, poolPumpModus: 4, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false, wasserzaehler: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -2830,6 +2862,17 @@ function updateHwcUI() {
 
 function activateHwcHeating() {
   socket.emit('setState', OIDs.hwcHeating, { val: true, ack: false });
+}
+
+function updateWasserzaehler() {
+  const intEl = document.getElementById('wz-int');
+  const decEl = document.getElementById('wz-dec');
+  if (!intEl || !decEl) return;
+  if (live.wasserzaehler === null) { intEl.textContent = '–'; decEl.textContent = ''; return; }
+  const str = live.wasserzaehler.toFixed(3);
+  const parts = str.split('.');
+  intEl.textContent = parts[0];
+  decEl.textContent = ',' + (parts[1] || '000');
 }
 
 function updateBWT() {
@@ -3092,6 +3135,12 @@ function applyState(oid, val) {
       live.poolAbdeckung = !!val;
       const hi = document.getElementById('haus-img');
       if (hi) hi.src = live.poolAbdeckung ? 'img/dashboard/haus-pool-geschlossen.png' : 'img/dashboard/haus.png';
+      break;
+    }
+    case OIDs.wasserzaehler: {
+      const wz = parseFloat(val);
+      live.wasserzaehler = isNaN(wz) ? null : wz;
+      updateWasserzaehler();
       break;
     }
     case OIDs.bwtSalt: {
