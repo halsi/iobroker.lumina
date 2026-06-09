@@ -2186,7 +2186,7 @@ function applyPositions(positions) {
     const img = node.querySelector('img');
     if (p.width && img) {
       img.style.width = p.width + 'px';
-      if (id === 'n-wasserzaehler') node.style.setProperty('--wz-fs', (p.width * 0.095) + 'px');
+      if (id === 'n-wasserzaehler') node.style.setProperty('--wz-fs', (p.width * 0.065) + 'px');
     }
     if (p.rot != null) {
       if (img) img.style.transform = `rotate(${p.rot}deg)`;
@@ -3215,7 +3215,7 @@ function initResize(nodeEl) {
     if (!resizing) return;
     const newW = Math.max(60, startW + (e.clientX - startX));
     nodeEl.querySelector('img').style.width = newW + 'px';
-    if (nodeEl.id === 'n-wasserzaehler') nodeEl.style.setProperty('--wz-fs', (newW * 0.095) + 'px');
+    if (nodeEl.id === 'n-wasserzaehler') nodeEl.style.setProperty('--wz-fs', (newW * 0.065) + 'px');
     updatePaths();
   });
 
