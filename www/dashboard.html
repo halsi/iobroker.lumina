@@ -220,11 +220,6 @@ html, body {
 #n-boiler img { position: relative; z-index: 2; }
 
 /* ── Wasserzähler overlay ────────────────────────────────────── */
-/* wz-inner: sizing context — events bubble freely to holo-node  */
-#n-wasserzaehler .wz-inner {
-  position: relative;
-  container-type: inline-size;
-}
 #n-wasserzaehler .wz-overlay {
   position: absolute;
   top: 34%; left: 19%; width: 57%; height: 20%;
@@ -232,12 +227,12 @@ html, body {
   pointer-events: none; gap: 0; letter-spacing: 0.04em;
 }
 #wz-int {
-  color: #4499FF; font-weight: 900; font-size: 9.5cqw;
+  color: #4499FF; font-weight: 900; font-size: var(--wz-fs, 22px);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 10px rgba(68,153,255,0.9), 0 0 4px rgba(68,153,255,0.6);
 }
 #wz-dec {
-  color: #FF4444; font-weight: 900; font-size: 9.5cqw;
+  color: #FF4444; font-weight: 900; font-size: var(--wz-fs, 22px);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 10px rgba(255,68,68,0.9), 0 0 4px rgba(255,68,68,0.6);
 }
@@ -1495,11 +1490,9 @@ html, body {
   </div>
 
   <div id="n-wasserzaehler" class="holo-node">
-    <div class="wz-inner">
-      <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
-      <div class="wz-overlay">
-        <span id="wz-int">–</span><span id="wz-dec"></span>
-      </div>
+    <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
+    <div class="wz-overlay">
+      <span id="wz-int">–</span><span id="wz-dec"></span>
     </div>
     <div class="resize-handle"></div>
   </div>
@@ -2191,7 +2184,10 @@ function applyPositions(positions) {
     node.style.left = p.x + 'px';
     node.style.top  = p.y + 'px';
     const img = node.querySelector('img');
-    if (p.width && img) img.style.width = p.width + 'px';
+    if (p.width && img) {
+      img.style.width = p.width + 'px';
+      if (id === 'n-wasserzaehler') node.style.setProperty('--wz-fs', (p.width * 0.095) + 'px');
+    }
     if (p.rot != null) {
       if (img) img.style.transform = `rotate(${p.rot}deg)`;
       const rh = node.querySelector('.rotate-handle');
@@ -3219,6 +3215,7 @@ function initResize(nodeEl) {
     if (!resizing) return;
     const newW = Math.max(60, startW + (e.clientX - startX));
     nodeEl.querySelector('img').style.width = newW + 'px';
+    if (nodeEl.id === 'n-wasserzaehler') nodeEl.style.setProperty('--wz-fs', (newW * 0.095) + 'px');
     updatePaths();
   });
 
