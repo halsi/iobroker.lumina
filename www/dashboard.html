@@ -979,6 +979,26 @@ html, body {
 .bep-btn-off { background: #FF5555; color: #000; }
 .bep-btn-dim { background: rgba(255,255,255,0.06); color: #555; border: 1px solid rgba(255,255,255,0.1); }
 
+/* ── Pool pump mode buttons ──────────────────────────────────── */
+.ppp-pump-row { display: flex; gap: 7px; padding: 10px 0 6px; }
+.ppp-pump-btn {
+  flex: 1; padding: 9px 4px; border: 1px solid rgba(68,136,255,0.25);
+  border-radius: 8px; background: rgba(68,136,255,0.07); color: #4488FF;
+  font-family: inherit; font-size: 11px; font-weight: 800; letter-spacing: 1.2px;
+  text-transform: uppercase; cursor: pointer; transition: filter 0.12s, background 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ppp-pump-btn:hover  { filter: brightness(130%); }
+.ppp-pump-btn:active { transform: scale(0.96); }
+.ppp-pump-btn.ppp-active-stufe {
+  background: rgba(68,136,255,0.3); color: #88CCFF;
+  border-color: rgba(68,136,255,0.7); box-shadow: 0 0 10px rgba(68,136,255,0.3);
+}
+.ppp-pump-btn.ppp-active-aus {
+  background: rgba(255,85,85,0.25); color: #FF8888;
+  border-color: rgba(255,85,85,0.6); box-shadow: 0 0 10px rgba(255,85,85,0.25);
+}
+
 /* ── Gartenwasser popup ─────────────────────────────────────────── */
 #gartenwasser-popup-backdrop {
   display: none;
@@ -1798,6 +1818,15 @@ html, body {
           <button class="bep-btn bep-btn-off" onclick="pppSetPoolValve(false)">DEAKTIVIEREN</button>
         </div>
       </div>
+      <div style="border-top:1px solid rgba(68,136,255,0.15);margin:4px -16px 0;padding:14px 16px 6px;">
+        <div class="bep-status-lbl" style="text-align:center;">POOL PUMPE</div>
+        <div class="ppp-pump-row">
+          <button class="ppp-pump-btn" id="ppp-pump-1" onclick="pppSetPumpMode(1)">STUFE 1</button>
+          <button class="ppp-pump-btn" id="ppp-pump-2" onclick="pppSetPumpMode(2)">STUFE 2</button>
+          <button class="ppp-pump-btn" id="ppp-pump-3" onclick="pppSetPumpMode(3)">STUFE 3</button>
+          <button class="ppp-pump-btn" id="ppp-pump-4" onclick="pppSetPumpMode(4)">AUS</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2604,6 +2633,7 @@ const OIDs = {
   poolAbdeckung:  '0_userdata.0.Pool.Abdeckung',
   poolPH:         '0_userdata.0.Pool.Pool-PH-Wert',
   poolORP:        '0_userdata.0.Pool.PoolORP',
+  poolPumpModus:  '0_userdata.0.Pool.Pool-Pumpe-Modus',
   alarmActivated:   'alarm.0.status.activated',
   alarmSharpInside: 'alarm.0.status.sharp_inside_activated',
   beregnerActive:   '0_userdata.0.Wasser.Gartenberegner',
@@ -2627,7 +2657,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, poolPumpModus: 4, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -3011,6 +3041,7 @@ function applyState(oid, val) {
     case OIDs.bodenfeuchteTomaten: live.bodenfeuchteTomaten = isNaN(n) ? null : n; updateSensors(); break;
     case OIDs.poolPH:  live.poolPH  = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
     case OIDs.poolORP: live.poolORP = isNaN(n) ? null : n; if (window.updatePoolPopup) window.updatePoolPopup(); break;
+    case OIDs.poolPumpModus: live.poolPumpModus = isNaN(n) ? 4 : Math.round(n); if (window.pppUpdatePumpBtns) window.pppUpdatePumpBtns(); break;
     case OIDs.alarmActivated:   live.alarmActivated   = !!val; updateShieldLabel(); break;
     case OIDs.alarmSharpInside: live.alarmSharpInside = !!val; updateShieldLabel(); break;
     case OIDs.ventilGarten: {
@@ -3578,6 +3609,21 @@ function initAnchorDrag(anchorEl) {
   }
 
   // ── Pool popup ─────────────────────────────────────────────────────────────
+  window.pppUpdatePumpBtns = function pppUpdatePumpBtns() {
+    [1, 2, 3, 4].forEach(i => {
+      const btn = document.getElementById('ppp-pump-' + i);
+      if (!btn) return;
+      btn.classList.remove('ppp-active-stufe', 'ppp-active-aus');
+      if (i === live.poolPumpModus) {
+        btn.classList.add(i === 4 ? 'ppp-active-aus' : 'ppp-active-stufe');
+      }
+    });
+  };
+  window.pppSetPumpMode = function pppSetPumpMode(val) {
+    const sock = window._dashSocket; if (!sock) return;
+    sock.emit('setState', OIDs.poolPumpModus, { val, ack: false });
+    scheduleAutoClose(window.closePoolPopup);
+  };
   window.pppUpdateValveBtn = function pppUpdateValveBtn() {
     const el = document.getElementById('ppp-valve-status'); if (!el) return;
     const on = live.ventilPool;
@@ -3596,6 +3642,7 @@ function initAnchorDrag(anchorEl) {
     const p = document.getElementById('ppp-ph');   if (p) p.textContent = fmtPH(live.poolPH);
     const o = document.getElementById('ppp-orp');  if (o) o.textContent = fmtORP(live.poolORP);
     pppUpdateValveBtn();
+    pppUpdatePumpBtns();
   }
 
   window.openPoolPopup = function() {
