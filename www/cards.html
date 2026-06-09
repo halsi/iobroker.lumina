@@ -261,6 +261,17 @@ body {
 .valve-on  { background: rgba(255,102,102,0.2); color: #ff8888; border-color: rgba(255,102,102,0.4); }
 .valve-off { background: rgba(153,204,255,0.08); color: var(--lblue); border-color: rgba(153,204,255,0.2); }
 
+/* ── Pool pump buttons ───────────────────────────────────────────── */
+.pump-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; padding: 10px 16px 14px; }
+.pump-btn {
+  padding: 9px 4px; font-family: inherit; font-size: 11px; font-weight: 800;
+  letter-spacing: 1px; text-transform: uppercase; border-radius: 10px; cursor: pointer;
+  border: 1px solid rgba(68,136,255,0.25); background: rgba(68,136,255,0.07); color: var(--blue);
+  transition: background 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.pump-btn.pump-active-stufe { background: rgba(68,136,255,0.3); color: #88CCFF; border-color: rgba(68,136,255,0.7); box-shadow: 0 0 10px rgba(68,136,255,0.3); }
+.pump-btn.pump-active-aus   { background: rgba(255,85,85,0.25);  color: #FF8888; border-color: rgba(255,85,85,0.6);   box-shadow: 0 0 10px rgba(255,85,85,0.25); }
+
 /* ── Klima toggle buttons ────────────────────────────────────────── */
 .clim-controls { padding: 8px 16px 14px; display: flex; flex-direction: column; gap: 7px; }
 .clim-row { display: flex; gap: 6px; }
@@ -599,10 +610,17 @@ body {
           <span class="lbl">pH-Wert</span>
           <span class="val" id="pool-ph"><span class="loading">…</span></span>
         </div>
-        <div class="row">
+        <div class="row" style="border-bottom:none;">
           <span class="lbl">ORP</span>
           <span class="val" id="pool-orp"><span class="loading">…</span></span>
         </div>
+      </div>
+      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:8px 16px 4px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Pumpe</div>
+      <div class="pump-row">
+        <button class="pump-btn" id="cp-pump-1" onclick="crdSetPumpMode(1)">STUFE 1</button>
+        <button class="pump-btn" id="cp-pump-2" onclick="crdSetPumpMode(2)">STUFE 2</button>
+        <button class="pump-btn" id="cp-pump-3" onclick="crdSetPumpMode(3)">STUFE 3</button>
+        <button class="pump-btn" id="cp-pump-4" onclick="crdSetPumpMode(4)">AUS</button>
       </div>
     </div>
 
@@ -767,6 +785,7 @@ const WASSER_OIDs = {
   'w-batt-gurken':      '0_userdata.0.Wetter.Bodenfeuchte.0f74c2.battery_ok',
   'pool-ph':            '0_userdata.0.Pool.Pool-PH-Wert',
   'pool-orp':           '0_userdata.0.Pool.PoolORP',
+  'pool-pump':          '0_userdata.0.Pool.Pool-Pumpe-Modus',
   'bwt-salt':           '0_userdata.0.Generic.BWTSalt',
   'bwt-flow':           'bwt.0.local.currentData.CurrentFlowrate_l_h',
 };
@@ -994,6 +1013,13 @@ function setWasser(elId, val) {
     else                          color = '#44AA44';
     el.innerHTML = Math.round(n) + '<span class="u"> mV</span>';
     el.style.color = color;
+  } else if (elId==='pool-pump') {
+    const mode = Math.round(parseFloat(val));
+    [1,2,3,4].forEach(i => {
+      const btn = document.getElementById('cp-pump-' + i); if (!btn) return;
+      btn.classList.remove('pump-active-stufe','pump-active-aus');
+      if (i === mode) btn.classList.add(i===4 ? 'pump-active-aus' : 'pump-active-stufe');
+    });
   } else if (elId==='bwt-salt') {
     const el=document.getElementById('bwt-salt'); if (!el) return;
     const needsSalt = (val===true||val==='true'||val===1||val==='1');
@@ -1009,6 +1035,9 @@ function setWasser(elId, val) {
 function setValve(elId, val) {
   const btn=document.getElementById(elId); if (!btn) return;
   btn.className='valve-btn '+(val===true||val==='true'||val===1?'valve-on':'valve-off');
+}
+function crdSetPumpMode(val) {
+  socket.emit('setState', '0_userdata.0.Pool.Pool-Pumpe-Modus', { val, ack: false });
 }
 function toggleValve(elId) {
   const btn=document.getElementById(elId); if (!btn) return;
