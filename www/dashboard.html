@@ -220,7 +220,7 @@ html, body {
 #n-boiler img { position: relative; z-index: 2; }
 
 /* ── Wasserzähler overlay ────────────────────────────────────── */
-#n-wasserzaehler .wz-wrap { position: relative; display: inline-block; container-type: inline-size; pointer-events: none; }
+#n-wasserzaehler { container-type: inline-size; }
 #n-wasserzaehler .wz-overlay {
   position: absolute;
   top: 29%; left: 21%; width: 50%; height: 17%;
@@ -1491,11 +1491,9 @@ html, body {
   </div>
 
   <div id="n-wasserzaehler" class="holo-node">
-    <div class="wz-wrap">
-      <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
-      <div class="wz-overlay">
-        <span id="wz-int">–</span><span id="wz-dec"></span>
-      </div>
+    <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
+    <div class="wz-overlay">
+      <span id="wz-int">–</span><span id="wz-dec"></span>
     </div>
     <div class="resize-handle"></div>
   </div>
