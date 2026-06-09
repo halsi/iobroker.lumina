@@ -2877,8 +2877,8 @@ function updateWasserzaehler() {
   if (live.wasserzaehler === null) { intEl.textContent = '–'; decEl.textContent = ''; return; }
   const str = live.wasserzaehler.toFixed(3);
   const parts = str.split('.');
-  intEl.textContent = parts[0];
-  decEl.textContent = parts[1] || '000';
+  intEl.textContent = parts[0].padStart(5, '0');
+  decEl.textContent = (parts[1] || '000').padEnd(3, '0').slice(0, 3);
 }
 
 function updateBWT() {
