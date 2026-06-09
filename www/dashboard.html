@@ -219,21 +219,14 @@ html, body {
 #n-boiler { isolation: isolate; }
 #n-boiler img { position: relative; z-index: 2; }
 
-/* ── Wasserzähler overlay ────────────────────────────────────── */
-#n-wasserzaehler { container-type: inline-size; }
-#n-wasserzaehler .wz-overlay {
-  position: absolute;
-  top: 29%; left: 21%; width: 50%; height: 17%;
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: none; gap: 0; letter-spacing: 0.04em;
-}
+/* ── Wasserzähler label ─────────────────────────────────────── */
 #wz-int {
-  color: #4499FF; font-weight: 900; font-size: 9.5cqw;
+  color: #4499FF; font-weight: 900;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 10px rgba(68,153,255,0.9), 0 0 4px rgba(68,153,255,0.6);
 }
 #wz-dec {
-  color: #FF4444; font-weight: 900; font-size: 9.5cqw;
+  color: #FF4444; font-weight: 900;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 10px rgba(255,68,68,0.9), 0 0 4px rgba(255,68,68,0.6);
 }
@@ -1492,9 +1485,6 @@ html, body {
 
   <div id="n-wasserzaehler" class="holo-node">
     <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
-    <div class="wz-overlay">
-      <span id="wz-int">–</span><span id="wz-dec"></span>
-    </div>
     <div class="resize-handle"></div>
   </div>
 
@@ -1657,6 +1647,15 @@ html, body {
     <span class="node-name" style="color:#99CCFF;">BWT</span><br>
     <span class="node-value" id="v-bwt-salt" style="font-size:14px;color:#44CC66;">–</span><br>
     <span class="node-value" id="v-bwt-flow" style="font-size:14px;color:#6AAEFF;">–</span>
+  </div>
+
+  <div id="lb-wasserzaehler" class="holo-label" data-size="20">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name" style="color:#6AAEFF;">WASSERZÄHLER</span><br>
+    <span class="node-value"><span id="wz-int">–</span><span id="wz-dec"></span></span>
   </div>
 
   <div id="lb-shield" class="holo-label" data-size="22">
@@ -3246,6 +3245,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-hwc-heat':    { x: 1679, y: 140, size: 22 },
   'lb-klima':       { x: 1390, y: 415, size: 22 },
   'lb-bwt':         { x: 1500, y: 560, size: 17 },
+  'lb-wasserzaehler': { x: 580, y: 720, size: 20 },
 };
 
 function loadLabelState() {
@@ -3625,7 +3625,8 @@ function initAnchorDrag(anchorEl) {
     'lb-shield':     'n-house',
     'lb-beregner':  'n-beregner',
     'lb-boiler':    'n-boiler',
-    'lb-bwt':       'n-bwt',
+    'lb-bwt':           'n-bwt',
+    'lb-wasserzaehler': 'n-wasserzaehler',
   };
 
   const connSvg = document.getElementById('connector-svg');
