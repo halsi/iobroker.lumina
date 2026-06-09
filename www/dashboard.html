@@ -219,14 +219,25 @@ html, body {
 #n-boiler { isolation: isolate; }
 #n-boiler img { position: relative; z-index: 2; }
 
-/* ── Wasserzähler label ─────────────────────────────────────── */
+/* ── Wasserzähler overlay ────────────────────────────────────── */
+/* wz-inner: sizing context — events bubble freely to holo-node  */
+#n-wasserzaehler .wz-inner {
+  position: relative;
+  container-type: inline-size;
+}
+#n-wasserzaehler .wz-overlay {
+  position: absolute;
+  top: 34%; left: 19%; width: 57%; height: 20%;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; gap: 0; letter-spacing: 0.04em;
+}
 #wz-int {
-  color: #4499FF; font-weight: 900;
+  color: #4499FF; font-weight: 900; font-size: 9.5cqw;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 10px rgba(68,153,255,0.9), 0 0 4px rgba(68,153,255,0.6);
 }
 #wz-dec {
-  color: #FF4444; font-weight: 900;
+  color: #FF4444; font-weight: 900; font-size: 9.5cqw;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 10px rgba(255,68,68,0.9), 0 0 4px rgba(255,68,68,0.6);
 }
@@ -1484,7 +1495,12 @@ html, body {
   </div>
 
   <div id="n-wasserzaehler" class="holo-node">
-    <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
+    <div class="wz-inner">
+      <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
+      <div class="wz-overlay">
+        <span id="wz-int">–</span><span id="wz-dec"></span>
+      </div>
+    </div>
     <div class="resize-handle"></div>
   </div>
 
@@ -1649,16 +1665,7 @@ html, body {
     <span class="node-value" id="v-bwt-flow" style="font-size:14px;color:#6AAEFF;">–</span>
   </div>
 
-  <div id="lb-wasserzaehler" class="holo-label" data-size="20">
-    <div class="label-controls">
-      <button class="lbl-btn lbl-minus">−</button>
-      <button class="lbl-btn lbl-plus">+</button>
-    </div>
-    <span class="node-name" style="color:#6AAEFF;">WASSERZÄHLER</span><br>
-    <span class="node-value"><span id="wz-int">–</span><span id="wz-dec"></span></span>
-  </div>
-
-  <div id="lb-shield" class="holo-label" data-size="22">
+<div id="lb-shield" class="holo-label" data-size="22">
     <div class="label-controls">
       <button class="lbl-btn lbl-minus">−</button>
       <button class="lbl-btn lbl-plus">+</button>
@@ -2869,7 +2876,7 @@ function updateWasserzaehler() {
   const str = live.wasserzaehler.toFixed(3);
   const parts = str.split('.');
   intEl.textContent = parts[0];
-  decEl.textContent = ',' + (parts[1] || '000');
+  decEl.textContent = parts[1] || '000';
 }
 
 function updateBWT() {
@@ -3245,7 +3252,6 @@ const DEFAULT_LABEL_STATE = {
   'lb-hwc-heat':    { x: 1679, y: 140, size: 22 },
   'lb-klima':       { x: 1390, y: 415, size: 22 },
   'lb-bwt':         { x: 1500, y: 560, size: 17 },
-  'lb-wasserzaehler': { x: 580, y: 720, size: 20 },
 };
 
 function loadLabelState() {
@@ -3626,7 +3632,6 @@ function initAnchorDrag(anchorEl) {
     'lb-beregner':  'n-beregner',
     'lb-boiler':    'n-boiler',
     'lb-bwt':           'n-bwt',
-    'lb-wasserzaehler': 'n-wasserzaehler',
   };
 
   const connSvg = document.getElementById('connector-svg');
