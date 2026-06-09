@@ -226,6 +226,12 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   pointer-events: none; gap: 0; letter-spacing: 0.04em;
 }
+.edit-mode #n-wasserzaehler .wz-overlay {
+  pointer-events: all;
+  cursor: grab;
+  outline: 1px dashed rgba(255,255,255,0.25);
+}
+.edit-mode #n-wasserzaehler .wz-overlay:active { cursor: grabbing; }
 #wz-int {
   color: #4499FF; font-weight: 900; font-size: var(--wz-fs, 22px);
   font-variant-numeric: tabular-nums;
@@ -3342,6 +3348,49 @@ function initLabelSize(labelEl) {
   });
 }
 
+// ── Wasserzähler overlay drag ─────────────────────────────────────────────
+function loadWzOverlay() {
+  const overlay = document.querySelector('#n-wasserzaehler .wz-overlay');
+  if (!overlay) return;
+  try {
+    const s = JSON.parse(localStorage.getItem('wz_overlay_pos') || 'null');
+    if (s && s.top != null) {
+      overlay.style.top  = s.top  + 'px';
+      overlay.style.left = s.left + 'px';
+    }
+  } catch(e) {}
+}
+
+function initWzOverlayDrag() {
+  const overlay = document.querySelector('#n-wasserzaehler .wz-overlay');
+  if (!overlay) return;
+  overlay.addEventListener('mousedown', e => {
+    if (!editMode) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const startX = e.clientX, startY = e.clientY;
+    // Use offsetTop/Left if no inline style set yet (CSS % default)
+    const origT = parseFloat(overlay.style.top)  || overlay.offsetTop;
+    const origL = parseFloat(overlay.style.left) || overlay.offsetLeft;
+    function onMove(ev) {
+      overlay.style.top  = (origT + ev.clientY - startY) + 'px';
+      overlay.style.left = (origL + ev.clientX - startX) + 'px';
+    }
+    function onUp() {
+      try {
+        localStorage.setItem('wz_overlay_pos', JSON.stringify({
+          top:  parseFloat(overlay.style.top),
+          left: parseFloat(overlay.style.left)
+        }));
+      } catch(e) {}
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',  onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',  onUp);
+  });
+}
+
 // ── Drag handlers (edit mode only) ────────────────────────────────────────
 function initDrag(nodeEl) {
   let dragging = false;
@@ -3405,6 +3454,7 @@ function initAnchorDrag(anchorEl) {
   applyAnchorState(loadAnchorState());
   loadPipePoints();
   loadPipeLabels();
+  loadWzOverlay();
 
   // Draw initial SVG paths (includes renderWaterPipes + applyAllPipeLabels)
   updatePaths();
@@ -3458,6 +3508,7 @@ function initAnchorDrag(anchorEl) {
     initFlowLabelDrag();
     initPipeDrag();
     initPipeLabelDrag();
+    initWzOverlayDrag();
   }
 
   // Redraw paths on viewport resize
