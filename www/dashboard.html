@@ -12,6 +12,17 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <style>
+/* 7-Segment-Schrift für den Wasserzähler – lokal eingebettet, damit die
+   Ziffern auf allen Geräten (MacBook/Chrome, Android-Walldisplay) identisch
+   rendern und nicht je nach System-Default-Font verschoben sind. */
+@font-face {
+  font-family: 'DSEG7';
+  src: url('assets/DSEG7Classic-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -224,7 +235,7 @@ html, body {
   position: absolute;
   top: 36%; left: 19%; width: 57%; height: 20%;
   display: flex; align-items: center; justify-content: center;
-  pointer-events: none; gap: 0; letter-spacing: 1.5px;
+  pointer-events: none; gap: 0; letter-spacing: 0;
 }
 .edit-mode #n-wasserzaehler .wz-overlay {
   pointer-events: all;
@@ -233,13 +244,13 @@ html, body {
 }
 .edit-mode #n-wasserzaehler .wz-overlay:active { cursor: grabbing; }
 #wz-int {
-  color: #4499FF; font-weight: 900; font-size: var(--wz-fs, 22px);
-  font-variant-numeric: tabular-nums;
+  color: #4499FF; font-weight: 700; font-size: var(--wz-fs, 22px);
+  font-family: 'DSEG7', monospace; line-height: 1;
   text-shadow: 0 0 10px rgba(68,153,255,0.9), 0 0 4px rgba(68,153,255,0.6);
 }
 #wz-dec {
-  color: #FF4444; font-weight: 900; font-size: var(--wz-fs, 22px);
-  font-variant-numeric: tabular-nums;
+  color: #FF4444; font-weight: 700; font-size: var(--wz-fs, 22px);
+  font-family: 'DSEG7', monospace; line-height: 1;
   text-shadow: 0 0 10px rgba(255,68,68,0.9), 0 0 4px rgba(255,68,68,0.6);
 }
 .boiler-water {
