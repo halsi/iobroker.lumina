@@ -250,6 +250,9 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   font-family: 'DSEG7', monospace; font-weight: 700;
   font-size: var(--wz-fs, 14px); line-height: 1;
+  /* Ziffern nur horizontal stauchen, damit sie nicht an die
+     Kästchen-Ränder stoßen (Höhe bleibt unverändert). */
+  transform: scaleX(0.9);
 }
 #n-wasserzaehler .wz-cell.wz-int {
   color: #4499FF;
