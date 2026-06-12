@@ -239,12 +239,6 @@ html, body {
   top: 44.2%; left: 33.2%; width: 33.5%; height: 13.4%;
   display: flex; pointer-events: none;
 }
-.edit-mode #n-wasserzaehler .wz-overlay {
-  pointer-events: all;
-  cursor: grab;
-  outline: 1px dashed rgba(255,255,255,0.25);
-}
-.edit-mode #n-wasserzaehler .wz-overlay:active { cursor: grabbing; }
 #n-wasserzaehler .wz-cell {
   flex: 1 1 0; min-width: 0;
   display: flex; align-items: center; justify-content: center;
@@ -3378,48 +3372,12 @@ function initLabelSize(labelEl) {
   });
 }
 
-// ── Wasserzähler overlay drag ─────────────────────────────────────────────
-function loadWzOverlay() {
-  const overlay = document.querySelector('#n-wasserzaehler .wz-overlay');
-  if (!overlay) return;
-  try {
-    const s = JSON.parse(localStorage.getItem('wz_overlay_pos') || 'null');
-    if (s && s.top != null) {
-      overlay.style.top  = s.top  + 'px';
-      overlay.style.left = s.left + 'px';
-    }
-  } catch(e) {}
-}
-
-function initWzOverlayDrag() {
-  const overlay = document.querySelector('#n-wasserzaehler .wz-overlay');
-  if (!overlay) return;
-  overlay.addEventListener('mousedown', e => {
-    if (!editMode) return;
-    e.stopPropagation();
-    e.preventDefault();
-    const startX = e.clientX, startY = e.clientY;
-    // Use offsetTop/Left if no inline style set yet (CSS % default)
-    const origT = parseFloat(overlay.style.top)  || overlay.offsetTop;
-    const origL = parseFloat(overlay.style.left) || overlay.offsetLeft;
-    function onMove(ev) {
-      overlay.style.top  = (origT + ev.clientY - startY) + 'px';
-      overlay.style.left = (origL + ev.clientX - startX) + 'px';
-    }
-    function onUp() {
-      try {
-        localStorage.setItem('wz_overlay_pos', JSON.stringify({
-          top:  parseFloat(overlay.style.top),
-          left: parseFloat(overlay.style.left)
-        }));
-      } catch(e) {}
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup',  onUp);
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup',  onUp);
-  });
-}
+// Hinweis: Das frühere Wasserzähler-Overlay-Drag (mit Speicherung in
+// localStorage 'wz_overlay_pos') wurde entfernt. Es war die einzige
+// Position, die NICHT über den Server synchronisiert wurde, und hat die
+// jetzt exakt ausgemessene CSS-Position pro Gerät überschrieben -> die
+// Ziffern lagen auf manchen Geräten verschoben. Die Position kommt nun
+// ausschließlich aus dem CSS (%-Werte) und ist damit überall identisch.
 
 // ── Drag handlers (edit mode only) ────────────────────────────────────────
 function initDrag(nodeEl) {
@@ -3484,7 +3442,6 @@ function initAnchorDrag(anchorEl) {
   applyAnchorState(loadAnchorState());
   loadPipePoints();
   loadPipeLabels();
-  loadWzOverlay();
 
   // Draw initial SVG paths (includes renderWaterPipes + applyAllPipeLabels)
   updatePaths();
@@ -3538,7 +3495,6 @@ function initAnchorDrag(anchorEl) {
     initFlowLabelDrag();
     initPipeDrag();
     initPipeLabelDrag();
-    initWzOverlayDrag();
   }
 
   // Redraw paths on viewport resize
