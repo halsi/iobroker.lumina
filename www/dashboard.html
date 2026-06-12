@@ -232,10 +232,12 @@ html, body {
 
 /* ── Wasserzähler overlay ────────────────────────────────────── */
 #n-wasserzaehler .wz-overlay {
+  /* Deckt exakt den gedruckten Ziffernstreifen im PNG ab (ausgemessen).
+     8 gleich breite flex-Zellen -> jede Ziffer sitzt immer in ihrem
+     Kästchen, unabhängig von Auflösung/Knotengröße. */
   position: absolute;
-  top: 36%; left: 19%; width: 57%; height: 20%;
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: none; gap: 0; letter-spacing: 0;
+  top: 44.2%; left: 32.5%; width: 34.9%; height: 13.4%;
+  display: flex; pointer-events: none;
 }
 .edit-mode #n-wasserzaehler .wz-overlay {
   pointer-events: all;
@@ -243,14 +245,18 @@ html, body {
   outline: 1px dashed rgba(255,255,255,0.25);
 }
 .edit-mode #n-wasserzaehler .wz-overlay:active { cursor: grabbing; }
-#wz-int {
-  color: #4499FF; font-weight: 700; font-size: var(--wz-fs, 22px);
-  font-family: 'DSEG7', monospace; line-height: 1;
+#n-wasserzaehler .wz-cell {
+  flex: 1 1 0; min-width: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DSEG7', monospace; font-weight: 700;
+  font-size: var(--wz-fs, 14px); line-height: 1;
+}
+#n-wasserzaehler .wz-cell.wz-int {
+  color: #4499FF;
   text-shadow: 0 0 10px rgba(68,153,255,0.9), 0 0 4px rgba(68,153,255,0.6);
 }
-#wz-dec {
-  color: #FF4444; font-weight: 700; font-size: var(--wz-fs, 22px);
-  font-family: 'DSEG7', monospace; line-height: 1;
+#n-wasserzaehler .wz-cell.wz-dec {
+  color: #FF4444;
   text-shadow: 0 0 10px rgba(255,68,68,0.9), 0 0 4px rgba(255,68,68,0.6);
 }
 .boiler-water {
@@ -1508,8 +1514,15 @@ html, body {
 
   <div id="n-wasserzaehler" class="holo-node">
     <img src="img/dashboard/wasserzaehler.png" alt="Wasserzähler" style="width:240px;">
-    <div class="wz-overlay">
-      <span id="wz-int">–</span><span id="wz-dec"></span>
+    <div class="wz-overlay" id="wz-digits">
+      <span class="wz-cell wz-int"></span>
+      <span class="wz-cell wz-int"></span>
+      <span class="wz-cell wz-int"></span>
+      <span class="wz-cell wz-int"></span>
+      <span class="wz-cell wz-int"></span>
+      <span class="wz-cell wz-dec"></span>
+      <span class="wz-cell wz-dec"></span>
+      <span class="wz-cell wz-dec"></span>
     </div>
     <div class="resize-handle"></div>
   </div>
@@ -2203,7 +2216,7 @@ function applyPositions(positions) {
     const img = node.querySelector('img');
     if (p.width && img) {
       img.style.width = p.width + 'px';
-      if (id === 'n-wasserzaehler') node.style.setProperty('--wz-fs', (p.width * 0.055) + 'px');
+      if (id === 'n-wasserzaehler') node.style.setProperty('--wz-fs', (p.width * 0.05) + 'px');
     }
     if (p.rot != null) {
       if (img) img.style.transform = `rotate(${p.rot}deg)`;
@@ -2882,14 +2895,17 @@ function activateHwcHeating() {
 }
 
 function updateWasserzaehler() {
-  const intEl = document.getElementById('wz-int');
-  const decEl = document.getElementById('wz-dec');
-  if (!intEl || !decEl) return;
-  if (live.wasserzaehler === null) { intEl.textContent = '–'; decEl.textContent = ''; return; }
-  const str = live.wasserzaehler.toFixed(3);
-  const parts = str.split('.');
-  intEl.textContent = parts[0].padStart(5, '0');
-  decEl.textContent = (parts[1] || '000').padEnd(3, '0').slice(0, 3);
+  const cells = document.querySelectorAll('#wz-digits .wz-cell');
+  if (cells.length < 8) return;
+  if (live.wasserzaehler === null) {
+    cells.forEach(c => c.textContent = '');
+    cells[0].textContent = '–';
+    return;
+  }
+  const parts = live.wasserzaehler.toFixed(3).split('.');
+  const digits = parts[0].padStart(5, '0').slice(-5)
+               + (parts[1] || '000').padEnd(3, '0').slice(0, 3);
+  for (let i = 0; i < 8; i++) cells[i].textContent = digits[i];
 }
 
 function updateBWT() {
@@ -3232,7 +3248,7 @@ function initResize(nodeEl) {
     if (!resizing) return;
     const newW = Math.max(60, startW + (e.clientX - startX));
     nodeEl.querySelector('img').style.width = newW + 'px';
-    if (nodeEl.id === 'n-wasserzaehler') nodeEl.style.setProperty('--wz-fs', (newW * 0.055) + 'px');
+    if (nodeEl.id === 'n-wasserzaehler') nodeEl.style.setProperty('--wz-fs', (newW * 0.05) + 'px');
     updatePaths();
   });
 
