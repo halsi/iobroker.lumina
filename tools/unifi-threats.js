@@ -78,16 +78,16 @@ async function login() {
 const V1 = '/proxy/network/api/s/' + SITE;
 const V2 = '/proxy/network/v2/api/site/' + SITE;
 const EVENT_EP = [
-  { m: 'GET',  p: V1 + '/list/event' },          // funktioniert auf diesem Controller (list/*)
-  { m: 'GET',  p: V1 + '/stat/event' },
-  { m: 'POST', p: V1 + '/stat/event' },
-  { m: 'GET',  p: V2 + '/system-log' },
-  { m: 'POST', p: V2 + '/system-log' },
+  { m: 'GET',  p: V1 + '/list/event' },
+  { m: 'GET',  p: V1 + '/list/event?within=24&_limit=3000' },
+  { m: 'POST', p: V1 + '/list/event', body: { _limit: 3000, within: 24, _sort: '-time' } },
+  { m: 'POST', p: V1 + '/stat/event', body: { _limit: 3000, within: 24 } },
+  { m: 'POST', p: V2 + '/system-log', body: { pageSize: 1000, pageNumber: 0 } },
 ];
 const ALARM_EP = [
-  { m: 'GET',  p: V1 + '/list/alarm' },           // liefert HTTP 200
-  { m: 'GET',  p: V1 + '/stat/alarm?archived=false' },
-  { m: 'POST', p: V1 + '/stat/alarm' },
+  { m: 'GET',  p: V1 + '/list/alarm' },            // liefert HTTP 200
+  { m: 'GET',  p: V1 + '/list/alarm?within=24&_limit=3000' },
+  { m: 'POST', p: V1 + '/list/alarm', body: { _limit: 3000, within: 24 } },
 ];
 
 function toList(body) { try { const j = JSON.parse(body); return Array.isArray(j) ? j : (j.data || j.items || j.events || j.alarms || []); } catch (e) { return null; } }
@@ -96,11 +96,11 @@ async function fetchFirst(cands, label) {
   if (!session) await login();
   for (const c of cands) {
     const opts = { cookie: session.cookie, csrf: session.csrf };
-    if (c.m === 'POST') opts.body = {};
+    if (c.m === 'POST') opts.body = c.body || {};
     let res = await httpReq(c.m, c.p, opts);
     if (res.status === 401) { await login(); opts.cookie = session.cookie; opts.csrf = session.csrf; res = await httpReq(c.m, c.p, opts); }
     const list = res.status === 200 ? toList(res.body) : null;
-    dlog('[unifi-threats] PROBE ' + label + ' ' + c.m + ' ' + c.p + ' → HTTP ' + res.status + (list ? ' len=' + list.length : ''));
+    dlog('[unifi-threats] PROBE ' + label + ' ' + c.m + ' ' + c.p + ' → HTTP ' + res.status + (list ? ' len=' + list.length : ' ' + (res.body || '').replace(/\s+/g, ' ').slice(0, 140)));
     if (list) return list;
   }
   return [];
