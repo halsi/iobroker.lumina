@@ -20,7 +20,7 @@
 
 const HOST = '1.1.1.1';          // <-- UDM Pro IP eintragen
 const PORT = 443;
-const USER = 'exampleuser';         // lokaler UniFi-OS-User
+const USER = 'exampleuser';      // <-- lokaler UniFi-OS-User eintragen
 const PASS = 'DEIN_PASSWORT';    // <-- eintragen
 const SITE = 'default';
 const INTERVAL_SEC = 60;
