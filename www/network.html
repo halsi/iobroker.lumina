@@ -131,6 +131,8 @@ body {
 .clients-total .num { font-size: 42px; font-weight: 800; color: var(--glow); line-height: 1; }
 .clients-total .sub { font-size: 13px; color: var(--muted); padding-bottom: 5px; }
 .subhead { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin: 13px 0 3px; }
+.subhead.vm-head { display: flex; justify-content: space-between; align-items: baseline; }
+.subhead .leg { color: var(--lblue); letter-spacing: 1px; }
 
 /* ── Device health list ──────────────────────────────────────────── */
 #dev-list { display: flex; flex-direction: column; }
@@ -228,7 +230,7 @@ body {
           <span class="ps">SSD <b id="pve-disk">–</b></span>
           <span class="ps">↑ <b id="pve-uptime">–</b></span>
         </div>
-        <div class="subhead">Aktive Container · VMs</div>
+        <div class="subhead vm-head"><span>Aktive Container · VMs</span><span class="leg">CPU · RAM</span></div>
         <div id="vm-list"></div>
       </div>
     </div>
