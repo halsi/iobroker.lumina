@@ -201,7 +201,8 @@ body {
           <div>Ping <span class="st-val st-ping" id="wan-ping">–</span><span class="u"> ms</span></div>
           <div class="wan-info">
             ISP-IP <b id="wan-ip">—</b><br>
-            Volumen ↓ <b id="wan-rx">—</b> · ↑ <b id="wan-tx">—</b>
+            Volumen seit Boot (<b id="vol-uptime">–</b>)<br>
+            ↓ <b id="wan-rx">—</b> · ↑ <b id="wan-tx">—</b>
           </div>
         </div>
       </div>
@@ -497,7 +498,7 @@ function applyState(oid, val) {
     const g = document.getElementById('gw-up'); if (g) { g.textContent = on ? 'Online' : 'Offline'; g.style.color = on ? 'var(--green)' : 'var(--salmon)'; }
     return;
   }
-  if (oid === WAN_OIDs['gw-uptime']) { setText('gw-uptime', '↑ ' + fmtUptime(val)); return; }
+  if (oid === WAN_OIDs['gw-uptime']) { const up = fmtUptime(val); setText('gw-uptime', '↑ ' + up); setText('vol-uptime', up); return; }
 
   // Gateway stats (kein return → Geräte-Health-Zeile aktualisiert sich ebenfalls)
   if (oid === GW_OIDs['gw-cpu'])  { setText('gw-cpu', fmtPct(val)); const n = num(val); const b = document.getElementById('gw-cpu-bar'); if (b && n !== null) b.style.width = Math.min(100, n) + '%'; }
