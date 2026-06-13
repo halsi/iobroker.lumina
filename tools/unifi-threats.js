@@ -69,35 +69,47 @@ async function login() {
   log('[unifi-threats] Login OK');
 }
 
-async function apiPost(endpoint, body) {
+// stat/event und stat/alarm sind GET (3000 neueste). Fallback auf POST für
+// abweichende Versionen. stat/ips/event existiert in Network 10.x nicht mehr.
+async function apiList(endpoint, query) {
   if (!session) await login();
-  const url = '/proxy/network/api/s/' + SITE + endpoint;
-  let res = await httpReq('POST', url, { body, cookie: session.cookie, csrf: session.csrf });
-  if (res.status === 401) { await login(); res = await httpReq('POST', url, { body, cookie: session.cookie, csrf: session.csrf }); }
-  if (res.status !== 200) throw new Error('API ' + endpoint + ' HTTP ' + res.status);
+  const path = '/proxy/network/api/s/' + SITE + endpoint;
+  const qs = query ? ('?' + query) : '';
+  let res = await httpReq('GET', path + qs, { cookie: session.cookie, csrf: session.csrf });
+  if (res.status === 401) { await login(); res = await httpReq('GET', path + qs, { cookie: session.cookie, csrf: session.csrf }); }
+  if (res.status === 404 || res.status === 405) { res = await httpReq('POST', path, { body: {}, cookie: session.cookie, csrf: session.csrf }); }
+  if (DEBUG) log('[unifi-threats] ' + endpoint + qs + ' → HTTP ' + res.status);
+  if (res.status !== 200) throw new Error(endpoint + ' HTTP ' + res.status);
   return JSON.parse(res.body).data || [];
 }
 
 function tOf(e) { return e.time || e.timestamp || (e.datetime ? Date.parse(e.datetime) : 0); }
 
+// Erkennungs-Heuristiken — nach DEBUG-Sample ggf. feinjustieren
+function isThreat(e)   { return /ips|ids|threat|inner_alert|EVT_IPS/i.test(JSON.stringify(e)); }
+function isBlocked(e)  { return /drop|block|reject/i.test(e.inner_alert_action || e.action || ''); }
+function isHoneypot(e) { return /honeypot/i.test(JSON.stringify(e)); }
+
 async function poll() {
   try {
     const now = Date.now(), dayAgo = now - 24 * 3600 * 1000;
 
-    // ── IDS/IPS-Events ──
-    const ips = await apiPost('/stat/ips/event', { _limit: 3000, _sort: '-time' });
-    const ips24 = ips.filter(e => tOf(e) >= dayAgo);
-    const detected = ips24.length;
-    const blocked = ips24.filter(e => /drop|block|reject/i.test(e.action || e.inner_alert_action || '')).length;
-    if (DEBUG && ips[0]) log('[unifi-threats] IPS-Beispiel: ' + JSON.stringify(ips[0]).slice(0, 400));
+    // System-Events (enthält IDS/IPS- und Honeypot-Meldungen)
+    const events = await apiList('/stat/event');
+    const ev24 = events.filter(e => tOf(e) >= dayAgo);
+    const threats = ev24.filter(isThreat);
+    let detected = threats.length;
+    let blocked  = threats.filter(isBlocked).length;
+    let honeypot = ev24.filter(isHoneypot).length;
 
-    // ── Honeypot — kommt i.d.R. als Alarm/Event; lose nach "honeypot" gematcht ──
-    let honeypot = 0;
+    // Alarme zusätzlich für Honeypot heranziehen
     try {
-      const alarms = await apiPost('/stat/alarm', { _limit: 3000, archived: false });
-      honeypot = alarms.filter(a => tOf(a) >= dayAgo && /honeypot/i.test(JSON.stringify(a))).length;
-      if (DEBUG && alarms[0]) log('[unifi-threats] Alarm-Beispiel: ' + JSON.stringify(alarms[0]).slice(0, 400));
+      const alarms = await apiList('/stat/alarm', 'archived=false');
+      honeypot += alarms.filter(a => tOf(a) >= dayAgo && isHoneypot(a)).length;
+      if (DEBUG && alarms[0]) log('[unifi-threats] Alarm-Beispiel: ' + JSON.stringify(alarms[0]).slice(0, 600));
     } catch (e) { log('[unifi-threats] Alarm-Abruf übersprungen: ' + e.message, 'warn'); }
+
+    if (DEBUG) { const s = events.find(isThreat) || events[0]; if (s) log('[unifi-threats] Event-Beispiel: ' + JSON.stringify(s).slice(0, 600)); }
 
     await setVal(BASE + '.ThreatsDetected-24h', detected, 'Threats Detected (24h)');
     await setVal(BASE + '.ThreatsBlocked-24h', blocked, 'Threats Blocked (24h)');
