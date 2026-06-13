@@ -167,6 +167,14 @@ body {
 .err-msg { color: var(--salmon); font-size: 15px; }
 .hx.err-badge-ok  { color: var(--green); }
 .hx.err-badge-bad { color: var(--salmon); }
+
+/* ── Security / Threats ──────────────────────────────────────────── */
+.card-red .card-header { background: rgba(255,136,102,0.12); color: var(--salmon); }
+.card-red .card-header .ch-dot { background: var(--salmon); }
+.th-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--sep); font-size: 18px; }
+.th-row:last-child { border-bottom: none; }
+.th-k { color: var(--text); }
+.th-v { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--lblue); }
 </style>
 </head>
 <body>
@@ -244,9 +252,9 @@ body {
 
   </div>
 
-  <!-- ══ Spalte B · Clients ═══════════════════════════════════════ -->
+  <!-- ══ Spalte B · Clients + Threats ═════════════════════════════ -->
   <div class="col col-b">
-    <div class="card card-blue grow">
+    <div class="card card-blue">
       <div class="card-header"><span class="ch-dot"></span>Clients</div>
       <div class="card-body">
         <div class="clients-total"><span class="num" id="clients-total">–</span><span class="sub">verbunden (LAN)</span></div>
@@ -254,6 +262,16 @@ body {
         <div id="lan-list"></div>
         <div class="subhead">WLAN (SSID)</div>
         <div id="wlan-list"></div>
+      </div>
+    </div>
+    <div class="card card-red grow">
+      <div class="card-header"><span class="ch-dot"></span>Security · Threats
+        <span class="hx" id="th-update"></span>
+      </div>
+      <div class="card-body">
+        <div class="th-row"><span class="th-k">Threats Detected (24h)</span><span class="th-v" id="th-detected">–</span></div>
+        <div class="th-row"><span class="th-k">Threats Blocked (24h)</span><span class="th-v" id="th-blocked">–</span></div>
+        <div class="th-row"><span class="th-k">Honeypot Triggered (24h)</span><span class="th-v" id="th-honeypot">–</span></div>
       </div>
     </div>
   </div>
@@ -373,6 +391,14 @@ const PVE_OIDs = {
 };
 const PVE_UPDATE_OID = 'proxmox.0.info.lastUpdate';
 const UNI_POLL_OID   = NS + '.info.lastApiPoll';
+
+// Threats (befüllt vom javascript-Adapter-Script tools/unifi-threats.js)
+const THREAT_OIDs = {
+  'th-detected': '0_userdata.0.unifi.threats.detected_24h',
+  'th-blocked':  '0_userdata.0.unifi.threats.blocked_24h',
+  'th-honeypot': '0_userdata.0.unifi.threats.honeypot_24h',
+  'th-update':   '0_userdata.0.unifi.threats.lastUpdate',
+};
 const VMS = [
   { id:'lxc_ebusd',        name:'ebusd'        },
   { id:'lxc_esphome',      name:'esphome'      },
@@ -406,6 +432,14 @@ function fmtTime(v) {
   return d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 function setText(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+function setThreat(id, val, kind) {
+  const el = document.getElementById(id); if (!el) return;
+  const n = num(val);
+  el.textContent = n === null ? '–' : Math.round(n);
+  if (kind === 'alert')      el.style.color = n > 0 ? 'var(--salmon)' : 'var(--green)';
+  else if (kind === 'warn')  el.style.color = n > 0 ? 'var(--yellow)' : 'var(--green)';
+  else                       el.style.color = 'var(--lblue)';
+}
 
 // ── Build dynamic lists ──────────────────────────────────────────────────
 function buildLists() {
@@ -471,7 +505,7 @@ function renderErrors() {
   const body = document.getElementById('err-body');
   if (body) {
     body.innerHTML = problems.length === 0
-      ? `<div class="err-ok"><span class="err-ok-dot"></span>All Systems OK<span class="err-ok-sub">${DEVICES.length} Geräte · Proxmox überwacht</span></div>`
+      ? `<div class="err-ok"><span class="err-ok-dot"></span>All Systems OK<span class="err-ok-sub">Monitoring: ${DEVICES.length} Devices + Proxmox</span></div>`
       : problems.map(p => `<div class="err-row"><span class="err-dot"></span><span class="err-name">${p.name}</span><span class="err-msg">${p.msg}</span></div>`).join('');
   }
   const badge = document.getElementById('err-badge');
@@ -515,6 +549,12 @@ function applyState(oid, val) {
 
   // Geräte-Health  (devices.<mac>.{isOnline | system.cpu | temperature | power})
   if (oid === UNI_POLL_OID) { setText('uni-update', ' · ' + fmtTime(val)); return; }
+
+  // Threats
+  if (oid === THREAT_OIDs['th-detected']) { setThreat('th-detected', val, 'warn'); return; }
+  if (oid === THREAT_OIDs['th-blocked'])  { setThreat('th-blocked', val, 'info'); return; }
+  if (oid === THREAT_OIDs['th-honeypot']) { setThreat('th-honeypot', val, 'alert'); return; }
+  if (oid === THREAT_OIDs['th-update'])   { setText('th-update', fmtTime(val)); return; }
 
   const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|hasError|system\\.cpu|temperatures\\.CPU\\.value|power)$'));
   if (devM) {
@@ -565,6 +605,7 @@ const allOids = [...new Set([
   ...Object.values(PVE_OIDs),
   PVE_UPDATE_OID,
   ...VMS.flatMap(v => ['status', 'cpu', 'mem_lev'].map(l => 'proxmox.0.' + v.id + '.' + l)),
+  ...Object.values(THREAT_OIDs),
 ])];
 
 // ── Init: erst DOM-Listen bauen, dann Verbindung ──────────────────────────
