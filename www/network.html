@@ -297,6 +297,7 @@ const SPEEDTEST_RUN_OID = GW + '.wan1.speedtest_run';
 const GW_OIDs = {
   'gw-cpu':  GW + '.system.cpu',
   'gw-mem':  GW + '.system.mem',
+  'gw-temp': GW + '.temperatures.CPU.value',   // UDM Pro: Temp liegt unter temperatures.<Sensor>.value
 };
 
 // Geräte-Health-Liste  (mac, Anzeigename, Modell, Typ)
@@ -414,8 +415,9 @@ function applyState(oid, val) {
   if (oid === WAN_OIDs['gw-uptime']) { setText('gw-uptime', '↑ ' + fmtUptime(val)); return; }
 
   // Gateway stats (kein return → Geräte-Health-Zeile aktualisiert sich ebenfalls)
-  if (oid === GW_OIDs['gw-cpu']) { setText('gw-cpu', fmtPct(val)); const n = num(val); const b = document.getElementById('gw-cpu-bar'); if (b && n !== null) b.style.width = Math.min(100, n) + '%'; }
-  if (oid === GW_OIDs['gw-mem']) { setText('gw-mem', fmtPct(val)); const n = num(val); const b = document.getElementById('gw-mem-bar'); if (b && n !== null) b.style.width = Math.min(100, n) + '%'; return; }
+  if (oid === GW_OIDs['gw-cpu'])  { setText('gw-cpu', fmtPct(val)); const n = num(val); const b = document.getElementById('gw-cpu-bar'); if (b && n !== null) b.style.width = Math.min(100, n) + '%'; }
+  if (oid === GW_OIDs['gw-temp']) { setText('gw-temp', fmtTemp(val)); }
+  if (oid === GW_OIDs['gw-mem'])  { setText('gw-mem', fmtPct(val)); const n = num(val); const b = document.getElementById('gw-mem-bar'); if (b && n !== null) b.style.width = Math.min(100, n) + '%'; return; }
 
   // Clients pro LAN / WLAN
   const esc = NS.replace(/\./g, '\\.');
@@ -426,12 +428,12 @@ function applyState(oid, val) {
   if (wlanM) { const el = document.getElementById('wlan-' + wlanM[1]); if (el) el.textContent = parseInt(val) || 0; return; }
 
   // Geräte-Health  (devices.<mac>.{isOnline | system.cpu | temperature | power})
-  const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|system\\.cpu|temperature|power)$'));
+  const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|system\\.cpu|temperatures\\.CPU\\.value|power)$'));
   if (devM) {
     const mac = devM[1], leaf = devM[2];
     if (leaf === 'isOnline') { const dot = document.getElementById('dev-' + mac + '-dot'); if (dot) dot.className = 'ddot ' + ((val === true || val === 'true') ? 'on' : 'off'); }
     else if (leaf === 'system.cpu') { const el = document.getElementById('dev-' + mac + '-cpu'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> %</span>'; }
-    else if (leaf === 'temperature') { const el = document.getElementById('dev-' + mac + '-temp'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> °C</span>'; }
+    else if (leaf === 'temperatures.CPU.value') { const el = document.getElementById('dev-' + mac + '-temp'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> °C</span>'; }
     else if (leaf === 'power') { const el = document.getElementById('dev-' + mac + '-poe'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : n.toFixed(1) + '<span class="du"> W</span>'; }
   }
 }
@@ -446,7 +448,7 @@ const allOids = [...new Set([
   ...DEVICES.flatMap(d => {
     const base = NS + '.devices.' + d.mac;
     const list = [base + '.isOnline', base + '.system.cpu'];
-    list.push(d.type === 'switch' ? base + '.power' : base + '.temperature');
+    list.push(d.type === 'switch' ? base + '.power' : base + '.temperatures.CPU.value');
     return list;
   }),
 ])];
