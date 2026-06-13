@@ -76,6 +76,7 @@ async function login() {
 // ── UniFi Network 10.x: IDS/IPS-Threats via v2 traffic-flows ──────────────
 //    POST /proxy/network/v2/api/site/<site>/traffic-flows mit policy_type-Filter.
 //    skip_count:false → Server liefert Gesamt-Count (kein Paging nötig).
+const V1 = '/proxy/network/api/s/' + SITE;
 const V2 = '/proxy/network/v2/api/site/' + SITE;
 
 async function trafficFlows(policyTypes, actions) {
@@ -109,15 +110,33 @@ async function trafficFlows(policyTypes, actions) {
   return { status: res.status, data, count };
 }
 
+// Honeypot ist kein traffic-flow policy_type -> über Alarme der letzten 24h heuristisch zählen
+async function listAlarms() {
+  if (!session) await login();
+  const path = V1 + '/list/alarm';
+  let res = await httpReq('GET', path, { cookie: session.cookie, csrf: session.csrf });
+  if (res.status === 401) { await login(); res = await httpReq('GET', path, { cookie: session.cookie, csrf: session.csrf }); }
+  let json = {}; try { json = JSON.parse(res.body); } catch (e) {}
+  const data = Array.isArray(json) ? json : (json.data || []);
+  dlog('[unifi-threats] list/alarm → HTTP ' + res.status + ' len=' + data.length);
+  return { status: res.status, data };
+}
+
 async function poll() {
   try {
+    const dayAgo = Date.now() - 24 * 3600 * 1000;
     const det = await trafficFlows(['INTRUSION_PREVENTION']);
-    const hp  = await trafficFlows(['HONEYPOT']); // ungültiger policy_type -> Fehlertext listet gültige Werte
 
     const detected = det.status === 200 ? det.count : 0;
     // serverseitiger action-Filter wird abgelehnt -> blocked clientseitig zählen (action != 'allowed')
     const blocked  = det.data.filter(e => String(e.action || '').toLowerCase() !== 'allowed').length;
-    const honeypot = hp.status === 200 ? hp.count : 0;
+
+    // Honeypot über Alarme (heuristisch: JSON enthält "honeypot")
+    let honeypot = 0;
+    try {
+      const al = await listAlarms();
+      honeypot = al.data.filter(a => { const t = a.time || a.timestamp || 0; return (!t || t >= dayAgo) && /honeypot/i.test(JSON.stringify(a)); }).length;
+    } catch (e) { dlog('[unifi-threats] Honeypot/Alarm: ' + e.message, 'warn'); }
 
     if (DEBUG && det.data[0]) dlog('[unifi-threats] Sample: ' + JSON.stringify(det.data[0]).slice(0, 700));
 
