@@ -32,6 +32,10 @@ const agent = new https.Agent({ rejectUnauthorized: false, keepAlive: true });
 const BASE = '0_userdata.0.Network.Unifi';
 let session = null;              // { cookie, csrf }
 
+// Bei DEBUG=true alle Meldungen als WARN ausgeben — sichtbar auch bei Instanz-Loglevel "warn".
+// (Fehler/explizite Level bleiben sonst erhalten.)
+function dlog(msg, level) { log(msg, DEBUG ? 'warn' : (level || 'info')); }
+
 function httpReq(method, path, { body, cookie, csrf } = {}) {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
@@ -66,7 +70,7 @@ async function login() {
   const cookie = (sc.map(c => c.split(';')[0]).filter(c => /^(TOKEN|unifises)/i.test(c)).join('; ')) || sc.map(c => c.split(';')[0]).join('; ');
   const csrf = res.headers['x-csrf-token'] || res.headers['x-updated-csrf-token'] || csrfFromCookie(cookie);
   session = { cookie, csrf };
-  log('[unifi-threats] Login OK');
+  dlog('[unifi-threats] Login OK');
 }
 
 // ── Endpoint-Kandidaten (v1 + v2). Das Script probiert sie der Reihe nach,
@@ -98,7 +102,7 @@ async function fetchFirst(cands, label) {
     let res = await httpReq(c.m, c.p, opts);
     if (res.status === 401) { await login(); opts.cookie = session.cookie; opts.csrf = session.csrf; res = await httpReq(c.m, c.p, opts); }
     const list = res.status === 200 ? toList(res.body) : null;
-    log('[unifi-threats] PROBE ' + label + ' ' + c.m + ' ' + c.p + ' → HTTP ' + res.status + (list ? ' len=' + list.length : ''));
+    dlog('[unifi-threats] PROBE ' + label + ' ' + c.m + ' ' + c.p + ' → HTTP ' + res.status + (list ? ' len=' + list.length : ''));
     if (list) return list;
   }
   return [];
@@ -124,14 +128,14 @@ async function poll() {
     const blocked  = threats.filter(isBlocked).length;
     const honeypot = a24.filter(isHoneypot).length;
 
-    if (DEBUG) { const s = a24.find(isThreat) || events[0] || alarms[0]; if (s) log('[unifi-threats] Sample: ' + JSON.stringify(s).slice(0, 700)); }
+    if (DEBUG) { const s = a24.find(isThreat) || events[0] || alarms[0]; if (s) dlog('[unifi-threats] Sample: ' + JSON.stringify(s).slice(0, 700)); }
 
     await setVal(BASE + '.ThreatsDetected-24h', detected, 'Threats Detected (24h)');
     await setVal(BASE + '.ThreatsBlocked-24h', blocked, 'Threats Blocked (24h)');
     await setVal(BASE + '.HoneypotTriggered-24h', honeypot, 'Honeypot Triggered (24h)');
-    log('[unifi-threats] detected=' + detected + ' blocked=' + blocked + ' honeypot=' + honeypot);
+    dlog('[unifi-threats] detected=' + detected + ' blocked=' + blocked + ' honeypot=' + honeypot);
   } catch (e) {
-    log('[unifi-threats] Fehler: ' + e.message, 'error');
+    dlog('[unifi-threats] Fehler: ' + e.message, 'error');
     session = null; // Re-Login beim nächsten Lauf erzwingen
   }
 }
