@@ -86,6 +86,20 @@ Kompaktes Card-basiertes Dashboard für den täglichen Überblick.
 
 ---
 
+### `network.html` — Netzwerk-Dashboard
+Card-basiertes Dashboard für das UniFi-Netzwerk — liest die States des **`iobroker.unifi-network`**-Adapters live via socket.io.
+
+**Sektionen:**
+- **WAN · Internet** — Live-Durchsatz ↓↑ mit Verlaufs-Graph, Speedtest (↓↑/Ping) inkl. `[TEST]`-Button (schreibt `wan1.speedtest_run`), ISP-IP, Volumen, Online-Status & Uptime
+- **Gateway · UDM Pro** — CPU, RAM, Temperatur, Status (`system.cpu`/`system.mem`/`temperature`)
+- **Clients** — Gesamtzahl + Aufschlüsselung pro VLAN (`lan.<id>.connected_clients`) und SSID (`wlan.<id>.connected_clients`)
+- **Geräte** — Health-Liste aller UniFi-Geräte (Online-Status, CPU, Temperatur; bei Switches PoE-Leistung)
+- **Server · Proxmox** — Platzhalter, wird über den `iobroker.proxmox`-Adapter (`proxmox.0.*`) aktiviert
+
+> **Voraussetzung:** Adapter `iobroker.unifi-network`. Wichtig: Im GERÄTE-Tab die *Datenpunkte-Blacklist* der gewünschten Kanäle (`wan1`, `system`, `temperatures`, `ports`, `power`, …) leeren — sonst werden diese States nicht angelegt.
+
+---
+
 ## Installation
 
 ```bash
@@ -111,6 +125,7 @@ http://<iobroker-ip>:8082/lumina/index.html       ← LCARS Wanddisplay
 http://<iobroker-ip>:8082/lumina/dashboard.html   ← Holografisches Dashboard
 http://<iobroker-ip>:8082/lumina/energie.html     ← Energiefluss-Detail
 http://<iobroker-ip>:8082/lumina/cards.html       ← Übersichts-Cards
+http://<iobroker-ip>:8082/lumina/network.html     ← Netzwerk-Dashboard (UniFi)
 ```
 
 ---

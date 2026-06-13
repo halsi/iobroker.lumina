@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Lumina Network</title>
+<link rel="shortcut icon" href="favicon32.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon32.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --orange:  #FF9900;
+  --yellow:  #FFCC00;
+  --blue:    #4488FF;
+  --teal:    #00AACC;
+  --teal2:   #66CCBB;
+  --purple:  #CC99FF;
+  --lblue:   #99CCFF;
+  --salmon:  #FF8866;
+  --green:   #44CC66;
+  --glow:    #52E5FF;
+  --bg:      #0c0c15;
+  --card-bg: #13131e;
+  --card-bd: rgba(255,255,255,0.07);
+  --sep:     rgba(255,255,255,0.06);
+  --text:    #e8e8f0;
+  --muted:   #666680;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  width: 1767px; height: 938px;
+  overflow: hidden;
+  transform-origin: top left;
+}
+
+/* ── Layout: 3 Spalten, füllen die Höhe (wie cards.html) ─────────── */
+#main { display: flex; gap: 14px; padding: 16px; height: 938px; overflow: hidden; }
+.col  { display: flex; flex-direction: column; gap: 14px; min-height: 0; min-width: 0; }
+.col-a { flex: 1.55; }
+.col-b { flex: 1; }
+.col-c { flex: 1.15; }
+.col .card.grow { flex: 1; }
+.col .card { min-height: 0; }
+
+/* ── Card ────────────────────────────────────────────────────────── */
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--card-bd);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.card.dashed { border-style: dashed; border-color: rgba(255,153,0,0.35); }
+.card.dashed .card-body { opacity: 0.92; }
+.card-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  font-size: 18px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  flex-shrink: 0;
+}
+.card-header .hx { margin-left: auto; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: var(--muted); }
+.ch-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.card-body { padding: 12px 16px 14px; flex: 1; min-height: 0; overflow: hidden; }
+
+.card-teal   .card-header { background: rgba(0,170,204,0.10);  color: var(--glow);   }
+.card-teal   .card-header .ch-dot { background: var(--glow);   }
+.card-purple .card-header { background: rgba(204,153,255,0.10);color: var(--purple); }
+.card-purple .card-header .ch-dot { background: var(--purple); }
+.card-blue   .card-header { background: rgba(68,136,255,0.10); color: var(--blue);   }
+.card-blue   .card-header .ch-dot { background: var(--blue);   }
+.card-orange .card-header { background: rgba(255,153,0,0.10);  color: var(--orange); }
+.card-orange .card-header .ch-dot { background: var(--orange); }
+.card-yellow .card-header { background: rgba(255,204,0,0.10);  color: var(--yellow); }
+.card-yellow .card-header .ch-dot { background: var(--yellow); }
+
+.u { font-size: 0.6em; color: var(--muted); font-weight: 600; }
+.loading { color: var(--muted); }
+.geplant { color: var(--orange) !important; border: 1px solid var(--orange); border-radius: 9px; padding: 1px 9px; }
+
+/* ── WAN panel ───────────────────────────────────────────────────── */
+.wan-grid { display: grid; grid-template-columns: 250px 1fr; gap: 18px; align-items: stretch; }
+.wan-live { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.wan-kicker { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--glow); }
+.wan-rate { display: flex; align-items: baseline; }
+.wan-rate .arr { font-size: 14px; color: var(--muted); margin-right: 8px; }
+.wan-rate .big { font-size: 42px; font-weight: 800; line-height: 1; }
+.wan-rate .dl { color: var(--blue); }
+.wan-rate .ul { color: var(--orange); }
+.spark-wrap { min-height: 132px; }
+.spark-wrap svg { width: 100%; height: 100%; display: block; }
+.wan-foot {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sep);
+}
+.st-kicker { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--purple); }
+.st-val { font-size: 22px; font-weight: 800; }
+.st-dl { color: var(--blue); } .st-ul { color: var(--orange); } .st-ping { color: var(--purple); }
+.wan-info { margin-left: auto; font-size: 13px; color: var(--muted); letter-spacing: 0.5px; text-align: right; line-height: 1.5; }
+.wan-info b { color: var(--lblue); font-weight: 600; }
+
+.test-btn {
+  background: var(--glow); color: #04222b;
+  font-size: 13px; font-weight: 800; letter-spacing: 1.5px;
+  padding: 9px 22px; border-radius: 22px; border: none; cursor: pointer;
+  transition: transform 0.12s, filter 0.12s;
+}
+.test-btn:hover { filter: brightness(1.12); }
+.test-btn.btn-pressed { transform: scale(0.94); }
+
+/* ── Stats ───────────────────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+.stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.stat .v { font-size: 28px; font-weight: 700; }
+.bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); margin-top: 6px; overflow: hidden; }
+.bar > span { display: block; height: 100%; border-radius: 3px; background: var(--glow); width: 0; transition: width 0.4s; }
+
+/* ── Clients ─────────────────────────────────────────────────────── */
+.row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--sep); font-size: 14px; }
+.row:last-child { border-bottom: none; }
+.row .cnt { font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; }
+.clients-total { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 6px; }
+.clients-total .num { font-size: 40px; font-weight: 800; color: var(--glow); line-height: 1; }
+.clients-total .sub { font-size: 12px; color: var(--muted); padding-bottom: 5px; }
+.subhead { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin: 12px 0 2px; }
+
+/* ── Device health list ──────────────────────────────────────────── */
+#dev-list { display: flex; flex-direction: column; }
+.drow { display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--sep); font-size: 13px; }
+.drow:last-child { border-bottom: none; }
+.ddot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.ddot.on  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.ddot.off { background: var(--salmon); }
+.dname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dmodel { font-size: 10px; color: var(--muted); margin-left: 4px; }
+.dstat { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--lblue); min-width: 54px; text-align: right; }
+.dstat.poe { color: var(--orange); }
+.dstat .du { font-size: 9px; color: var(--muted); }
+
+/* ── Proxmox placeholder ─────────────────────────────────────────── */
+.vmrow { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--sep); }
+.vmrow:last-child { border-bottom: none; }
+.vmrow .st { font-size: 11px; color: var(--muted); }
+.vmdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 7px; background: var(--muted); }
+.vmdot.run { background: var(--green); }
+.srv-note { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.srv-note b { color: var(--lblue); }
+</style>
+</head>
+<body>
+
+<main id="main">
+
+  <!-- ══ Spalte A · WAN + Gateway + Proxmox ═══════════════════════ -->
+  <div class="col col-a">
+
+    <div class="card card-teal" id="wan">
+      <div class="card-header"><span class="ch-dot"></span>WAN · Internet
+        <span class="hx" id="wan-status">—</span>
+      </div>
+      <div class="card-body">
+        <div class="wan-grid">
+          <div class="wan-live">
+            <span class="wan-kicker">Live · Durchsatz</span>
+            <div class="wan-rate"><span class="arr">↓</span><span class="big dl" id="wan-dl"><span class="loading">…</span></span><span class="u"> Mbit/s</span></div>
+            <div class="wan-rate"><span class="arr">↑</span><span class="big ul" id="wan-ul"><span class="loading">…</span></span><span class="u"> Mbit/s</span></div>
+          </div>
+          <div class="spark-wrap">
+            <svg viewBox="0 0 600 132" preserveAspectRatio="none" aria-hidden="true">
+              <polyline id="spark-ul" fill="none" stroke="#FF9900" stroke-width="2" points=""/>
+              <polyline id="spark-dl" fill="none" stroke="#4488FF" stroke-width="2.5" points=""/>
+            </svg>
+          </div>
+        </div>
+        <div class="wan-foot">
+          <span class="st-kicker">Speedtest</span>
+          <div><span class="arr" style="color:var(--muted)">↓</span> <span class="st-val st-dl" id="st-dl">–</span><span class="u"> Mbit/s</span></div>
+          <div><span class="arr" style="color:var(--muted)">↑</span> <span class="st-val st-ul" id="st-ul">–</span><span class="u"> Mbit/s</span></div>
+          <div>Ping <span class="st-val st-ping" id="wan-ping">–</span><span class="u"> ms</span></div>
+          <button class="test-btn" id="st-run" onclick="runSpeedtest()">▶ TEST</button>
+          <div class="wan-info">
+            ISP-IP <b id="wan-ip">—</b><br>
+            Volumen ↓ <b id="wan-rx">—</b> · ↑ <b id="wan-tx">—</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-purple">
+      <div class="card-header"><span class="ch-dot"></span>Gateway · UDM Pro
+        <span class="hx" id="gw-uptime">—</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-grid">
+          <div class="stat"><div class="k">CPU</div><div class="v" id="gw-cpu">–</div><div class="bar"><span id="gw-cpu-bar"></span></div></div>
+          <div class="stat"><div class="k">RAM</div><div class="v" id="gw-mem">–</div><div class="bar"><span id="gw-mem-bar"></span></div></div>
+          <div class="stat"><div class="k">Temperatur</div><div class="v" id="gw-temp">–</div></div>
+          <div class="stat"><div class="k">Status</div><div class="v" id="gw-up" style="font-size:20px;">–</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-yellow dashed">
+      <div class="card-header"><span class="ch-dot"></span>Server · Proxmox
+        <span class="hx geplant">GEPLANT</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-grid">
+          <div class="stat"><div class="k">Node pve · CPU</div><div class="v" id="pve-cpu">–</div></div>
+          <div class="stat"><div class="k">RAM</div><div class="v" id="pve-mem">–</div></div>
+          <div class="stat"><div class="k">Uptime</div><div class="v" id="pve-uptime">–</div></div>
+          <div class="stat"><div class="k">VMs · LXC</div><div class="v" id="pve-vms">–</div></div>
+        </div>
+        <div class="srv-note">Sektion wird aktiv, sobald der <b>iobroker.proxmox</b>-Adapter States unter <code>proxmox.0.*</code> liefert.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ Spalte B · Clients ═══════════════════════════════════════ -->
+  <div class="col col-b">
+    <div class="card card-blue grow">
+      <div class="card-header"><span class="ch-dot"></span>Clients</div>
+      <div class="card-body">
+        <div class="clients-total"><span class="num" id="clients-total">–</span><span class="sub">verbunden (LAN)</span></div>
+        <div class="subhead">Pro Netz (VLAN)</div>
+        <div id="lan-list"></div>
+        <div class="subhead">WLAN (SSID)</div>
+        <div id="wlan-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Spalte C · Geräte ════════════════════════════════════════ -->
+  <div class="col col-c">
+    <div class="card card-orange grow">
+      <div class="card-header"><span class="ch-dot"></span>Geräte
+        <span class="hx" id="dev-summary">—</span>
+      </div>
+      <div class="card-body"><div id="dev-list"></div></div>
+    </div>
+  </div>
+
+</main>
+
+<a href="dashboard.html" id="dash-switch" title="Lumina Dashboard">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="13 2 13 9 20 9"/><path d="M3 15a9 9 0 1 0 16.59-5.41L13 2z"/>
+  </svg>
+</a>
+<style>
+#dash-switch {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(82,229,255,0.10);
+  border: 1.5px solid rgba(82,229,255,0.35);
+  color: #52E5FF;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none; backdrop-filter: blur(8px);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  z-index: 999;
+}
+#dash-switch:hover { background: rgba(82,229,255,0.22); border-color: rgba(82,229,255,0.7); transform: scale(1.08); }
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════════════
+//  OID-Konfiguration  (Adapter: iobroker.unifi-network)
+//  Alle Pfade hier zentral anpassen.
+// ════════════════════════════════════════════════════════════════════════
+const NS = 'unifi-network.0';
+const GW = NS + '.devices.d0:21:f9:85:67:e1';   // UDM Pro (Firewall)
+
+const WAN_OIDs = {
+  'wan-dl':    GW + '.wan1.current_download',
+  'wan-ul':    GW + '.wan1.current_upload',
+  'wan-ping':  GW + '.wan1.latency',
+  'wan-ip':    GW + '.wan1.ip',
+  'wan-up':    GW + '.wan1.up',
+  'wan-rx':    GW + '.wan1.rx_bytes',
+  'wan-tx':    GW + '.wan1.tx_bytes',
+  'st-dl':     GW + '.wan1.speedtest_download',
+  'st-ul':     GW + '.wan1.speedtest_upload',
+  'gw-uptime': GW + '.uptime',
+};
+const SPEEDTEST_RUN_OID = GW + '.wan1.speedtest_run';
+
+const GW_OIDs = {
+  'gw-cpu':  GW + '.system.cpu',
+  'gw-mem':  GW + '.system.mem',
+};
+
+// Geräte-Health-Liste  (mac, Anzeigename, Modell, Typ)
+const DEVICES = [
+  { mac:'d0:21:f9:85:67:e1', name:'Firewall',         model:'UDM Pro',  type:'gw'     },
+  { mac:'24:5a:4c:96:f2:38', name:'Switch-Rack',      model:'USL24P',   type:'switch' },
+  { mac:'e4:38:83:8c:8a:ba', name:'Switch-Dachboden', model:'USL8LPB',  type:'switch' },
+  { mac:'84:78:48:54:59:d4', name:'UPS Tower',        model:'USWDA24',  type:'switch' },
+  { mac:'78:45:58:e5:1f:99', name:'Wohnen',           model:'UAP6MP',   type:'ap'     },
+  { mac:'f4:e2:c6:20:cc:bf', name:'Terrasse',         model:'U7MSH',    type:'ap'     },
+  { mac:'1c:0b:8b:b8:1c:b9', name:'Technikraum',      model:'UAPA693',  type:'ap'     },
+  { mac:'d0:21:f9:af:c2:5c', name:'Büro',             model:'U6EXT',    type:'ap'     },
+  { mac:'78:45:58:d4:25:69', name:'Dachboden',        model:'UALR6v2',  type:'ap'     },
+  { mac:'d0:21:f9:b3:9f:24', name:'Garage',           model:'UAL6',     type:'ap'     },
+  { mac:'24:5a:4c:1c:f8:e4', name:'Gästezimmer',      model:'UAL6',     type:'ap'     },
+  { mac:'24:5a:4c:1c:ec:40', name:'Gartenhütte',      model:'UAL6',     type:'ap'     },
+  { mac:'d0:21:f9:f5:8d:08', name:'Vorraum',          model:'U6EXT',    type:'ap'     },
+  { mac:'24:5a:4c:1c:f6:60', name:'Lagerraum',        model:'UAL6',     type:'ap'     },
+  { mac:'78:45:58:9f:39:f4', name:'Küche',            model:'U6M',      type:'ap'     },
+];
+
+// Clients pro VLAN / SSID.  oidId = Objekt-ID des Netzes unter unifi-network.0.lan / .wlan
+// HINWEIS: Internal (20) + Mgmt (30) waren im Objektbaum verdeckt → bitte oidId ergänzen.
+const LANS = [
+  { oidId:'5be146d877acd2340bec5b4f', name:'Default'         },
+  { oidId:'5dac6bcc3bcf6f2cea566afa', name:'Firma (99)'      },
+  { oidId:'5f7753813bcf6f1186c53f8d', name:'Outdoor (10)'    },
+  { oidId:'5f7754203bcf6f1186c54208', name:'Guest (200)'     },
+  { oidId:'5f7796e03bcf6f03909d0e5a', name:'Restricted (40)' },
+  { oidId:'5f7797df3bcf6f03909d0eb5', name:'SmartHome (50)'  },
+];
+const WLANS = [
+  { oidId:'5f7793863bcf6f03909d0cb2', name:'4711' },
+  { oidId:'5f7829933bcf6f03909e5294', name:'4712' },
+  { oidId:'64896d9602bc6113350263c7', name:'4713' },
+];
+
+// ── Helpers ──────────────────────────────────────────────────────────────
+function num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
+function fmtMbit(v) { const n = num(v); if (n === null) return '–'; return n < 1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n); }
+function fmtSt(v)   { const n = num(v); return n === null ? '–' : Math.round(n); }
+function fmtPct(v)  { const n = num(v); return n === null ? '–' : Math.round(n) + '<span class="u"> %</span>'; }
+function fmtTemp(v) { const n = num(v); return n === null ? '–' : Math.round(n) + '<span class="u"> °C</span>'; }
+function fmtBytes(v){ const n = num(v); if (n === null) return '—'; return n >= 1000 ? (n / 1000).toFixed(2) + ' TB' : n.toFixed(0) + ' GB'; }
+function fmtUptime(v){ const n = num(v); if (n === null) return '–'; const d = Math.floor(n / 86400), h = Math.floor((n % 86400) / 3600); return d > 0 ? `${d}d ${h}h` : `${h}h`; }
+function pressEffect(el) { el.classList.remove('btn-pressed'); void el.offsetWidth; el.classList.add('btn-pressed'); }
+function setText(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+
+function runSpeedtest() {
+  const btn = document.getElementById('st-run');
+  socket.emit('setState', SPEEDTEST_RUN_OID, { val: true, ack: false });
+  pressEffect(btn);
+  const old = btn.innerHTML;
+  btn.innerHTML = '⟳ LÄUFT…';
+  setTimeout(() => { btn.innerHTML = old; }, 2500);
+}
+
+// ── Build dynamic lists ──────────────────────────────────────────────────
+function buildLists() {
+  document.getElementById('lan-list').innerHTML = LANS.map(l =>
+    `<div class="row"><span>${l.name}</span><span class="cnt" id="lan-${l.oidId}">–</span></div>`).join('');
+  document.getElementById('wlan-list').innerHTML = WLANS.map(w =>
+    `<div class="row"><span>${w.name}</span><span class="cnt" id="wlan-${w.oidId}">–</span></div>`).join('');
+  document.getElementById('dev-list').innerHTML = DEVICES.map(d => {
+    const extra = d.type === 'switch'
+      ? `<span class="dstat poe" id="dev-${d.mac}-poe">–</span>`
+      : `<span class="dstat" id="dev-${d.mac}-temp">–</span>`;
+    return `<div class="drow">
+      <span class="ddot" id="dev-${d.mac}-dot"></span>
+      <span class="dname">${d.name}<span class="dmodel">${d.model}</span></span>
+      <span class="dstat" id="dev-${d.mac}-cpu">–</span>
+      ${extra}
+    </div>`;
+  }).join('');
+  document.getElementById('dev-summary').textContent = DEVICES.length + ' Geräte';
+}
+
+// ── WAN sparkline ──────────────────────────────────────────────────────────
+const DL_HIST = [], UL_HIST = [], HIST_MAX = 80;
+function pushHist(arr, v) { arr.push(v); if (arr.length > HIST_MAX) arr.shift(); }
+function redrawSpark() {
+  const W = 600, H = 132, pad = 8;
+  const max = Math.max(1, ...DL_HIST, ...UL_HIST);
+  const pts = arr => arr.length === 0 ? '' : arr.map((v, i) => {
+    const x = arr.length === 1 ? W : (i / (arr.length - 1)) * W;
+    const y = H - pad - (v / max) * (H - 2 * pad);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  const dl = document.getElementById('spark-dl'), ul = document.getElementById('spark-ul');
+  if (dl) dl.setAttribute('points', pts(DL_HIST));
+  if (ul) ul.setAttribute('points', pts(UL_HIST));
+}
+
+// ── Client totals ──────────────────────────────────────────────────────────
+const lanCounts = {};
+function updateClientTotal() {
+  const total = Object.values(lanCounts).reduce((a, b) => a + b, 0);
+  document.getElementById('clients-total').textContent = total || '–';
+}
+
+// ── Render dispatch ────────────────────────────────────────────────────────
+function applyState(oid, val) {
+  // WAN
+  if (oid === WAN_OIDs['wan-dl'])   { setText('wan-dl', fmtMbit(val)); const n = num(val); if (n !== null) { pushHist(DL_HIST, n); redrawSpark(); } return; }
+  if (oid === WAN_OIDs['wan-ul'])   { setText('wan-ul', fmtMbit(val)); const n = num(val); if (n !== null) { pushHist(UL_HIST, n); redrawSpark(); } return; }
+  if (oid === WAN_OIDs['wan-ping']) { setText('wan-ping', fmtSt(val)); return; }
+  if (oid === WAN_OIDs['st-dl'])    { setText('st-dl', fmtSt(val)); return; }
+  if (oid === WAN_OIDs['st-ul'])    { setText('st-ul', fmtSt(val)); return; }
+  if (oid === WAN_OIDs['wan-ip'])   { setText('wan-ip', val || '—'); return; }
+  if (oid === WAN_OIDs['wan-rx'])   { setText('wan-rx', fmtBytes(val)); return; }
+  if (oid === WAN_OIDs['wan-tx'])   { setText('wan-tx', fmtBytes(val)); return; }
+  if (oid === WAN_OIDs['wan-up'])   {
+    const on = val === true || val === 'true';
+    const s = document.getElementById('wan-status'); if (s) { s.textContent = on ? '● Online' : '● Offline'; s.style.color = on ? 'var(--green)' : 'var(--salmon)'; }
+    const g = document.getElementById('gw-up'); if (g) { g.textContent = on ? 'Online' : 'Offline'; g.style.color = on ? 'var(--green)' : 'var(--salmon)'; }
+    return;
+  }
+  if (oid === WAN_OIDs['gw-uptime']) { setText('gw-uptime', '↑ ' + fmtUptime(val)); return; }
+
+  // Gateway stats (kein return → Geräte-Health-Zeile aktualisiert sich ebenfalls)
+  if (oid === GW_OIDs['gw-cpu']) { setText('gw-cpu', fmtPct(val)); const n = num(val); const b = document.getElementById('gw-cpu-bar'); if (b && n !== null) b.style.width = Math.min(100, n) + '%'; }
+  if (oid === GW_OIDs['gw-mem']) { setText('gw-mem', fmtPct(val)); const n = num(val); const b = document.getElementById('gw-mem-bar'); if (b && n !== null) b.style.width = Math.min(100, n) + '%'; return; }
+
+  // Clients pro LAN / WLAN
+  const esc = NS.replace(/\./g, '\\.');
+  const lanM = oid.match(new RegExp('^' + esc + '\\.lan\\.([^.]+)\\.connected_clients$'));
+  if (lanM) { const c = parseInt(val) || 0; const el = document.getElementById('lan-' + lanM[1]); if (el) el.textContent = c; lanCounts[lanM[1]] = c; updateClientTotal(); return; }
+  const wlanM = oid.match(new RegExp('^' + esc + '\\.wlan\\.([^.]+)\\.connected_clients$'));
+  if (wlanM) { const el = document.getElementById('wlan-' + wlanM[1]); if (el) el.textContent = parseInt(val) || 0; return; }
+
+  // Geräte-Health  (devices.<mac>.{isOnline | system.cpu | temperature | power})
+  const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|system\\.cpu|temperature|power)$'));
+  if (devM) {
+    const mac = devM[1], leaf = devM[2];
+    if (leaf === 'isOnline') { const dot = document.getElementById('dev-' + mac + '-dot'); if (dot) dot.className = 'ddot ' + ((val === true || val === 'true') ? 'on' : 'off'); }
+    else if (leaf === 'system.cpu') { const el = document.getElementById('dev-' + mac + '-cpu'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> %</span>'; }
+    else if (leaf === 'temperature') { const el = document.getElementById('dev-' + mac + '-temp'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> °C</span>'; }
+    else if (leaf === 'power') { const el = document.getElementById('dev-' + mac + '-poe'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : n.toFixed(1) + '<span class="du"> W</span>'; }
+  }
+}
+
+// ── Subscription list ──────────────────────────────────────────────────────
+const allOids = [...new Set([
+  ...Object.values(WAN_OIDs),
+  ...Object.values(GW_OIDs),
+  ...LANS.map(l  => NS + '.lan.'  + l.oidId + '.connected_clients'),
+  ...WLANS.map(w => NS + '.wlan.' + w.oidId + '.connected_clients'),
+  ...DEVICES.flatMap(d => {
+    const base = NS + '.devices.' + d.mac;
+    const list = [base + '.isOnline', base + '.system.cpu'];
+    list.push(d.type === 'switch' ? base + '.power' : base + '.temperature');
+    return list;
+  }),
+])];
+
+// ── Init: erst DOM-Listen bauen, dann Verbindung ──────────────────────────
+buildLists();
+
+// ── Socket.io ────────────────────────────────────────────────────────────
+const socket = io({ path: '/socket.io' });
+
+function fetchAll() {
+  if (!socket || !socket.connected) return;
+  allOids.forEach(oid => socket.emit('getStates', [oid], (err, states) => {
+    if (!states) return;
+    const e = states[oid]; if (!e || e.val === null || e.val === undefined) return;
+    applyState(oid, e.val);
+  }));
+}
+
+socket.on('connect', () => {
+  allOids.forEach(oid => {
+    socket.emit('subscribe', oid, { ack: true }, () => {});
+    socket.emit('getStates', [oid], (err, states) => {
+      if (!states) return;
+      const e = states[oid]; if (!e || e.val === null || e.val === undefined) return;
+      applyState(oid, e.val);
+    });
+  });
+});
+socket.on('stateChange', (oid, state) => {
+  if (!state || state.val === null || state.val === undefined) return;
+  applyState(oid, state.val);
+});
+
+setInterval(fetchAll, 300000);
+
+// ── Auto-reload nach langem Hintergrund ──────────────────────────────────────
+let _hiddenAt = null;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { _hiddenAt = Date.now(); }
+  else if (_hiddenAt && Date.now() - _hiddenAt > 30000) { location.reload(); }
+  else { _hiddenAt = null; }
+});
+</script>
+
+<script>
+(function () {
+  function scaleToFit() {
+    const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const s = Math.min(vw / 1767, vh / 938);
+    document.body.style.transform = s >= 1 ? '' : `scale(${s})`;
+  }
+  scaleToFit();
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', scaleToFit);
+  else window.addEventListener('resize', scaleToFit);
+})();
+</script>
+</body>
+</html>
