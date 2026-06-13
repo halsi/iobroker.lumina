@@ -265,9 +265,7 @@ body {
       </div>
     </div>
     <div class="card card-red grow">
-      <div class="card-header"><span class="ch-dot"></span>Security · Threats
-        <span class="hx" id="th-update"></span>
-      </div>
+      <div class="card-header"><span class="ch-dot"></span>Security · Threats</div>
       <div class="card-body">
         <div class="th-row"><span class="th-k">Threats Detected (24h)</span><span class="th-v" id="th-detected">–</span></div>
         <div class="th-row"><span class="th-k">Threats Blocked (24h)</span><span class="th-v" id="th-blocked">–</span></div>
@@ -394,10 +392,9 @@ const UNI_POLL_OID   = NS + '.info.lastApiPoll';
 
 // Threats (befüllt vom javascript-Adapter-Script tools/unifi-threats.js)
 const THREAT_OIDs = {
-  'th-detected': '0_userdata.0.unifi.threats.detected_24h',
-  'th-blocked':  '0_userdata.0.unifi.threats.blocked_24h',
-  'th-honeypot': '0_userdata.0.unifi.threats.honeypot_24h',
-  'th-update':   '0_userdata.0.unifi.threats.lastUpdate',
+  'th-detected': '0_userdata.0.Network.Unifi.ThreatsDetected-24h',
+  'th-blocked':  '0_userdata.0.Network.Unifi.ThreatsBlocked-24h',
+  'th-honeypot': '0_userdata.0.Network.Unifi.HoneypotTriggered-24h',
 };
 const VMS = [
   { id:'lxc_ebusd',        name:'ebusd'        },
@@ -554,7 +551,6 @@ function applyState(oid, val) {
   if (oid === THREAT_OIDs['th-detected']) { setThreat('th-detected', val, 'warn'); return; }
   if (oid === THREAT_OIDs['th-blocked'])  { setThreat('th-blocked', val, 'info'); return; }
   if (oid === THREAT_OIDs['th-honeypot']) { setThreat('th-honeypot', val, 'alert'); return; }
-  if (oid === THREAT_OIDs['th-update'])   { setText('th-update', fmtTime(val)); return; }
 
   const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|hasError|system\\.cpu|temperatures\\.CPU\\.value|power)$'));
   if (devM) {

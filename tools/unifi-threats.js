@@ -29,7 +29,7 @@ const DEBUG = true;              // nach erfolgreicher Justierung auf false
 const https = require('https');
 const agent = new https.Agent({ rejectUnauthorized: false, keepAlive: true });
 
-const BASE = '0_userdata.0.unifi.threats';
+const BASE = '0_userdata.0.Network.Unifi';
 let session = null;              // { cookie, csrf }
 
 function httpReq(method, path, { body, cookie, csrf } = {}) {
@@ -99,10 +99,9 @@ async function poll() {
       if (DEBUG && alarms[0]) log('[unifi-threats] Alarm-Beispiel: ' + JSON.stringify(alarms[0]).slice(0, 400));
     } catch (e) { log('[unifi-threats] Alarm-Abruf übersprungen: ' + e.message, 'warn'); }
 
-    await setVal(BASE + '.detected_24h', detected, 'Threats Detected (24h)');
-    await setVal(BASE + '.blocked_24h', blocked, 'Threats Blocked (24h)');
-    await setVal(BASE + '.honeypot_24h', honeypot, 'Honeypot Triggered (24h)');
-    await setVal(BASE + '.lastUpdate', now, 'Last Update');
+    await setVal(BASE + '.ThreatsDetected-24h', detected, 'Threats Detected (24h)');
+    await setVal(BASE + '.ThreatsBlocked-24h', blocked, 'Threats Blocked (24h)');
+    await setVal(BASE + '.HoneypotTriggered-24h', honeypot, 'Honeypot Triggered (24h)');
     log('[unifi-threats] detected=' + detected + ' blocked=' + blocked + ' honeypot=' + honeypot);
   } catch (e) {
     log('[unifi-threats] Fehler: ' + e.message, 'error');
@@ -113,7 +112,7 @@ async function poll() {
 const _created = {};
 async function setVal(id, val, name) {
   if (!_created[id]) {
-    await createStateAsync(id, val, false, { name: name || id.split('.').pop(), type: 'number', role: 'value', read: true, write: false });
+    if (!existsState(id)) await createStateAsync(id, val, false, { name: name || id.split('.').pop(), type: 'number', role: 'value', read: true, write: false });
     _created[id] = true;
   }
   await setStateAsync(id, val, true);
