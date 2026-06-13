@@ -379,7 +379,7 @@ const DL_HIST = [], UL_HIST = [], HIST_MAX = 80;
 function pushHist(arr, v) { arr.push(v); if (arr.length > HIST_MAX) arr.shift(); }
 function redrawSpark() {
   const W = 600, H = 132, pad = 8;
-  const max = Math.max(1, ...DL_HIST, ...UL_HIST);
+  const max = Math.max(1, ...DL_HIST, ...UL_HIST) * 1.15;
   const pts = arr => arr.length === 0 ? '' : arr.map((v, i) => {
     const x = arr.length === 1 ? W : (i / (arr.length - 1)) * W;
     const y = H - pad - (v / max) * (H - 2 * pad);
@@ -400,8 +400,8 @@ function updateClientTotal() {
 // ── Render dispatch ────────────────────────────────────────────────────────
 function applyState(oid, val) {
   // WAN
-  if (oid === WAN_OIDs['wan-dl'])   { setText('wan-dl', fmtMbit(val)); const n = num(val); if (n !== null) { pushHist(DL_HIST, n); redrawSpark(); } return; }
-  if (oid === WAN_OIDs['wan-ul'])   { setText('wan-ul', fmtMbit(val)); const n = num(val); if (n !== null) { pushHist(UL_HIST, n); redrawSpark(); } return; }
+  if (oid === WAN_OIDs['wan-dl'])   { setText('wan-dl', fmtMbit(val)); const n = num(val); if (n !== null) { if (DL_HIST.length === 0) pushHist(DL_HIST, n); pushHist(DL_HIST, n); redrawSpark(); } return; }
+  if (oid === WAN_OIDs['wan-ul'])   { setText('wan-ul', fmtMbit(val)); const n = num(val); if (n !== null) { if (UL_HIST.length === 0) pushHist(UL_HIST, n); pushHist(UL_HIST, n); redrawSpark(); } return; }
   if (oid === WAN_OIDs['wan-ping']) { setText('wan-ping', fmtSt(val)); return; }
   if (oid === WAN_OIDs['st-dl'])    { setText('st-dl', fmtSt(val)); return; }
   if (oid === WAN_OIDs['st-ul'])    { setText('st-ul', fmtSt(val)); return; }
