@@ -67,7 +67,7 @@ body {
   letter-spacing: 2px; text-transform: uppercase;
   flex-shrink: 0;
 }
-.card-header .hx { margin-left: auto; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: var(--muted); }
+.card-header .hx { margin-left: auto; font-size: 14px; font-weight: 600; letter-spacing: 1px; color: var(--muted); }
 .ch-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .card-body { padding: 12px 16px 14px; flex: 1; min-height: 0; overflow: hidden; }
 
@@ -89,7 +89,7 @@ body {
 /* ── WAN panel ───────────────────────────────────────────────────── */
 .wan-grid { display: grid; grid-template-columns: 250px 1fr; gap: 18px; align-items: stretch; }
 .wan-live { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
-.wan-kicker { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--glow); }
+.wan-kicker { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--glow); }
 .wan-rate { display: flex; align-items: baseline; }
 .wan-rate .arr { font-size: 14px; color: var(--muted); margin-right: 8px; }
 .wan-rate .big { font-size: 42px; font-weight: 800; line-height: 1; }
@@ -101,10 +101,10 @@ body {
   display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sep);
 }
-.st-kicker { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--purple); }
+.st-kicker { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--purple); }
 .st-val { font-size: 22px; font-weight: 800; }
 .st-dl { color: var(--blue); } .st-ul { color: var(--orange); } .st-ping { color: var(--purple); }
-.wan-info { margin-left: auto; font-size: 13px; color: var(--muted); letter-spacing: 0.5px; text-align: right; line-height: 1.5; }
+.wan-info { margin-left: auto; font-size: 15px; color: var(--muted); letter-spacing: 0.5px; text-align: right; line-height: 1.5; }
 .wan-info b { color: var(--lblue); font-weight: 600; }
 
 .test-btn {
@@ -118,44 +118,44 @@ body {
 
 /* ── Stats ───────────────────────────────────────────────────────── */
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
-.stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.stat .k { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 .stat .v { font-size: 28px; font-weight: 700; }
 .bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); margin-top: 6px; overflow: hidden; }
 .bar > span { display: block; height: 100%; border-radius: 3px; background: var(--glow); width: 0; transition: width 0.4s; }
 
 /* ── Clients ─────────────────────────────────────────────────────── */
-.row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--sep); font-size: 14px; }
+.row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--sep); font-size: 17px; }
 .row:last-child { border-bottom: none; }
 .row .cnt { font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; }
 .clients-total { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 6px; }
-.clients-total .num { font-size: 40px; font-weight: 800; color: var(--glow); line-height: 1; }
-.clients-total .sub { font-size: 12px; color: var(--muted); padding-bottom: 5px; }
-.subhead { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin: 12px 0 2px; }
+.clients-total .num { font-size: 42px; font-weight: 800; color: var(--glow); line-height: 1; }
+.clients-total .sub { font-size: 13px; color: var(--muted); padding-bottom: 5px; }
+.subhead { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin: 13px 0 3px; }
 
 /* ── Device health list ──────────────────────────────────────────── */
 #dev-list { display: flex; flex-direction: column; }
-.drow { display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--sep); font-size: 13px; }
+.drow { display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--sep); font-size: 16px; }
 .drow:last-child { border-bottom: none; }
-.ddot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.ddot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
 .ddot.on  { background: var(--green); box-shadow: 0 0 6px var(--green); }
 .ddot.off { background: var(--salmon); }
 .dname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dmodel { font-size: 10px; color: var(--muted); margin-left: 4px; }
-.dstat { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--lblue); min-width: 54px; text-align: right; }
+.dmodel { font-size: 12px; color: var(--muted); margin-left: 5px; }
+.dstat { font-variant-numeric: tabular-nums; font-size: 16px; color: var(--lblue); min-width: 62px; text-align: right; }
 .dstat.poe { color: var(--orange); }
-.dstat .du { font-size: 9px; color: var(--muted); }
+.dstat .du { font-size: 11px; color: var(--muted); }
 
 /* ── Proxmox ─────────────────────────────────────────────────────── */
 .pve-node { display: flex; align-items: center; gap: 14px; padding: 2px 0 10px; border-bottom: 1px solid var(--sep); flex-wrap: wrap; }
-.pve-node .nm { font-size: 14px; font-weight: 700; color: var(--yellow); }
-.pve-node .ps { font-size: 13px; color: var(--muted); }
+.pve-node .nm { font-size: 16px; font-weight: 700; color: var(--yellow); }
+.pve-node .ps { font-size: 15px; color: var(--muted); }
 .pve-node .ps b { color: var(--text); font-weight: 700; }
-#vm-list { flex: 1; min-height: 0; overflow-y: auto; margin-top: 4px; }
-.vmrow { display: grid; grid-template-columns: 12px 1fr auto auto; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--sep); }
-.vmrow:last-child { border-bottom: none; }
+#vm-list { flex: 1; min-height: 0; overflow-y: auto; margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 26px; align-content: start; }
+.vmrow { display: grid; grid-template-columns: 11px 1fr auto; align-items: center; gap: 9px; padding: 4px 0; font-size: 15px; }
+.vmrow.vm-hidden { display: none; }
 .vmrow .vn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vmrow .vs { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--lblue); min-width: 48px; text-align: right; }
-.vmrow .vs .du { font-size: 9px; color: var(--muted); }
+.vmrow .vs { font-variant-numeric: tabular-nums; font-size: 14px; color: var(--lblue); text-align: right; white-space: nowrap; }
+.vmrow .vs .du { font-size: 10px; color: var(--muted); }
 .vmdot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
 .vmdot.run  { background: var(--green); box-shadow: 0 0 6px var(--green); }
 .vmdot.stop { background: var(--muted); }
@@ -228,7 +228,7 @@ body {
           <span class="ps">SSD <b id="pve-disk">–</b></span>
           <span class="ps">↑ <b id="pve-uptime">–</b></span>
         </div>
-        <div class="subhead">Container · VMs</div>
+        <div class="subhead">Aktive Container · VMs</div>
         <div id="vm-list"></div>
       </div>
     </div>
@@ -413,11 +413,10 @@ function buildLists() {
   }).join('');
   document.getElementById('dev-summary').textContent = DEVICES.length + ' Geräte';
   document.getElementById('vm-list').innerHTML = VMS.map(v =>
-    `<div class="vmrow">
-      <span class="vmdot" id="vm-${v.id}-dot"></span>
+    `<div class="vmrow vm-hidden" id="vm-${v.id}-row">
+      <span class="vmdot run"></span>
       <span class="vn">${v.name}</span>
-      <span class="vs" id="vm-${v.id}-cpu">–</span>
-      <span class="vs" id="vm-${v.id}-mem">–</span>
+      <span class="vs"><span id="vm-${v.id}-cpu">–</span> · <span id="vm-${v.id}-mem">–</span></span>
     </div>`).join('');
 }
 
@@ -503,7 +502,7 @@ function applyState(oid, val) {
   const vmM = oid.match(/^proxmox\.0\.((?:lxc|qemu)_[^.]+)\.(status|cpu|mem_lev)$/);
   if (vmM) {
     const id = vmM[1], leaf = vmM[2];
-    if (leaf === 'status') { const dot = document.getElementById('vm-' + id + '-dot'); if (dot) dot.className = 'vmdot ' + (val === 'running' ? 'run' : 'stop'); vmStatus[id] = val; updateVmSummary(); }
+    if (leaf === 'status') { const row = document.getElementById('vm-' + id + '-row'); if (row) row.classList.toggle('vm-hidden', val !== 'running'); vmStatus[id] = val; updateVmSummary(); }
     else if (leaf === 'cpu') { const el = document.getElementById('vm-' + id + '-cpu'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : (n < 10 ? n.toFixed(1) : Math.round(n)) + '<span class="du"> %</span>'; }
     else if (leaf === 'mem_lev') { const el = document.getElementById('vm-' + id + '-mem'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> %</span>'; }
     return;
