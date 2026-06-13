@@ -145,14 +145,20 @@ body {
 .dstat.poe { color: var(--orange); }
 .dstat .du { font-size: 9px; color: var(--muted); }
 
-/* ── Proxmox placeholder ─────────────────────────────────────────── */
-.vmrow { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--sep); }
+/* ── Proxmox ─────────────────────────────────────────────────────── */
+.pve-node { display: flex; align-items: center; gap: 14px; padding: 2px 0 10px; border-bottom: 1px solid var(--sep); flex-wrap: wrap; }
+.pve-node .nm { font-size: 14px; font-weight: 700; color: var(--yellow); }
+.pve-node .ps { font-size: 13px; color: var(--muted); }
+.pve-node .ps b { color: var(--text); font-weight: 700; }
+#vm-list { flex: 1; min-height: 0; overflow-y: auto; margin-top: 4px; }
+.vmrow { display: grid; grid-template-columns: 12px 1fr auto auto; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--sep); }
 .vmrow:last-child { border-bottom: none; }
-.vmrow .st { font-size: 11px; color: var(--muted); }
-.vmdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 7px; background: var(--muted); }
-.vmdot.run { background: var(--green); }
-.srv-note { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.5; }
-.srv-note b { color: var(--lblue); }
+.vmrow .vn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vmrow .vs { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--lblue); min-width: 48px; text-align: right; }
+.vmrow .vs .du { font-size: 9px; color: var(--muted); }
+.vmdot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.vmdot.run  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.vmdot.stop { background: var(--muted); }
 </style>
 </head>
 <body>
@@ -208,18 +214,20 @@ body {
       </div>
     </div>
 
-    <div class="card card-yellow dashed">
+    <div class="card card-yellow grow">
       <div class="card-header"><span class="ch-dot"></span>Server · Proxmox
-        <span class="hx geplant">GEPLANT</span>
+        <span class="hx" id="pve-summary">—</span>
       </div>
-      <div class="card-body">
-        <div class="stat-grid">
-          <div class="stat"><div class="k">Node pve · CPU</div><div class="v" id="pve-cpu">–</div></div>
-          <div class="stat"><div class="k">RAM</div><div class="v" id="pve-mem">–</div></div>
-          <div class="stat"><div class="k">Uptime</div><div class="v" id="pve-uptime">–</div></div>
-          <div class="stat"><div class="k">VMs · LXC</div><div class="v" id="pve-vms">–</div></div>
+      <div class="card-body" style="display:flex; flex-direction:column;">
+        <div class="pve-node">
+          <span class="vmdot" id="pve-dot"></span>
+          <span class="nm">Node · pve</span>
+          <span class="ps">CPU <b id="pve-cpu">–</b></span>
+          <span class="ps">RAM <b id="pve-mem">–</b></span>
+          <span class="ps">↑ <b id="pve-uptime">–</b></span>
         </div>
-        <div class="srv-note">Sektion wird aktiv, sobald der <b>iobroker.proxmox</b>-Adapter States unter <code>proxmox.0.*</code> liefert.</div>
+        <div class="subhead">Container · VMs</div>
+        <div id="vm-list"></div>
       </div>
     </div>
 
@@ -336,11 +344,36 @@ const WLANS = [
   { oidId:'64896d9602bc6113350263c7', name:'4713' },
 ];
 
+// Proxmox (Adapter: iobroker.proxmox)
+const PVE = 'proxmox.0.node_pve';
+const PVE_OIDs = {
+  'pve-cpu':    PVE + '.cpu',
+  'pve-mem':    PVE + '.memory.used_lev',
+  'pve-uptime': PVE + '.uptime',
+  'pve-status': PVE + '.status',
+};
+const VMS = [
+  { id:'lxc_ebusd',        name:'ebusd'        },
+  { id:'lxc_esphome',      name:'esphome'      },
+  { id:'lxc_graylog',      name:'graylog'      },
+  { id:'lxc_influxdb',     name:'influxdb'     },
+  { id:'lxc_iobroker',     name:'iobroker'     },
+  { id:'lxc_nanoclaw',     name:'nanoclaw'     },
+  { id:'lxc_netbox',       name:'netbox'       },
+  { id:'lxc_nuclei',       name:'nuclei'       },
+  { id:'lxc_portainer',    name:'portainer'    },
+  { id:'lxc_smartmeter',   name:'smartmeter'   },
+  { id:'lxc_sonoshttpAPI', name:'sonoshttpAPI' },
+  { id:'qemu_Windows10',   name:'Windows10'    },
+  { id:'qemu_kali',        name:'kali'         },
+];
+
 // ── Helpers ──────────────────────────────────────────────────────────────
 function num(v) { const n = parseFloat(v); return isNaN(n) ? null : n; }
 function fmtMbit(v) { const n = num(v); if (n === null) return '–'; return n < 1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n); }
 function fmtSt(v)   { const n = num(v); return n === null ? '–' : Math.round(n); }
 function fmtPct(v)  { const n = num(v); return n === null ? '–' : Math.round(n) + '<span class="u"> %</span>'; }
+function fmtCpu(v)  { const n = num(v); return n === null ? '–' : (n < 10 ? n.toFixed(1) : Math.round(n)) + '<span class="u"> %</span>'; }
 function fmtTemp(v) { const n = num(v); return n === null ? '–' : Math.round(n) + '<span class="u"> °C</span>'; }
 function fmtBytes(v){ const n = num(v); if (n === null) return '—'; return n >= 1000 ? (n / 1000).toFixed(2) + ' TB' : n.toFixed(0) + ' GB'; }
 function fmtUptime(v){ const n = num(v); if (n === null) return '–'; const d = Math.floor(n / 86400), h = Math.floor((n % 86400) / 3600); return d > 0 ? `${d}d ${h}h` : `${h}h`; }
@@ -374,6 +407,13 @@ function buildLists() {
     </div>`;
   }).join('');
   document.getElementById('dev-summary').textContent = DEVICES.length + ' Geräte';
+  document.getElementById('vm-list').innerHTML = VMS.map(v =>
+    `<div class="vmrow">
+      <span class="vmdot" id="vm-${v.id}-dot"></span>
+      <span class="vn">${v.name}</span>
+      <span class="vs" id="vm-${v.id}-cpu">–</span>
+      <span class="vs" id="vm-${v.id}-mem">–</span>
+    </div>`).join('');
 }
 
 // ── WAN sparkline ──────────────────────────────────────────────────────────
@@ -394,6 +434,13 @@ function redrawSpark() {
 
 // ── Client-Gesamtwert (Aggregat aus lan.connected_clients) ───────────────────
 const LAN_TOTAL_OID = NS + '.lan.connected_clients';
+
+// ── Proxmox VM-Status-Zusammenfassung ────────────────────────────────────────
+const vmStatus = {};
+function updateVmSummary() {
+  const running = VMS.filter(v => vmStatus[v.id] === 'running').length;
+  const el = document.getElementById('pve-summary'); if (el) el.textContent = running + '/' + VMS.length + ' laufen';
+}
 
 // ── Render dispatch ────────────────────────────────────────────────────────
 function applyState(oid, val) {
@@ -435,6 +482,23 @@ function applyState(oid, val) {
     else if (leaf === 'system.cpu') { const el = document.getElementById('dev-' + mac + '-cpu'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> %</span>'; }
     else if (leaf === 'temperatures.CPU.value') { const el = document.getElementById('dev-' + mac + '-temp'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> °C</span>'; }
     else if (leaf === 'power') { const el = document.getElementById('dev-' + mac + '-poe'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : n.toFixed(1) + '<span class="du"> W</span>'; }
+    return;
+  }
+
+  // Proxmox node (node_pve)
+  if (oid === PVE_OIDs['pve-cpu'])    { setText('pve-cpu', fmtCpu(val)); return; }
+  if (oid === PVE_OIDs['pve-mem'])    { setText('pve-mem', fmtPct(val)); return; }
+  if (oid === PVE_OIDs['pve-uptime']) { setText('pve-uptime', fmtUptime(val)); return; }
+  if (oid === PVE_OIDs['pve-status']) { const dot = document.getElementById('pve-dot'); if (dot) dot.className = 'vmdot ' + (val === 'running' ? 'run' : 'stop'); return; }
+
+  // Proxmox VMs / LXC  (proxmox.0.<lxc|qemu>_<name>.{status,cpu,mem_lev})
+  const vmM = oid.match(/^proxmox\.0\.((?:lxc|qemu)_[^.]+)\.(status|cpu|mem_lev)$/);
+  if (vmM) {
+    const id = vmM[1], leaf = vmM[2];
+    if (leaf === 'status') { const dot = document.getElementById('vm-' + id + '-dot'); if (dot) dot.className = 'vmdot ' + (val === 'running' ? 'run' : 'stop'); vmStatus[id] = val; updateVmSummary(); }
+    else if (leaf === 'cpu') { const el = document.getElementById('vm-' + id + '-cpu'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : (n < 10 ? n.toFixed(1) : Math.round(n)) + '<span class="du"> %</span>'; }
+    else if (leaf === 'mem_lev') { const el = document.getElementById('vm-' + id + '-mem'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> %</span>'; }
+    return;
   }
 }
 
@@ -451,6 +515,8 @@ const allOids = [...new Set([
     list.push(d.type === 'switch' ? base + '.power' : base + '.temperatures.CPU.value');
     return list;
   }),
+  ...Object.values(PVE_OIDs),
+  ...VMS.flatMap(v => ['status', 'cpu', 'mem_lev'].map(l => 'proxmox.0.' + v.id + '.' + l)),
 ])];
 
 // ── Init: erst DOM-Listen bauen, dann Verbindung ──────────────────────────
