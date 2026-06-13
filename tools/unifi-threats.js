@@ -73,60 +73,53 @@ async function login() {
   dlog('[unifi-threats] Login OK');
 }
 
-// ── Endpoint-Kandidaten (v1 + v2). Das Script probiert sie der Reihe nach,
-//    loggt jeden HTTP-Status und nimmt den ersten, der 200 + Liste liefert. ──
-const V1 = '/proxy/network/api/s/' + SITE;
+// ── UniFi Network 10.x: IDS/IPS-Threats via v2 traffic-flows ──────────────
+//    POST /proxy/network/v2/api/site/<site>/traffic-flows mit policy_type-Filter.
+//    skip_count:false → Server liefert Gesamt-Count (kein Paging nötig).
 const V2 = '/proxy/network/v2/api/site/' + SITE;
-const EVENT_EP = [
-  { m: 'GET',  p: V1 + '/list/event' },
-  { m: 'GET',  p: V1 + '/list/event?within=24&_limit=3000' },
-  { m: 'POST', p: V1 + '/list/event', body: { _limit: 3000, within: 24, _sort: '-time' } },
-  { m: 'POST', p: V1 + '/stat/event', body: { _limit: 3000, within: 24 } },
-  { m: 'POST', p: V2 + '/system-log', body: { pageSize: 1000, pageNumber: 0 } },
-];
-const ALARM_EP = [
-  { m: 'GET',  p: V1 + '/list/alarm' },            // liefert HTTP 200
-  { m: 'GET',  p: V1 + '/list/alarm?within=24&_limit=3000' },
-  { m: 'POST', p: V1 + '/list/alarm', body: { _limit: 3000, within: 24 } },
-];
 
-function toList(body) { try { const j = JSON.parse(body); return Array.isArray(j) ? j : (j.data || j.items || j.events || j.alarms || []); } catch (e) { return null; } }
-
-async function fetchFirst(cands, label) {
+async function trafficFlows(policyTypes, actions) {
   if (!session) await login();
-  for (const c of cands) {
-    const opts = { cookie: session.cookie, csrf: session.csrf };
-    if (c.m === 'POST') opts.body = c.body || {};
-    let res = await httpReq(c.m, c.p, opts);
-    if (res.status === 401) { await login(); opts.cookie = session.cookie; opts.csrf = session.csrf; res = await httpReq(c.m, c.p, opts); }
-    const list = res.status === 200 ? toList(res.body) : null;
-    dlog('[unifi-threats] PROBE ' + label + ' ' + c.m + ' ' + c.p + ' → HTTP ' + res.status + (list ? ' len=' + list.length : ' ' + (res.body || '').replace(/\s+/g, ' ').slice(0, 140)));
-    if (list) return list;
-  }
-  return [];
+  const now = Date.now();
+  const body = {
+    timestampFrom: now - 24 * 3600 * 1000,
+    timestampTo: now,
+    pageNumber: 0,
+    pageSize: 100,
+    skip_count: false,
+    policy_type: policyTypes,
+    risk: [], action: actions || [], direction: [], protocol: [], policy: [],
+    service: [], source_host: [], source_mac: [], source_ip: [], source_port: [],
+    source_network_id: [], source_domain: [], source_zone_id: [], source_region: [],
+    destination_host: [], destination_mac: [], destination_ip: [], destination_port: [],
+    destination_network_id: [], destination_domain: [], destination_zone_id: [], destination_region: [],
+    in_network_id: [], out_network_id: [], next_ai_query: [], except_for: [], search_text: '',
+  };
+  const path = V2 + '/traffic-flows';
+  let res = await httpReq('POST', path, { body, cookie: session.cookie, csrf: session.csrf });
+  if (res.status === 401) { await login(); res = await httpReq('POST', path, { body, cookie: session.cookie, csrf: session.csrf }); }
+  let json = {}; try { json = JSON.parse(res.body); } catch (e) {}
+  const data = Array.isArray(json) ? json : (json.data || json.flows || []);
+  const count = (typeof json.count === 'number') ? json.count
+              : (typeof json.total_count === 'number') ? json.total_count
+              : (typeof json.totalCount === 'number') ? json.totalCount : data.length;
+  dlog('[unifi-threats] traffic-flows ' + JSON.stringify(policyTypes) + (actions ? ' act=' + JSON.stringify(actions) : '') +
+       ' → HTTP ' + res.status + ' count=' + count + ' len=' + data.length +
+       (res.status !== 200 ? ' ' + (res.body || '').replace(/\s+/g, ' ').slice(0, 160) : ''));
+  return { status: res.status, data, count };
 }
-
-function tOf(e) { return e.time || e.timestamp || (e.datetime ? Date.parse(e.datetime) : 0); }
-
-// Erkennungs-Heuristiken — nach Sample-Log ggf. feinjustieren
-function isThreat(e)   { return /ips|ids|threat|inner_alert|EVT_IPS/i.test(JSON.stringify(e)); }
-function isBlocked(e)  { return /drop|block|reject/i.test(e.inner_alert_action || e.action || ''); }
-function isHoneypot(e) { return /honeypot/i.test(JSON.stringify(e)); }
 
 async function poll() {
   try {
-    const now = Date.now(), dayAgo = now - 24 * 3600 * 1000;
+    const det = await trafficFlows(['INTRUSION_PREVENTION']);
+    const blk = await trafficFlows(['INTRUSION_PREVENTION'], ['blocked', 'dropped', 'rejected']);
+    const hp  = await trafficFlows(['HONEYPOT']);
 
-    const events = await fetchFirst(EVENT_EP, 'event');
-    const alarms = await fetchFirst(ALARM_EP, 'alarm');
-    const a24 = events.concat(alarms).filter(e => tOf(e) >= dayAgo);
+    const detected = det.status === 200 ? det.count : 0;
+    const blocked  = blk.status === 200 ? blk.count : 0;
+    const honeypot = hp.status === 200 ? hp.count : 0;
 
-    const threats = a24.filter(isThreat);
-    const detected = threats.length;
-    const blocked  = threats.filter(isBlocked).length;
-    const honeypot = a24.filter(isHoneypot).length;
-
-    if (DEBUG) { const s = a24.find(isThreat) || events[0] || alarms[0]; if (s) dlog('[unifi-threats] Sample: ' + JSON.stringify(s).slice(0, 700)); }
+    if (DEBUG && det.data[0]) dlog('[unifi-threats] Sample: ' + JSON.stringify(det.data[0]).slice(0, 700));
 
     await setVal(BASE + '.ThreatsDetected-24h', detected, 'Threats Detected (24h)');
     await setVal(BASE + '.ThreatsBlocked-24h', blocked, 'Threats Blocked (24h)');
