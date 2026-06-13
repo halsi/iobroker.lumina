@@ -209,7 +209,7 @@ body {
           <div>Ping <span class="st-val st-ping" id="wan-ping">–</span><span class="u"> ms</span></div>
           <div class="wan-info">
             ISP-IP <b id="wan-ip">—</b><br>
-            Volumen seit Boot (<b id="vol-uptime">–</b>)<br>
+            Volume since last boot (<b id="vol-uptime">–</b>)<br>
             ↓ <b id="wan-rx">—</b> · ↑ <b id="wan-tx">—</b>
           </div>
         </div>
@@ -243,9 +243,9 @@ body {
           <span class="ps">Load <b id="pve-load">–</b></span>
           <span class="ps">SSD <b id="pve-disk">–</b></span>
           <span class="ps">↑ <b id="pve-uptime">–</b></span>
-          <span class="ps">Stand <b id="pve-update">–</b></span>
+          <span class="ps">Last Sync <b id="pve-update">–</b></span>
         </div>
-        <div class="subhead vm-head"><span>Aktive Container · VMs</span><span class="leg">CPU · RAM</span></div>
+        <div class="subhead vm-head"><span>Active Containers · VMS</span><span class="leg">CPU · RAM</span></div>
         <div id="vm-list"></div>
       </div>
     </div>
@@ -277,13 +277,13 @@ body {
   <!-- ══ Spalte C · Geräte + Fehlerstatus ═════════════════════════ -->
   <div class="col col-c">
     <div class="card card-orange">
-      <div class="card-header"><span class="ch-dot"></span>Geräte
+      <div class="card-header"><span class="ch-dot"></span>Devices
         <span class="hx"><span id="dev-summary">—</span><span id="uni-update"></span></span>
       </div>
       <div class="card-body"><div id="dev-list"></div></div>
     </div>
     <div class="card card-shield grow">
-      <div class="card-header"><span class="ch-dot"></span>Fehler · Status
+      <div class="card-header"><span class="ch-dot"></span>Error - State
         <span class="hx err-badge-ok" id="err-badge"></span>
       </div>
       <div class="card-body" id="err-body"></div>
@@ -455,7 +455,7 @@ function buildLists() {
       ${extra}
     </div>`;
   }).join('');
-  document.getElementById('dev-summary').textContent = DEVICES.length + ' Geräte';
+  document.getElementById('dev-summary').textContent = DEVICES.length + ' Devices';
   renderErrors();
   document.getElementById('vm-list').innerHTML = VMS.map(v =>
     `<div class="vmrow vm-hidden" id="vm-${v.id}-row">
