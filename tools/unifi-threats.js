@@ -105,18 +105,18 @@ async function trafficFlows(policyTypes, actions) {
               : (typeof json.totalCount === 'number') ? json.totalCount : data.length;
   dlog('[unifi-threats] traffic-flows ' + JSON.stringify(policyTypes) + (actions ? ' act=' + JSON.stringify(actions) : '') +
        ' → HTTP ' + res.status + ' count=' + count + ' len=' + data.length +
-       (res.status !== 200 ? ' ' + (res.body || '').replace(/\s+/g, ' ').slice(0, 160) : ''));
+       (res.status !== 200 ? ' ' + (res.body || '').replace(/\s+/g, ' ').slice(0, 400) : ''));
   return { status: res.status, data, count };
 }
 
 async function poll() {
   try {
     const det = await trafficFlows(['INTRUSION_PREVENTION']);
-    const blk = await trafficFlows(['INTRUSION_PREVENTION'], ['blocked', 'dropped', 'rejected']);
-    const hp  = await trafficFlows(['HONEYPOT']);
+    const hp  = await trafficFlows(['HONEYPOT']); // ungültiger policy_type -> Fehlertext listet gültige Werte
 
     const detected = det.status === 200 ? det.count : 0;
-    const blocked  = blk.status === 200 ? blk.count : 0;
+    // serverseitiger action-Filter wird abgelehnt -> blocked clientseitig zählen (action != 'allowed')
+    const blocked  = det.data.filter(e => String(e.action || '').toLowerCase() !== 'allowed').length;
     const honeypot = hp.status === 200 ? hp.count : 0;
 
     if (DEBUG && det.data[0]) dlog('[unifi-threats] Sample: ' + JSON.stringify(det.data[0]).slice(0, 700));
