@@ -78,18 +78,16 @@ async function login() {
 const V1 = '/proxy/network/api/s/' + SITE;
 const V2 = '/proxy/network/v2/api/site/' + SITE;
 const EVENT_EP = [
+  { m: 'GET',  p: V1 + '/list/event' },          // funktioniert auf diesem Controller (list/*)
   { m: 'GET',  p: V1 + '/stat/event' },
   { m: 'POST', p: V1 + '/stat/event' },
   { m: 'GET',  p: V2 + '/system-log' },
   { m: 'POST', p: V2 + '/system-log' },
-  { m: 'GET',  p: V2 + '/event' },
 ];
 const ALARM_EP = [
+  { m: 'GET',  p: V1 + '/list/alarm' },           // liefert HTTP 200
   { m: 'GET',  p: V1 + '/stat/alarm?archived=false' },
   { m: 'POST', p: V1 + '/stat/alarm' },
-  { m: 'GET',  p: V1 + '/list/alarm' },
-  { m: 'GET',  p: V2 + '/alarm' },
-  { m: 'GET',  p: V2 + '/alarms' },
 ];
 
 function toList(body) { try { const j = JSON.parse(body); return Array.isArray(j) ? j : (j.data || j.items || j.events || j.alarms || []); } catch (e) { return null; } }
