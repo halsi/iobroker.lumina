@@ -224,6 +224,8 @@ body {
           <span class="nm">Node · pve</span>
           <span class="ps">CPU <b id="pve-cpu">–</b></span>
           <span class="ps">RAM <b id="pve-mem">–</b></span>
+          <span class="ps">Load <b id="pve-load">–</b></span>
+          <span class="ps">SSD <b id="pve-disk">–</b></span>
           <span class="ps">↑ <b id="pve-uptime">–</b></span>
         </div>
         <div class="subhead">Container · VMs</div>
@@ -347,10 +349,13 @@ const WLANS = [
 // Proxmox (Adapter: iobroker.proxmox)
 const PVE = 'proxmox.0.node_pve';
 const PVE_OIDs = {
-  'pve-cpu':    PVE + '.cpu',
-  'pve-mem':    PVE + '.memory.used_lev',
-  'pve-uptime': PVE + '.uptime',
-  'pve-status': PVE + '.status',
+  'pve-cpu':         PVE + '.cpu',
+  'pve-mem':         PVE + '.memory.used_lev',
+  'pve-uptime':      PVE + '.uptime',
+  'pve-status':      PVE + '.status',
+  'pve-load':        PVE + '.loadavg.0',
+  'pve-disk':        PVE + '.disk_nvme0n1.wearout',   // SSD-Wearout; Disk-Device ggf. anpassen
+  'pve-disk-health': PVE + '.disk_nvme0n1.health',
 };
 const VMS = [
   { id:'lxc_ebusd',        name:'ebusd'        },
@@ -489,7 +494,10 @@ function applyState(oid, val) {
   if (oid === PVE_OIDs['pve-cpu'])    { setText('pve-cpu', fmtCpu(val)); return; }
   if (oid === PVE_OIDs['pve-mem'])    { setText('pve-mem', fmtPct(val)); return; }
   if (oid === PVE_OIDs['pve-uptime']) { setText('pve-uptime', fmtUptime(val)); return; }
-  if (oid === PVE_OIDs['pve-status']) { const dot = document.getElementById('pve-dot'); if (dot) dot.className = 'vmdot ' + (val === 'running' ? 'run' : 'stop'); return; }
+  if (oid === PVE_OIDs['pve-load'])   { const n = num(val); setText('pve-load', n === null ? '–' : n.toFixed(2)); return; }
+  if (oid === PVE_OIDs['pve-disk'])   { setText('pve-disk', fmtPct(val)); return; }
+  if (oid === PVE_OIDs['pve-disk-health']) { const el = document.getElementById('pve-disk'); if (el) el.style.color = (!val || val === 'PASSED') ? '' : 'var(--salmon)'; return; }
+  if (oid === PVE_OIDs['pve-status']) { const dot = document.getElementById('pve-dot'); if (dot) dot.className = 'vmdot ' + (val === 'online' || val === 'running' ? 'run' : 'stop'); return; }
 
   // Proxmox VMs / LXC  (proxmox.0.<lxc|qemu>_<name>.{status,cpu,mem_lev})
   const vmM = oid.match(/^proxmox\.0\.((?:lxc|qemu)_[^.]+)\.(status|cpu|mem_lev)$/);
