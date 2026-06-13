@@ -18,7 +18,7 @@
 //     Zählung (action/honeypot-Match) bei Bedarf feinjustieren.
 // ============================================================================
 
-const HOST = '1.1.1.1';        // UDM Pro IP
+const HOST = '1.1.1.1';          // <-- UDM Pro IP eintragen
 const PORT = 443;
 const USER = 'exampleuser';         // lokaler UniFi-OS-User
 const PASS = 'DEIN_PASSWORT';    // <-- eintragen
