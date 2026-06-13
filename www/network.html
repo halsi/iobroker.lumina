@@ -319,12 +319,13 @@ const DEVICES = [
 ];
 
 // Clients pro VLAN / SSID.  oidId = Objekt-ID des Netzes unter unifi-network.0.lan / .wlan
-// HINWEIS: Internal (20) + Mgmt (30) waren im Objektbaum verdeckt → bitte oidId ergänzen.
 const LANS = [
   { oidId:'5be146d877acd2340bec5b4f', name:'Default'         },
   { oidId:'5dac6bcc3bcf6f2cea566afa', name:'Firma (99)'      },
   { oidId:'5f7753813bcf6f1186c53f8d', name:'Outdoor (10)'    },
   { oidId:'5f7754203bcf6f1186c54208', name:'Guest (200)'     },
+  { oidId:'5f77612f3bcf6f1186c54579', name:'Internal (20)'   },
+  { oidId:'5f77618e3bcf6f1186c545ad', name:'Mgmt (30)'       },
   { oidId:'5f7796e03bcf6f03909d0e5a', name:'Restricted (40)' },
   { oidId:'5f7797df3bcf6f03909d0eb5', name:'SmartHome (50)'  },
 ];
@@ -390,12 +391,8 @@ function redrawSpark() {
   if (ul) ul.setAttribute('points', pts(UL_HIST));
 }
 
-// ── Client totals ──────────────────────────────────────────────────────────
-const lanCounts = {};
-function updateClientTotal() {
-  const total = Object.values(lanCounts).reduce((a, b) => a + b, 0);
-  document.getElementById('clients-total').textContent = total || '–';
-}
+// ── Client-Gesamtwert (Aggregat aus lan.connected_clients) ───────────────────
+const LAN_TOTAL_OID = NS + '.lan.connected_clients';
 
 // ── Render dispatch ────────────────────────────────────────────────────────
 function applyState(oid, val) {
@@ -422,8 +419,9 @@ function applyState(oid, val) {
 
   // Clients pro LAN / WLAN
   const esc = NS.replace(/\./g, '\\.');
+  if (oid === LAN_TOTAL_OID) { const el = document.getElementById('clients-total'); if (el) el.textContent = (val === null || val === undefined ? '–' : parseInt(val) || 0); return; }
   const lanM = oid.match(new RegExp('^' + esc + '\\.lan\\.([^.]+)\\.connected_clients$'));
-  if (lanM) { const c = parseInt(val) || 0; const el = document.getElementById('lan-' + lanM[1]); if (el) el.textContent = c; lanCounts[lanM[1]] = c; updateClientTotal(); return; }
+  if (lanM) { const el = document.getElementById('lan-' + lanM[1]); if (el) el.textContent = parseInt(val) || 0; return; }
   const wlanM = oid.match(new RegExp('^' + esc + '\\.wlan\\.([^.]+)\\.connected_clients$'));
   if (wlanM) { const el = document.getElementById('wlan-' + wlanM[1]); if (el) el.textContent = parseInt(val) || 0; return; }
 
@@ -442,6 +440,7 @@ function applyState(oid, val) {
 const allOids = [...new Set([
   ...Object.values(WAN_OIDs),
   ...Object.values(GW_OIDs),
+  LAN_TOTAL_OID,
   ...LANS.map(l  => NS + '.lan.'  + l.oidId + '.connected_clients'),
   ...WLANS.map(w => NS + '.wlan.' + w.oidId + '.connected_clients'),
   ...DEVICES.flatMap(d => {
