@@ -152,6 +152,21 @@ body {
 .vmdot { width: 11px; height: 11px; border-radius: 50%; background: var(--muted); }
 .vmdot.run  { background: var(--green); box-shadow: 0 0 6px var(--green); }
 .vmdot.stop { background: var(--muted); }
+
+/* ── Fehler / Problem-States ─────────────────────────────────────── */
+.card-shield .card-header { background: rgba(82,229,255,0.08); color: var(--glow); }
+.card-shield .card-header .ch-dot { background: var(--glow); }
+#err-body { display: flex; flex-direction: column; }
+.err-ok { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: var(--green); font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+.err-ok-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px var(--green); }
+.err-ok-sub { font-size: 14px; color: var(--muted); font-weight: 400; letter-spacing: 1px; }
+.err-row { display: grid; grid-template-columns: 13px 1fr auto; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--sep); font-size: 18px; }
+.err-row:last-child { border-bottom: none; }
+.err-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--salmon); box-shadow: 0 0 7px var(--salmon); }
+.err-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.err-msg { color: var(--salmon); font-size: 15px; }
+.hx.err-badge-ok  { color: var(--green); }
+.hx.err-badge-bad { color: var(--salmon); }
 </style>
 </head>
 <body>
@@ -219,6 +234,7 @@ body {
           <span class="ps">Load <b id="pve-load">–</b></span>
           <span class="ps">SSD <b id="pve-disk">–</b></span>
           <span class="ps">↑ <b id="pve-uptime">–</b></span>
+          <span class="ps">Stand <b id="pve-update">–</b></span>
         </div>
         <div class="subhead vm-head"><span>Aktive Container · VMs</span><span class="leg">CPU · RAM</span></div>
         <div id="vm-list"></div>
@@ -241,13 +257,19 @@ body {
     </div>
   </div>
 
-  <!-- ══ Spalte C · Geräte ════════════════════════════════════════ -->
+  <!-- ══ Spalte C · Geräte + Fehlerstatus ═════════════════════════ -->
   <div class="col col-c">
-    <div class="card card-orange grow">
+    <div class="card card-orange">
       <div class="card-header"><span class="ch-dot"></span>Geräte
-        <span class="hx" id="dev-summary">—</span>
+        <span class="hx"><span id="dev-summary">—</span><span id="uni-update"></span></span>
       </div>
       <div class="card-body"><div id="dev-list"></div></div>
+    </div>
+    <div class="card card-shield grow">
+      <div class="card-header"><span class="ch-dot"></span>Fehler · Status
+        <span class="hx err-badge-ok" id="err-badge">OK</span>
+      </div>
+      <div class="card-body" id="err-body"></div>
     </div>
   </div>
 
@@ -348,6 +370,8 @@ const PVE_OIDs = {
   'pve-disk':        PVE + '.disk_nvme0n1.wearout',   // SSD-Wearout; Disk-Device ggf. anpassen
   'pve-disk-health': PVE + '.disk_nvme0n1.health',
 };
+const PVE_UPDATE_OID = 'proxmox.0.info.lastUpdate';
+const UNI_POLL_OID   = NS + '.info.lastApiPoll';
 const VMS = [
   { id:'lxc_ebusd',        name:'ebusd'        },
   { id:'lxc_esphome',      name:'esphome'      },
@@ -373,6 +397,13 @@ function fmtCpu(v)  { const n = num(v); return n === null ? '–' : (n < 10 ? n.
 function fmtTemp(v) { const n = num(v); return n === null ? '–' : Math.round(n) + '<span class="u"> °C</span>'; }
 function fmtBytes(v){ const n = num(v); if (n === null) return '—'; return n >= 1000 ? (n / 1000).toFixed(2) + ' TB' : n.toFixed(0) + ' GB'; }
 function fmtUptime(v){ const n = num(v); if (n === null) return '–'; const d = Math.floor(n / 86400), h = Math.floor((n % 86400) / 3600); return d > 0 ? `${d}d ${h}h` : `${h}h`; }
+function fmtTime(v) {
+  if (v === null || v === undefined || v === '') return '–';
+  const n = Number(v);
+  const d = isNaN(n) ? new Date(String(v)) : new Date(n);
+  if (isNaN(d.getTime())) return String(v);
+  return d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
 function setText(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
 
 // ── Build dynamic lists ──────────────────────────────────────────────────
@@ -393,6 +424,7 @@ function buildLists() {
     </div>`;
   }).join('');
   document.getElementById('dev-summary').textContent = DEVICES.length + ' Geräte';
+  renderErrors();
   document.getElementById('vm-list').innerHTML = VMS.map(v =>
     `<div class="vmrow vm-hidden" id="vm-${v.id}-row">
       <span class="vmdot run"></span>
@@ -425,6 +457,27 @@ const vmStatus = {};
 function updateVmSummary() {
   const running = VMS.filter(v => vmStatus[v.id] === 'running').length;
   const el = document.getElementById('pve-summary'); if (el) el.textContent = running + '/' + VMS.length + ' laufen';
+}
+
+// ── Fehler-/Problem-Status ───────────────────────────────────────────────────
+const devError = {};
+let pveOnline = true, pveDiskOk = true;
+function renderErrors() {
+  const problems = [];
+  DEVICES.forEach(d => { if (devError[d.mac]) problems.push({ name: d.name + ' · ' + d.model, msg: 'Fehler gemeldet' }); });
+  if (!pveOnline) problems.push({ name: 'Proxmox · pve', msg: 'Node offline' });
+  if (!pveDiskOk) problems.push({ name: 'Proxmox · SSD', msg: 'SMART nicht PASSED' });
+  const body = document.getElementById('err-body');
+  if (body) {
+    body.innerHTML = problems.length === 0
+      ? `<div class="err-ok"><span class="err-ok-dot"></span>Alle Systeme OK<span class="err-ok-sub">${DEVICES.length} Geräte · Proxmox überwacht</span></div>`
+      : problems.map(p => `<div class="err-row"><span class="err-dot"></span><span class="err-name">${p.name}</span><span class="err-msg">${p.msg}</span></div>`).join('');
+  }
+  const badge = document.getElementById('err-badge');
+  if (badge) {
+    badge.textContent = problems.length === 0 ? 'OK' : problems.length + (problems.length > 1 ? ' Probleme' : ' Problem');
+    badge.className = 'hx ' + (problems.length === 0 ? 'err-badge-ok' : 'err-badge-bad');
+  }
 }
 
 // ── Render dispatch ────────────────────────────────────────────────────────
@@ -460,10 +513,13 @@ function applyState(oid, val) {
   if (wlanM) { const el = document.getElementById('wlan-' + wlanM[1]); if (el) el.textContent = parseInt(val) || 0; return; }
 
   // Geräte-Health  (devices.<mac>.{isOnline | system.cpu | temperature | power})
-  const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|system\\.cpu|temperatures\\.CPU\\.value|power)$'));
+  if (oid === UNI_POLL_OID) { setText('uni-update', ' · ' + fmtTime(val)); return; }
+
+  const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|hasError|system\\.cpu|temperatures\\.CPU\\.value|power)$'));
   if (devM) {
     const mac = devM[1], leaf = devM[2];
     if (leaf === 'isOnline') { const dot = document.getElementById('dev-' + mac + '-dot'); if (dot) dot.className = 'ddot ' + ((val === true || val === 'true') ? 'on' : 'off'); }
+    else if (leaf === 'hasError') { devError[mac] = (val === true || val === 'true'); renderErrors(); }
     else if (leaf === 'system.cpu') { const el = document.getElementById('dev-' + mac + '-cpu'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> %</span>'; }
     else if (leaf === 'temperatures.CPU.value') { const el = document.getElementById('dev-' + mac + '-temp'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> °C</span>'; }
     else if (leaf === 'power') { const el = document.getElementById('dev-' + mac + '-poe'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : n.toFixed(1) + '<span class="du"> W</span>'; }
@@ -476,8 +532,9 @@ function applyState(oid, val) {
   if (oid === PVE_OIDs['pve-uptime']) { setText('pve-uptime', fmtUptime(val)); return; }
   if (oid === PVE_OIDs['pve-load'])   { const n = num(val); setText('pve-load', n === null ? '–' : n.toFixed(2)); return; }
   if (oid === PVE_OIDs['pve-disk'])   { setText('pve-disk', fmtPct(val)); return; }
-  if (oid === PVE_OIDs['pve-disk-health']) { const el = document.getElementById('pve-disk'); if (el) el.style.color = (!val || val === 'PASSED') ? '' : 'var(--salmon)'; return; }
-  if (oid === PVE_OIDs['pve-status']) { const dot = document.getElementById('pve-dot'); if (dot) dot.className = 'vmdot ' + (val === 'online' || val === 'running' ? 'run' : 'stop'); return; }
+  if (oid === PVE_OIDs['pve-disk-health']) { pveDiskOk = (!val || val === 'PASSED'); const el = document.getElementById('pve-disk'); if (el) el.style.color = pveDiskOk ? '' : 'var(--salmon)'; renderErrors(); return; }
+  if (oid === PVE_OIDs['pve-status']) { pveOnline = (val === 'online' || val === 'running'); const dot = document.getElementById('pve-dot'); if (dot) dot.className = 'vmdot ' + (pveOnline ? 'run' : 'stop'); renderErrors(); return; }
+  if (oid === PVE_UPDATE_OID) { setText('pve-update', fmtTime(val)); return; }
 
   // Proxmox VMs / LXC  (proxmox.0.<lxc|qemu>_<name>.{status,cpu,mem_lev})
   const vmM = oid.match(/^proxmox\.0\.((?:lxc|qemu)_[^.]+)\.(status|cpu|mem_lev)$/);
@@ -497,13 +554,15 @@ const allOids = [...new Set([
   LAN_TOTAL_OID,
   ...LANS.map(l  => NS + '.lan.'  + l.oidId + '.connected_clients'),
   ...WLANS.map(w => NS + '.wlan.' + w.oidId + '.connected_clients'),
+  UNI_POLL_OID,
   ...DEVICES.flatMap(d => {
     const base = NS + '.devices.' + d.mac;
-    const list = [base + '.isOnline', base + '.system.cpu'];
+    const list = [base + '.isOnline', base + '.hasError', base + '.system.cpu'];
     list.push(d.type === 'switch' ? base + '.power' : base + '.temperatures.CPU.value');
     return list;
   }),
   ...Object.values(PVE_OIDs),
+  PVE_UPDATE_OID,
   ...VMS.flatMap(v => ['status', 'cpu', 'mem_lev'].map(l => 'proxmox.0.' + v.id + '.' + l)),
 ])];
 
