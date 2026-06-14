@@ -70,6 +70,7 @@ body {
 .card-header .hx { margin-left: auto; font-size: 16px; font-weight: 600; letter-spacing: 1px; color: var(--muted); }
 .ch-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .card-body { padding: 12px 16px 14px; flex: 1; min-height: 0; overflow: hidden; }
+.card-purple .card-body, .card-green .card-body { padding-top: 8px; padding-bottom: 10px; }
 
 .card-teal   .card-header { background: rgba(0,170,204,0.10);  color: var(--glow);   }
 .card-teal   .card-header .ch-dot { background: var(--glow);   }
@@ -112,7 +113,7 @@ body {
 .card-green .card-header { background: rgba(68,204,102,0.10); color: var(--green); }
 .card-green .card-header .ch-dot { background: var(--green); }
 .nas { display: flex; align-items: center; gap: 20px; }
-.nas .pct { font-size: 38px; font-weight: 800; color: var(--green); line-height: 1; }
+.nas .pct { font-size: 26px; font-weight: 800; color: var(--green); line-height: 1; }
 .nas .nas-lbl { font-size: 13px; color: var(--muted); }
 .nas .meta { flex: 1; min-width: 0; }
 .nas .meta .bar { height: 9px; margin: 0; }
@@ -121,9 +122,9 @@ body {
 .nas .meta .txt b { color: var(--lblue); font-weight: 600; }
 
 /* ── Stats ───────────────────────────────────────────────────────── */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
 .stat .k { font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-.stat .v { font-size: 34px; font-weight: 700; }
+.stat .v { font-size: 24px; font-weight: 700; }
 .bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); margin-top: 6px; overflow: hidden; }
 .bar > span { display: block; height: 100%; border-radius: 3px; background: var(--glow); width: 0; transition: width 0.4s; }
 
@@ -155,12 +156,12 @@ body {
 .dver { font-variant-numeric: tabular-nums; font-size: 14px; color: #8a93b0; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Proxmox ─────────────────────────────────────────────────────── */
-.pve-node { display: flex; align-items: center; gap: 14px; padding: 2px 0 10px; border-bottom: 1px solid var(--sep); flex-wrap: wrap; }
-.pve-node .nm { font-size: 19px; font-weight: 700; color: var(--yellow); }
-.pve-node .ps { font-size: 18px; color: var(--muted); }
+.pve-node { display: flex; align-items: center; gap: 10px 14px; padding: 2px 0 8px; border-bottom: 1px solid var(--sep); flex-wrap: wrap; }
+.pve-node .nm { font-size: 16px; font-weight: 700; color: var(--yellow); }
+.pve-node .ps { font-size: 14px; color: var(--muted); }
 .pve-node .ps b { color: var(--text); font-weight: 700; }
-#vm-list { flex: 1; min-height: 0; overflow-y: auto; margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 26px; align-content: start; }
-.vmrow { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 10px; padding: 5px 0; font-size: 18px; }
+#vm-list { flex: 1; min-height: 0; overflow-y: auto; margin-top: 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 26px; align-content: start; }
+.vmrow { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 10px; padding: 3px 0; font-size: 18px; }
 .vmrow.vm-hidden { display: none; }
 .vmrow .vn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vmrow .vs { font-variant-numeric: tabular-nums; font-size: 16px; color: var(--lblue); text-align: right; white-space: nowrap; }
