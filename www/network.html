@@ -327,26 +327,6 @@ body {
 
 </main>
 
-<a href="dashboard.html" id="dash-switch" title="Lumina Dashboard">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polyline points="13 2 13 9 20 9"/><path d="M3 15a9 9 0 1 0 16.59-5.41L13 2z"/>
-  </svg>
-</a>
-<style>
-#dash-switch {
-  position: fixed; bottom: 24px; right: 24px;
-  width: 52px; height: 52px; border-radius: 50%;
-  background: rgba(82,229,255,0.10);
-  border: 1.5px solid rgba(82,229,255,0.35);
-  color: #52E5FF;
-  display: flex; align-items: center; justify-content: center;
-  text-decoration: none; backdrop-filter: blur(8px);
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-  z-index: 999;
-}
-#dash-switch:hover { background: rgba(82,229,255,0.22); border-color: rgba(82,229,255,0.7); transform: scale(1.08); }
-</style>
-
 <script src="/socket.io/socket.io.js"></script>
 <script>
 // ════════════════════════════════════════════════════════════════════════

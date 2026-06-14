@@ -414,30 +414,6 @@ html, body {
   display: none;
 }
 
-/* ── Nav button ───────────────────────────────────────────────────────── */
-#nav-btn {
-  position: fixed;
-  bottom: 24px; right: 24px;
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  background: rgba(106,174,255,0.10);
-  border: 1.5px solid rgba(106,174,255,0.35);
-  color: #6AAEFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-  z-index: 999;
-  text-decoration: none;
-}
-#nav-btn:hover {
-  background: rgba(106,174,255,0.22);
-  border-color: rgba(106,174,255,0.7);
-  transform: scale(1.08);
-}
-
 /* ── Car popup modal ──────────────────────────────────────────────────── */
 #car-popup-backdrop, #pool-popup-backdrop {
   display: none;
@@ -2084,13 +2060,6 @@ html, body {
     </div>
   </div>
 </div>
-
-<!-- Nav button: cycles to energie.html -->
-<a id="nav-btn" href="energie.html" title="Energie Flow">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-  </svg>
-</a>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="config.js"></script>

@@ -399,21 +399,15 @@ body {
   <!-- ── STATUS ────────────────────────── -->
   <div class="col">
 
-    <div class="card card-orange">
-      <div class="card-header"><span class="ch-dot"></span>Temperaturen</div>
-      <div class="card-body">
-        <div class="row"><span class="lbl">Außen</span><span class="val" id="temp-outdoor"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Innen</span><span class="val" id="temp-indoor"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Pool</span><span class="val" id="temp-pool"><span class="loading">…</span></span></div>
-        <div class="row">
-          <span class="lbl">Warmwasser</span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span id="hwc-flame" class="hwc-flame">🔥</span>
-            <button id="hwc-heat-btn" class="hwc-btn" onclick="pressEffect(this);activateHwcHeating()">▲ HEIZEN</button>
-            <span class="val" id="temp-hwc"><span class="loading">…</span></span>
-          </div>
+    <div class="card card-beige">
+      <div class="card-header"><span class="ch-dot"></span>Shield</div>
+      <div class="shield-row">
+        <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif" alt="">
+        <div class="shield-controls">
+          <button class="shield-btn shield-btn-disable" onclick="pressEffect(this);shieldDisable()">Disable</button>
+          <div id="shield-label" class="shield-label shield-inactive">INACTIVE</div>
+          <button class="shield-btn shield-btn-enable" onclick="pressEffect(this);shieldEnable()">Enable</button>
         </div>
-        <div class="row"><span class="lbl">Heizung Vorlauf</span><span class="val" id="temp-vorlauf"><span class="loading">…</span></span></div>
       </div>
     </div>
 
@@ -558,15 +552,21 @@ body {
   <!-- ── WASSER ────────────────────────── -->
   <div class="col">
 
-    <div class="card card-beige">
-      <div class="card-header"><span class="ch-dot"></span>Shield</div>
-      <div class="shield-row">
-        <img id="shield-gif" src="/vis.0/main/img/star/inactive.gif" class="shield-gif" alt="">
-        <div class="shield-controls">
-          <button class="shield-btn shield-btn-disable" onclick="pressEffect(this);shieldDisable()">Disable</button>
-          <div id="shield-label" class="shield-label shield-inactive">INACTIVE</div>
-          <button class="shield-btn shield-btn-enable" onclick="pressEffect(this);shieldEnable()">Enable</button>
+    <div class="card card-orange">
+      <div class="card-header"><span class="ch-dot"></span>Temperaturen</div>
+      <div class="card-body">
+        <div class="row"><span class="lbl">Außen</span><span class="val" id="temp-outdoor"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Innen</span><span class="val" id="temp-indoor"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Pool</span><span class="val" id="temp-pool"><span class="loading">…</span></span></div>
+        <div class="row">
+          <span class="lbl">Warmwasser</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span id="hwc-flame" class="hwc-flame">🔥</span>
+            <button id="hwc-heat-btn" class="hwc-btn" onclick="pressEffect(this);activateHwcHeating()">▲ HEIZEN</button>
+            <span class="val" id="temp-hwc"><span class="loading">…</span></span>
+          </div>
         </div>
+        <div class="row"><span class="lbl">Heizung Vorlauf</span><span class="val" id="temp-vorlauf"><span class="loading">…</span></span></div>
       </div>
     </div>
 
@@ -1215,30 +1215,6 @@ socket.on('stateChange', (oid, state) => {
 setInterval(refreshAll, 300000);
 </script>
 
-<a href="dashboard.html" id="dash-switch" title="Lumina Dashboard">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polyline points="13 2 13 9 20 9"/><path d="M3 15a9 9 0 1 0 16.59-5.41L13 2z"/>
-  </svg>
-</a>
-<style>
-#dash-switch {
-  position: fixed; bottom: 24px; right: 24px;
-  width: 52px; height: 52px; border-radius: 50%;
-  background: rgba(255,204,0,0.10);
-  border: 1.5px solid rgba(255,204,0,0.35);
-  color: #FFCC00;
-  display: flex; align-items: center; justify-content: center;
-  text-decoration: none;
-  backdrop-filter: blur(8px);
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-  z-index: 999;
-}
-#dash-switch:hover {
-  background: rgba(255,204,0,0.22);
-  border-color: rgba(255,204,0,0.7);
-  transform: scale(1.08);
-}
-</style>
 <script>
 (function() {
   function scaleToFit() {
