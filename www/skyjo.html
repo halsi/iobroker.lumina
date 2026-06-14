@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1f6feb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Skyjo">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Skyjo Punkte</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231f6feb'/%3E%3Cg fill='%23fff' font-family='Arial' font-weight='bold' text-anchor='middle'%3E%3Ctext x='90' y='118' font-size='90'%3ES%3C/text%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0f1420;
+    --bg2: #161d2e;
+    --card: #1d2740;
+    --card2: #243152;
+    --line: #2e3c5e;
+    --text: #eef2fb;
+    --muted: #8a98b8;
+    --accent: #1f6feb;
+    --accent2: #3b8bff;
+    /* Skyjo Kartenfarben */
+    --c-blue: #2a7de1;
+    --c-green: #3fb56b;
+    --c-yellow: #f2c33d;
+    --c-red: #e35454;
+    --gold: #ffd25a;
+    --silver: #c7d0e0;
+    --bronze: #d98a4e;
+    --radius: 16px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 800px at 50% -10%, #1a2540 0%, var(--bg) 55%) fixed;
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: contain;
+  }
+  .app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: calc(14px + var(--safe-top)) 14px calc(120px + var(--safe-bottom));
+  }
+  header.top {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px;
+  }
+  .logo {
+    width: 46px; height: 46px; border-radius: 13px; flex: 0 0 auto;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--c-blue), var(--accent));
+    box-shadow: 0 6px 18px rgba(31,111,235,.35);
+    position: relative; overflow: hidden;
+  }
+  .logo span { font-weight: 800; font-size: 24px; color: #fff; }
+  .logo::after {
+    content:""; position:absolute; inset:0;
+    background: linear-gradient(135deg, transparent 55%, rgba(255,255,255,.25));
+  }
+  .title h1 { margin: 0; font-size: 22px; letter-spacing: .3px; }
+  .title p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+
+  .screen { display: none; animation: fade .25s ease; }
+  .screen.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px);} to {opacity:1; transform:none;} }
+
+  .panel {
+    background: linear-gradient(180deg, var(--card), var(--bg2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .panel h2 { margin: 0 0 12px; font-size: 15px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+
+  label { display:block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  input[type="text"], input[type="number"] {
+    width: 100%; padding: 13px 14px; font-size: 16px;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 12px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input:focus { border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(59,139,255,.18); }
+  input[type="number"] { -moz-appearance: textfield; text-align: center; font-weight: 700; }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .btn {
+    appearance: none; border: none; cursor: pointer;
+    font-size: 16px; font-weight: 700; color: #fff;
+    padding: 14px 18px; border-radius: 13px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    box-shadow: 0 6px 16px rgba(31,111,235,.3);
+    transition: transform .08s, filter .15s, opacity .15s;
+    width: 100%;
+  }
+  .btn:active { transform: scale(.97); filter: brightness(1.05); }
+  .btn.secondary { background: var(--card2); box-shadow:none; border:1px solid var(--line); }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); box-shadow:none; color: var(--text); }
+  .btn.danger { background: linear-gradient(135deg, #ff6b6b, var(--c-red)); box-shadow: 0 6px 16px rgba(227,84,84,.3); }
+  .btn.small { padding: 10px 12px; font-size: 14px; width: auto; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* Spieler-Setup-Liste */
+  .player-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .player-row { display: flex; gap: 10px; align-items: center; }
+  .player-row .chip {
+    width: 34px; height: 34px; border-radius: 10px; flex: 0 0 auto;
+    display: grid; place-items: center; font-weight: 800; color:#0d1320; font-size: 15px;
+  }
+  .player-row input { flex: 1; }
+  .icon-btn {
+    flex: 0 0 auto; width: 44px; height: 46px; border-radius: 12px;
+    background: var(--card2); border: 1px solid var(--line); color: var(--muted);
+    font-size: 20px; cursor: pointer; display:grid; place-items:center;
+  }
+  .icon-btn:active { transform: scale(.94); }
+
+  .target-row { display:flex; align-items:center; gap:12px; }
+  .target-row input { width: 90px; }
+
+  /* Scoreboard */
+  .scoreboard { display: flex; flex-direction: column; gap: 8px; }
+  .score-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 14px; padding: 12px 14px;
+    transition: transform .2s;
+  }
+  .score-card .rank {
+    width: 30px; font-weight: 800; font-size: 16px; color: var(--muted); text-align:center;
+    flex: 0 0 auto;
+  }
+  .score-card.leader .rank { color: var(--gold); }
+  .score-card .dot { width: 14px; height: 14px; border-radius: 50%; flex:0 0 auto; }
+  .score-card .name { flex: 1; font-weight: 700; font-size: 16px; }
+  .score-card .total {
+    font-weight: 800; font-size: 22px; font-variant-numeric: tabular-nums;
+  }
+  .score-card .total small { font-size: 12px; color: var(--muted); font-weight:600; }
+  .score-card.danger { border-color: var(--c-red); box-shadow: 0 0 0 1px rgba(227,84,84,.4) inset; }
+  .pill {
+    font-size: 11px; font-weight:700; padding: 2px 8px; border-radius: 20px;
+    background: rgba(227,84,84,.18); color: #ff9a9a; margin-left: 6px;
+  }
+
+  .banner {
+    display:flex; gap:10px; align-items:center;
+    background: rgba(242,195,61,.12); border: 1px solid rgba(242,195,61,.4);
+    color: #ffe09a; padding: 12px 14px; border-radius: 13px; margin-bottom: 14px;
+    font-size: 14px; font-weight: 600;
+  }
+  .banner.big { background: rgba(227,84,84,.12); border-color: rgba(227,84,84,.45); color:#ffb4b4; }
+
+  /* Runden-Eingabe */
+  .round-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; }
+  .round-input-row { display:flex; align-items:center; gap: 12px; }
+  .round-input-row .dot { width:14px;height:14px;border-radius:50%;flex:0 0 auto; }
+  .round-input-row .name { flex:1; font-weight:700; font-size:15px; }
+  .round-input-row input { width: 92px; }
+
+  /* Verlauf-Tabelle */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border:1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 320px; }
+  th, td { padding: 10px 8px; text-align: center; white-space: nowrap; }
+  thead th { background: var(--bg); color: var(--muted); font-weight:600; font-size:12px; position: sticky; left:auto; }
+  tbody tr:nth-child(odd) td { background: rgba(255,255,255,.015); }
+  td.rnd, th.rnd { position: sticky; left: 0; background: var(--bg2); font-weight:700; color:var(--muted); }
+  tfoot td { font-weight: 800; border-top: 2px solid var(--line); background: var(--bg); font-variant-numeric: tabular-nums; }
+  td.val { font-variant-numeric: tabular-nums; font-weight:600; }
+
+  /* Ergebnis / Ranking */
+  .podium { display:flex; flex-direction:column; gap: 10px; margin-bottom: 6px; }
+  .rank-card {
+    display:flex; align-items:center; gap:14px;
+    padding: 14px 16px; border-radius: 16px;
+    background: var(--bg); border:1px solid var(--line);
+  }
+  .rank-card .medal { font-size: 30px; width: 40px; text-align:center; flex:0 0 auto; }
+  .rank-card .nm { flex:1; }
+  .rank-card .nm b { font-size: 17px; }
+  .rank-card .nm small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+  .rank-card .pts { font-weight:800; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .rank-card.g1 { border-color: var(--gold); box-shadow: 0 0 22px rgba(255,210,90,.18); background: linear-gradient(180deg, rgba(255,210,90,.08), var(--bg)); }
+  .rank-card.g2 { border-color: var(--silver); }
+  .rank-card.g3 { border-color: var(--bronze); }
+
+  .stats-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat {
+    background: var(--bg); border:1px solid var(--line); border-radius:13px; padding: 12px 14px;
+  }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-size: 18px; font-weight: 800; margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+  /* gespeicherte Spiele */
+  .game-item {
+    display:flex; align-items:center; gap:12px;
+    background: var(--bg); border:1px solid var(--line); border-radius:13px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .game-item .gi-main { flex:1; min-width:0; }
+  .game-item .gi-main b { font-size:15px; }
+  .game-item .gi-main small { display:block; color:var(--muted); font-size:12px; margin-top:2px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .game-item .status { font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; flex:0 0 auto; }
+  .status.running { background: rgba(63,181,107,.18); color:#86e6a8; }
+  .status.done { background: rgba(138,152,184,.18); color:var(--muted); }
+
+  .empty { text-align:center; color: var(--muted); padding: 26px 10px; font-size:14px; }
+
+  /* fixierte Aktionsleiste unten */
+  .actionbar {
+    position: fixed; left:0; right:0; bottom:0; z-index: 30;
+    padding: 12px 14px calc(12px + var(--safe-bottom));
+    background: linear-gradient(180deg, rgba(15,20,32,0), var(--bg) 32%);
+    backdrop-filter: blur(6px);
+  }
+  .actionbar .inner { max-width: 720px; margin: 0 auto; display:flex; gap:8px; }
+  .actionbar .inner .btn { flex:1; min-width:0; padding-left:12px; padding-right:12px; font-size:15px; white-space:nowrap; }
+
+  .link { color: var(--accent2); cursor:pointer; font-weight:600; }
+  .hint { font-size:12.5px; color:var(--muted); line-height:1.5; margin-top:8px; }
+  .center { text-align:center; }
+  .spacer { height: 4px; }
+  dialog {
+    border:none; border-radius: 18px; padding:0; max-width: 360px; width: calc(100% - 36px);
+    background: var(--card); color: var(--text); box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  dialog::backdrop { background: rgba(5,8,16,.6); backdrop-filter: blur(2px); }
+  .dlg { padding: 20px; }
+  .dlg h3 { margin: 0 0 8px; font-size: 18px; }
+  .dlg p { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="logo"><span>S</span></div>
+    <div class="title">
+      <h1>Skyjo</h1>
+      <p id="subtitle">Punkte-Zähler & Statistik</p>
+    </div>
+  </header>
+
+  <!-- ============ START / NEUES SPIEL ============ -->
+  <section id="screen-setup" class="screen active">
+    <div class="panel">
+      <h2>Neues Spiel</h2>
+      <label for="gameName">Spielname (optional)</label>
+      <input type="text" id="gameName" placeholder="z. B. Familienabend" autocomplete="off">
+      <div class="spacer"></div>
+      <label>Spieler</label>
+      <div class="player-rows" id="playerRows"></div>
+      <button class="btn ghost small" id="addPlayerBtn">+ Spieler hinzufügen</button>
+      <div class="spacer"></div><div class="spacer"></div>
+      <label for="targetScore">Spiel endet bei (Punkte)</label>
+      <div class="target-row">
+        <input type="number" id="targetScore" value="100" inputmode="numeric">
+        <span class="hint" style="margin:0">Standard bei Skyjo: 100</span>
+      </div>
+      <div class="spacer"></div><div class="spacer"></div>
+      <button class="btn" id="startGameBtn">Spiel starten</button>
+    </div>
+
+    <div class="panel" id="savedPanel">
+      <h2>Gespeicherte Spiele</h2>
+      <div id="savedList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Daten</h2>
+      <div class="btn-row">
+        <button class="btn ghost small" id="exportBtn">Exportieren</button>
+        <button class="btn ghost small" id="importBtn">Importieren</button>
+      </div>
+      <p class="hint">Spielstände werden lokal auf diesem Gerät gespeichert. Mit Export/Import kannst du sie auf ein anderes Gerät (iPhone/iPad) übertragen. Tipp: „Teilen → Zum Home-Bildschirm" macht aus der Seite eine App-Kachel.</p>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+    </div>
+  </section>
+
+  <!-- ============ LAUFENDES SPIEL ============ -->
+  <section id="screen-game" class="screen">
+    <div id="gameBanner"></div>
+
+    <div class="panel">
+      <h2>Wertung <span id="roundCounter" style="color:var(--accent2)"></span></h2>
+      <div class="scoreboard" id="scoreboard"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Runde <span id="nextRoundNo" style="color:var(--accent2)"></span> eintragen</h2>
+      <div class="round-grid" id="roundInputs"></div>
+      <p class="hint">Tipp: Minuspunkte sind erlaubt (z. B. <b>-4</b>). Leere Felder zählen als 0.</p>
+      <div class="spacer"></div>
+      <button class="btn" id="saveRoundBtn">Runde speichern</button>
+    </div>
+
+    <div class="panel" id="historyPanel">
+      <h2>Verlauf</h2>
+      <div class="table-wrap"><table id="historyTable"></table></div>
+      <p class="hint">Auf eine Rundenzahl tippen, um die Runde zu bearbeiten oder zu löschen.</p>
+    </div>
+  </section>
+
+  <!-- ============ ERGEBNIS ============ -->
+  <section id="screen-result" class="screen">
+    <div class="banner"><span>🏆</span><span id="winnerLine"></span></div>
+
+    <div class="panel">
+      <h2>Endstand</h2>
+      <div class="podium" id="podium"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Statistik</h2>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Bester Wert pro Runde</h2>
+      <div class="table-wrap"><table id="resultTable"></table></div>
+    </div>
+  </section>
+</div>
+
+<!-- fixierte Buttons -->
+<div class="actionbar" id="actionbar" style="display:none">
+  <div class="inner" id="actionInner"></div>
+</div>
+
+<!-- Generischer Dialog -->
+<dialog id="confirmDlg">
+  <div class="dlg">
+    <h3 id="dlgTitle"></h3>
+    <p id="dlgText"></p>
+    <div class="btn-row">
+      <button class="btn ghost small" id="dlgCancel">Abbrechen</button>
+      <button class="btn danger small" id="dlgOk">OK</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Runde bearbeiten Dialog -->
+<dialog id="editDlg">
+  <div class="dlg">
+    <h3 id="editTitle">Runde bearbeiten</h3>
+    <div class="round-grid" id="editInputs"></div>
+    <div class="spacer"></div>
+    <div class="btn-row three">
+      <button class="btn ghost small" id="editCancel">Abbruch</button>
+      <button class="btn danger small" id="editDelete">Löschen</button>
+      <button class="btn small" id="editSave">Sichern</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+(function () {
+  // ---------- Konstanten ----------
+  var STORE_KEY = "skyjo.games.v1";
+  var COLORS = ["#2a7de1","#3fb56b","#f2c33d","#e35454","#9b6bff","#41c7c7","#ff8c42","#e85aa0"];
+  var MEDALS = ["🥇","🥈","🥉"];
+
+  // ---------- State ----------
+  var games = [];          // alle Spiele
+  var current = null;      // aktuelles Spielobjekt
+  var setupPlayers = ["", ""]; // Eingabe im Setup
+
+  // ---------- Helpers ----------
+  function $(id){ return document.getElementById(id); }
+  function el(tag, cls, txt){ var e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; }
+  function color(i){ return COLORS[i % COLORS.length]; }
+  function uid(){ return "g"+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36); }
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]; }); }
+  function fmtDate(ts){
+    var d = new Date(ts);
+    return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"})
+      + " " + d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+  }
+
+  function load(){
+    try { games = JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+    catch(e){ games = []; }
+  }
+  function save(){
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(games)); }
+    catch(e){ alert("Speichern fehlgeschlagen (Speicher voll oder privater Modus)."); }
+  }
+
+  // Summen pro Spieler
+  function totals(game){
+    return game.players.map(function(_, pi){
+      return game.rounds.reduce(function(s, r){ return s + (r[pi]||0); }, 0);
+    });
+  }
+  // Ranking [{idx, total, rank}] – niedrigster Wert = Platz 1, gleiche Werte = gleicher Platz
+  function ranking(game){
+    var t = totals(game);
+    var arr = game.players.map(function(name, idx){ return {idx:idx, name:name, total:t[idx]}; });
+    arr.sort(function(a,b){ return a.total - b.total; });
+    var rank=0, prev=null;
+    arr.forEach(function(x,i){
+      if(prev===null || x.total!==prev){ rank=i+1; prev=x.total; }
+      x.rank=rank;
+    });
+    return arr;
+  }
+
+  // ---------- Screens ----------
+  function show(name){
+    ["setup","game","result"].forEach(function(s){
+      $("screen-"+s).classList.toggle("active", s===name);
+    });
+    window.scrollTo(0,0);
+    renderActionbar(name);
+  }
+
+  function renderActionbar(name){
+    var bar = $("actionbar"), inner = $("actionInner");
+    inner.innerHTML = "";
+    if(name==="game"){
+      bar.style.display="block";
+      var back = el("button","btn secondary","Übersicht");
+      back.onclick = function(){ openSetup(); };
+      var end = el("button","btn","Spiel beenden");
+      end.onclick = endGame;
+      inner.appendChild(back); inner.appendChild(end);
+    } else if(name==="result"){
+      bar.style.display="block";
+      var back2 = el("button","btn secondary","Übersicht");
+      back2.onclick = function(){ openSetup(); };
+      var cont = el("button","btn ghost","Weiter");
+      cont.onclick = function(){ current.finished=false; save(); openGame(current.id); };
+      var again = el("button","btn","Revanche");
+      again.onclick = rematch;
+      inner.appendChild(back2); inner.appendChild(cont); inner.appendChild(again);
+    } else {
+      bar.style.display="none";
+    }
+  }
+
+  // ================= SETUP =================
+  function renderSetupPlayers(){
+    var wrap = $("playerRows"); wrap.innerHTML="";
+    setupPlayers.forEach(function(nm, i){
+      var row = el("div","player-row");
+      var chip = el("div","chip"); chip.style.background=color(i); chip.textContent=(i+1);
+      var inp = el("input"); inp.type="text"; inp.placeholder="Spieler "+(i+1);
+      inp.value=nm; inp.autocomplete="off";
+      inp.oninput = function(){ setupPlayers[i]=inp.value; };
+      var del = el("button","icon-btn","–");
+      del.title="Entfernen";
+      del.onclick = function(){
+        if(setupPlayers.length<=2){ return; }
+        setupPlayers.splice(i,1); renderSetupPlayers();
+      };
+      if(setupPlayers.length<=2){ del.disabled=true; del.style.opacity=.3; }
+      row.appendChild(chip); row.appendChild(inp); row.appendChild(del);
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderSavedList(){
+    var list = $("savedList"); list.innerHTML="";
+    if(!games.length){ list.appendChild(el("div","empty","Noch keine Spiele gespeichert.")); return; }
+    games.slice().sort(function(a,b){ return b.created - a.created; }).forEach(function(g){
+      var item = el("div","game-item");
+      var main = el("div","gi-main");
+      var nm = el("b", null, g.name || "Skyjo-Spiel");
+      var sub = el("small", null, g.players.join(", ") + " · " + g.rounds.length + " Runden · " + fmtDate(g.created));
+      main.appendChild(nm); main.appendChild(sub);
+      var st = el("span","status "+(g.finished?"done":"running"), g.finished?"Beendet":"Läuft");
+      var open = el("button","icon-btn","›"); open.style.fontSize="22px";
+      open.onclick = function(){ g.finished ? openResult(g.id) : openGame(g.id); };
+      var del = el("button","icon-btn","🗑");
+      del.onclick = function(){
+        confirmDlg("Spiel löschen?", "„"+(g.name||"Skyjo-Spiel")+"“ wird dauerhaft entfernt.", function(){
+          games = games.filter(function(x){ return x.id!==g.id; });
+          save(); renderSavedList();
+        });
+      };
+      item.appendChild(main); item.appendChild(st); item.appendChild(open); item.appendChild(del);
+      list.appendChild(item);
+    });
+  }
+
+  function openSetup(){
+    current = null;
+    $("subtitle").textContent = "Punkte-Zähler & Statistik";
+    renderSavedList();
+    show("setup");
+  }
+
+  function startGame(){
+    var names = setupPlayers.map(function(s){ return s.trim(); }).filter(function(s){ return s.length; });
+    if(names.length < 2){ alert("Bitte mindestens 2 Spieler eintragen."); return; }
+    var target = parseInt($("targetScore").value, 10);
+    if(!target || target < 1){ target = 100; }
+    var g = {
+      id: uid(),
+      name: $("gameName").value.trim(),
+      players: names,
+      target: target,
+      rounds: [],
+      finished: false,
+      created: Date.now()
+    };
+    games.push(g); save();
+    openGame(g.id);
+    // Setup für nächstes Mal zurücksetzen
+    $("gameName").value=""; $("targetScore").value="100";
+    setupPlayers=["",""]; renderSetupPlayers();
+  }
+
+  // ================= GAME =================
+  function openGame(id){
+    current = games.filter(function(g){ return g.id===id; })[0];
+    if(!current){ openSetup(); return; }
+    current.finished = false;
+    $("subtitle").textContent = current.name || "Laufendes Spiel";
+    renderGame();
+    show("game");
+  }
+
+  function renderGame(){
+    var g = current;
+    var t = totals(g);
+    var maxTotal = Math.max.apply(null, t);
+    var reached = maxTotal >= g.target;
+
+    // Banner
+    var banner = $("gameBanner"); banner.innerHTML="";
+    if(reached){
+      var rank = ranking(g);
+      var b = el("div","banner big");
+      b.appendChild(el("span",null,"🚨"));
+      b.appendChild(el("span",null, g.target+" Punkte erreicht! Letzte Runde noch zu Ende spielen, dann „Spiel beenden“. Aktuell vorn: "+rank[0].name+"."));
+      banner.appendChild(b);
+    }
+
+    $("roundCounter").textContent = g.rounds.length ? "· "+g.rounds.length+" Runden" : "";
+    $("nextRoundNo").textContent = (g.rounds.length+1);
+
+    // Scoreboard (sortiert)
+    var sb = $("scoreboard"); sb.innerHTML="";
+    var rank2 = ranking(g);
+    rank2.forEach(function(x){
+      var card = el("div","score-card");
+      if(x.rank===1 && g.rounds.length) card.classList.add("leader");
+      if(t[x.idx] >= g.target) card.classList.add("danger");
+      card.appendChild(el("div","rank", g.rounds.length ? x.rank+"." : "–"));
+      var dot = el("div","dot"); dot.style.background=color(x.idx); card.appendChild(dot);
+      var nameWrap = el("div","name"); nameWrap.textContent=x.name;
+      if(t[x.idx] >= g.target){ var p=el("span","pill","Limit"); nameWrap.appendChild(p); }
+      card.appendChild(nameWrap);
+      var tot = el("div","total"); tot.textContent = x.total; card.appendChild(tot);
+      sb.appendChild(card);
+    });
+
+    // Runden-Eingabe
+    var ri = $("roundInputs"); ri.innerHTML="";
+    g.players.forEach(function(name, pi){
+      var row = el("div","round-input-row");
+      var dot = el("div","dot"); dot.style.background=color(pi); row.appendChild(dot);
+      row.appendChild(el("div","name", name));
+      var inp = el("input"); inp.type="number"; inp.inputMode="numeric"; inp.placeholder="0";
+      inp.id="ri_"+pi; inp.setAttribute("data-pi", pi);
+      inp.addEventListener("keydown", function(ev){
+        if(ev.key==="Enter"){
+          var next = $("ri_"+(pi+1));
+          if(next){ next.focus(); } else { saveRound(); }
+        }
+      });
+      row.appendChild(inp);
+      ri.appendChild(row);
+    });
+
+    renderHistory();
+    renderActionbar("game");
+  }
+
+  function renderHistory(){
+    var g = current;
+    var tbl = $("historyTable"); tbl.innerHTML="";
+    if(!g.rounds.length){
+      $("historyPanel").style.display="block";
+      tbl.parentElement.style.display="none";
+      var ph = $("historyPanel");
+      // einfacher Hinweis statt Tabelle
+      var existing = ph.querySelector(".empty-hist");
+      if(!existing){
+        var e = el("div","empty empty-hist","Noch keine Runde eingetragen.");
+        ph.appendChild(e);
+      }
+      return;
+    }
+    tbl.parentElement.style.display="block";
+    var ph = $("historyPanel"); var old = ph.querySelector(".empty-hist"); if(old) old.remove();
+
+    var thead = el("thead"); var trh = el("tr");
+    trh.appendChild(Object.assign(el("th","rnd","#"),{}));
+    g.players.forEach(function(name, pi){
+      var th = el("th",null,name);
+      th.style.color = color(pi);
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh); tbl.appendChild(thead);
+
+    var tbody = el("tbody");
+    g.rounds.forEach(function(r, ri){
+      var tr = el("tr");
+      var rn = el("td","rnd", (ri+1));
+      rn.style.cursor="pointer";
+      rn.onclick = function(){ editRound(ri); };
+      tr.appendChild(rn);
+      g.players.forEach(function(_, pi){
+        tr.appendChild(el("td","val", (r[pi]||0)));
+      });
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+
+    var tfoot = el("tfoot"); var trf = el("tr");
+    trf.appendChild(el("td","rnd","Σ"));
+    var t = totals(g);
+    g.players.forEach(function(_, pi){
+      var td = el("td",null, t[pi]);
+      if(t[pi] >= g.target) td.style.color="var(--c-red)";
+      trf.appendChild(td);
+    });
+    tfoot.appendChild(trf); tbl.appendChild(tfoot);
+  }
+
+  function saveRound(){
+    var g = current;
+    var r = g.players.map(function(_, pi){
+      var v = $("ri_"+pi).value.trim();
+      var n = v==="" ? 0 : parseInt(v,10);
+      return isNaN(n) ? 0 : n;
+    });
+    g.rounds.push(r);
+    save();
+    renderGame();
+    // Eingaben leeren passiert durch renderGame (neue Inputs)
+    var first = $("ri_0"); if(first) first.focus();
+  }
+
+  function editRound(ri){
+    var g = current;
+    var dlg = $("editDlg");
+    $("editTitle").textContent = "Runde "+(ri+1)+" bearbeiten";
+    var wrap = $("editInputs"); wrap.innerHTML="";
+    g.players.forEach(function(name, pi){
+      var row = el("div","round-input-row");
+      var dot = el("div","dot"); dot.style.background=color(pi); row.appendChild(dot);
+      row.appendChild(el("div","name", name));
+      var inp = el("input"); inp.type="number"; inp.inputMode="numeric";
+      inp.id="ei_"+pi; inp.value = g.rounds[ri][pi];
+      row.appendChild(inp); wrap.appendChild(row);
+    });
+    $("editSave").onclick = function(){
+      g.rounds[ri] = g.players.map(function(_, pi){
+        var v=$("ei_"+pi).value.trim(); var n=v===""?0:parseInt(v,10); return isNaN(n)?0:n;
+      });
+      save(); dlg.close(); renderGame();
+    };
+    $("editDelete").onclick = function(){
+      g.rounds.splice(ri,1); save(); dlg.close(); renderGame();
+    };
+    $("editCancel").onclick = function(){ dlg.close(); };
+    dlg.showModal();
+  }
+
+  function endGame(){
+    if(!current.rounds.length){ alert("Es wurde noch keine Runde gespielt."); return; }
+    confirmDlg("Spiel beenden?", "Du kommst zur Auswertung. Du kannst danach jederzeit weiterspielen.", function(){
+      current.finished = true; save(); openResult(current.id);
+    }, "Beenden");
+  }
+
+  function rematch(){
+    var g = current;
+    setupPlayers = g.players.slice();
+    $("gameName").value = g.name ? g.name+" (Revanche)" : "";
+    $("targetScore").value = g.target;
+    renderSetupPlayers();
+    openSetup();
+  }
+
+  // ================= RESULT =================
+  function openResult(id){
+    current = games.filter(function(g){ return g.id===id; })[0];
+    if(!current){ openSetup(); return; }
+    $("subtitle").textContent = (current.name||"Spiel") + " · Auswertung";
+    renderResult();
+    show("result");
+  }
+
+  function renderResult(){
+    var g = current;
+    var rank = ranking(g);
+    var t = totals(g);
+
+    $("winnerLine").textContent = rank[0].name + " gewinnt mit " + rank[0].total + " Punkten!";
+
+    // Podium / Ranking
+    var pod = $("podium"); pod.innerHTML="";
+    rank.forEach(function(x, i){
+      var card = el("div","rank-card");
+      if(x.rank<=3) card.classList.add("g"+x.rank);
+      var medal = el("div","medal", x.rank<=3 ? MEDALS[x.rank-1] : x.rank+".");
+      card.appendChild(medal);
+      var nm = el("div","nm");
+      nm.appendChild(Object.assign(el("b",null,x.name),{}));
+      var avg = g.rounds.length ? (x.total/g.rounds.length) : 0;
+      nm.appendChild(el("small",null, "Ø "+avg.toFixed(1)+" / Runde"));
+      card.appendChild(nm);
+      var dot = el("div","dot"); dot.style.cssText="width:14px;height:14px;border-radius:50%;background:"+color(x.idx);
+      card.appendChild(dot);
+      card.appendChild(el("div","pts", x.total));
+      pod.appendChild(card);
+    });
+
+    // Statistik
+    var allVals = [];
+    g.rounds.forEach(function(r){ r.forEach(function(v){ allVals.push(v||0); }); });
+    var bestRound = allVals.length ? Math.min.apply(null, allVals) : 0;
+    var worstRound = allVals.length ? Math.max.apply(null, allVals) : 0;
+    // beste Einzelrunde: welcher Spieler
+    var bestWho="–", worstWho="–";
+    g.rounds.forEach(function(r){
+      r.forEach(function(v, pi){
+        if((v||0)===bestRound && bestWho==="–") bestWho=g.players[pi];
+        if((v||0)===worstRound && worstWho==="–") worstWho=g.players[pi];
+      });
+    });
+    var spread = (Math.max.apply(null,t) - Math.min.apply(null,t));
+
+    var sg = $("statsGrid"); sg.innerHTML="";
+    function stat(k,v){ var s=el("div","stat"); s.appendChild(el("div","k",k)); s.appendChild(el("div","v",v)); sg.appendChild(s); }
+    stat("Gespielte Runden", g.rounds.length);
+    stat("Punktelimit", g.target);
+    stat("Beste Einzelrunde", bestRound+" ("+bestWho+")");
+    stat("Höchste Einzelrunde", worstRound+" ("+worstWho+")");
+    stat("Abstand 1. ↔ letzter", spread+" Pkt");
+    stat("Ø pro Runde (alle)", g.rounds.length ? (t.reduce(function(a,b){return a+b;},0)/(g.rounds.length*g.players.length)).toFixed(1) : "0");
+
+    // Tabelle: Runden mit Markierung des besten Werts
+    var tbl = $("resultTable"); tbl.innerHTML="";
+    var thead=el("thead"); var trh=el("tr"); trh.appendChild(el("th","rnd","#"));
+    g.players.forEach(function(name,pi){ var th=el("th",null,name); th.style.color=color(pi); trh.appendChild(th); });
+    thead.appendChild(trh); tbl.appendChild(thead);
+    var tbody=el("tbody");
+    g.rounds.forEach(function(r,ri){
+      var tr=el("tr"); tr.appendChild(el("td","rnd",(ri+1)));
+      var mn = Math.min.apply(null, r.map(function(v){return v||0;}));
+      g.players.forEach(function(_,pi){
+        var td=el("td","val",(r[pi]||0));
+        if((r[pi]||0)===mn){ td.style.color="var(--c-green)"; td.style.fontWeight="800"; }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    var tfoot=el("tfoot"); var trf=el("tr"); trf.appendChild(el("td","rnd","Σ"));
+    g.players.forEach(function(_,pi){
+      var td=el("td",null,t[pi]);
+      if(rank[0].idx===pi){ td.style.color="var(--gold)"; }
+      trf.appendChild(td);
+    });
+    tfoot.appendChild(trf); tbl.appendChild(tfoot);
+
+    renderActionbar("result");
+  }
+
+  // ================= DIALOG =================
+  function confirmDlg(title, text, onOk, okLabel){
+    var dlg=$("confirmDlg");
+    $("dlgTitle").textContent=title;
+    $("dlgText").textContent=text;
+    $("dlgOk").textContent = okLabel || "OK";
+    $("dlgOk").onclick=function(){ dlg.close(); onOk(); };
+    $("dlgCancel").onclick=function(){ dlg.close(); };
+    dlg.showModal();
+  }
+
+  // ================= EXPORT / IMPORT =================
+  function exportData(){
+    var data = JSON.stringify(games, null, 2);
+    var blob = new Blob([data], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = el("a"); a.href=url; a.download="skyjo-spielstaende.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+  function importData(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var imported = JSON.parse(reader.result);
+        if(!Array.isArray(imported)) throw 0;
+        var existing = {};
+        games.forEach(function(g){ existing[g.id]=true; });
+        var added=0;
+        imported.forEach(function(g){
+          if(g && g.id && g.players && !existing[g.id]){ games.push(g); added++; }
+        });
+        save(); renderSavedList();
+        alert(added+" Spiel(e) importiert.");
+      } catch(e){ alert("Datei konnte nicht gelesen werden."); }
+    };
+    reader.readAsText(file);
+  }
+
+  // ================= EVENTS =================
+  $("addPlayerBtn").onclick = function(){
+    if(setupPlayers.length>=8){ alert("Maximal 8 Spieler."); return; }
+    setupPlayers.push(""); renderSetupPlayers();
+  };
+  $("startGameBtn").onclick = startGame;
+  $("saveRoundBtn").onclick = saveRound;
+  $("exportBtn").onclick = exportData;
+  $("importBtn").onclick = function(){ $("importFile").click(); };
+  $("importFile").onchange = function(e){ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=""; };
+
+  // ================= INIT =================
+  load();
+  renderSetupPlayers();
+  openSetup();
+})();
+</script>
+</body>
+</html>
