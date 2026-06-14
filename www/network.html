@@ -95,7 +95,8 @@ body {
 .wan-rate .big { font-size: 48px; font-weight: 800; line-height: 1; }
 .wan-rate .dl { color: var(--blue); }
 .wan-rate .ul { color: var(--orange); }
-.spark-wrap { min-height: 132px; }
+.wan-right { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+.spark-wrap { flex: 1; min-height: 100px; }
 .spark-wrap svg { width: 100%; height: 100%; display: block; }
 .wan-foot {
   display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
@@ -106,6 +107,18 @@ body {
 .st-dl { color: var(--blue); } .st-ul { color: var(--orange); } .st-ping { color: var(--purple); }
 .wan-info { margin-left: auto; font-size: 17px; color: var(--muted); letter-spacing: 0.5px; text-align: right; line-height: 1.5; }
 .wan-info b { color: var(--lblue); font-weight: 600; }
+
+/* ── NAS ─────────────────────────────────────────────────────────── */
+.card-green .card-header { background: rgba(68,204,102,0.10); color: var(--green); }
+.card-green .card-header .ch-dot { background: var(--green); }
+.nas { display: flex; align-items: center; gap: 20px; }
+.nas .pct { font-size: 38px; font-weight: 800; color: var(--green); line-height: 1; }
+.nas .nas-lbl { font-size: 13px; color: var(--muted); }
+.nas .meta { flex: 1; min-width: 0; }
+.nas .meta .bar { height: 9px; margin: 0; }
+.nas .meta .bar > span { background: var(--green); }
+.nas .meta .txt { margin-top: 9px; font-size: 16px; color: var(--muted); }
+.nas .meta .txt b { color: var(--lblue); font-weight: 600; }
 
 /* ── Stats ───────────────────────────────────────────────────────── */
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
@@ -127,16 +140,19 @@ body {
 
 /* ── Device health list ──────────────────────────────────────────── */
 #dev-list { display: flex; flex-direction: column; }
-.drow { display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--sep); font-size: 19px; }
+.dhead { display: grid; grid-template-columns: 14px 1fr 60px 112px 62px; gap: 8px; align-items: center; padding: 2px 0 8px; border-bottom: 1px solid var(--sep); margin-bottom: 2px; }
+.dh { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); text-align: right; }
+.drow { display: grid; grid-template-columns: 14px 1fr 60px 112px 62px; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--sep); font-size: 19px; }
 .drow:last-child { border-bottom: none; }
 .ddot { width: 12px; height: 12px; border-radius: 50%; background: var(--muted); }
 .ddot.on  { background: var(--green); box-shadow: 0 0 6px var(--green); }
 .ddot.off { background: var(--salmon); }
 .dname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dmodel { font-size: 14px; color: var(--muted); margin-left: 5px; }
-.dstat { font-variant-numeric: tabular-nums; font-size: 19px; color: var(--lblue); min-width: 70px; text-align: right; }
+.dstat { font-variant-numeric: tabular-nums; font-size: 19px; color: var(--lblue); text-align: right; }
 .dstat.poe { color: var(--orange); }
 .dstat .du { font-size: 13px; color: var(--muted); }
+.dver { font-variant-numeric: tabular-nums; font-size: 14px; color: #8a93b0; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Proxmox ─────────────────────────────────────────────────────── */
 .pve-node { display: flex; align-items: center; gap: 14px; padding: 2px 0 10px; border-bottom: 1px solid var(--sep); flex-wrap: wrap; }
@@ -171,7 +187,7 @@ body {
 /* ── Security / Threats ──────────────────────────────────────────── */
 .card-red .card-header { background: rgba(255,136,102,0.12); color: var(--salmon); }
 .card-red .card-header .ch-dot { background: var(--salmon); }
-.th-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--sep); font-size: 18px; }
+.th-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--sep); font-size: 18px; }
 .th-row:last-child { border-bottom: none; }
 .th-k { color: var(--text); }
 .th-v { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--lblue); }
@@ -195,11 +211,18 @@ body {
             <div class="wan-rate"><span class="arr">↓</span><span class="big dl" id="wan-dl"><span class="loading">…</span></span><span class="u"> Mbit/s</span></div>
             <div class="wan-rate"><span class="arr">↑</span><span class="big ul" id="wan-ul"><span class="loading">…</span></span><span class="u"> Mbit/s</span></div>
           </div>
-          <div class="spark-wrap">
-            <svg viewBox="0 0 600 132" preserveAspectRatio="none" aria-hidden="true">
-              <polyline id="spark-ul" fill="none" stroke="#FF9900" stroke-width="2" points=""/>
-              <polyline id="spark-dl" fill="none" stroke="#4488FF" stroke-width="2.5" points=""/>
-            </svg>
+          <div class="wan-right">
+            <div class="spark-wrap">
+              <svg viewBox="0 0 600 132" preserveAspectRatio="none" aria-hidden="true">
+                <polyline id="spark-ul" fill="none" stroke="#FF9900" stroke-width="2" points=""/>
+                <polyline id="spark-dl" fill="none" stroke="#4488FF" stroke-width="2.5" points=""/>
+              </svg>
+            </div>
+            <div class="wan-info">
+              ISP-IP <b id="wan-ip">—</b><br>
+              Volume since last boot (<b id="vol-uptime">–</b>)<br>
+              ↓ <b id="wan-rx">—</b> · ↑ <b id="wan-tx">—</b>
+            </div>
           </div>
         </div>
         <div class="wan-foot">
@@ -207,10 +230,18 @@ body {
           <div><span class="arr" style="color:var(--muted)">↓</span> <span class="st-val st-dl" id="st-dl">–</span><span class="u"> Mbit/s</span></div>
           <div><span class="arr" style="color:var(--muted)">↑</span> <span class="st-val st-ul" id="st-ul">–</span><span class="u"> Mbit/s</span></div>
           <div>Ping <span class="st-val st-ping" id="wan-ping">–</span><span class="u"> ms</span></div>
-          <div class="wan-info">
-            ISP-IP <b id="wan-ip">—</b><br>
-            Volume since last boot (<b id="vol-uptime">–</b>)<br>
-            ↓ <b id="wan-rx">—</b> · ↑ <b id="wan-tx">—</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-green">
+      <div class="card-header"><span class="ch-dot"></span>Network Attached Storage</div>
+      <div class="card-body">
+        <div class="nas">
+          <div><div class="pct" id="nas-lev">–</div><div class="nas-lbl">used</div></div>
+          <div class="meta">
+            <div class="bar"><span id="nas-bar"></span></div>
+            <div class="txt"><b id="nas-used">—</b> / <b id="nas-total">—</b></div>
           </div>
         </div>
       </div>
@@ -280,7 +311,10 @@ body {
       <div class="card-header"><span class="ch-dot"></span>Devices
         <span class="hx"><span id="dev-summary">—</span><span id="uni-update"></span></span>
       </div>
-      <div class="card-body"><div id="dev-list"></div></div>
+      <div class="card-body">
+        <div class="dhead"><span></span><span></span><span class="dh">CPU</span><span class="dh">Version</span><span class="dh">PoE</span></div>
+        <div id="dev-list"></div>
+      </div>
     </div>
     <div class="card card-shield grow">
       <div class="card-header"><span class="ch-dot"></span>Error - State
@@ -345,7 +379,7 @@ const DEVICES = [
   { mac:'d0:21:f9:85:67:e1', name:'Firewall',         model:'UDM Pro',  type:'gw'     },
   { mac:'24:5a:4c:96:f2:38', name:'Switch-Rack',      model:'USL24P',   type:'switch' },
   { mac:'e4:38:83:8c:8a:ba', name:'Switch-Dachboden', model:'USL8LPB',  type:'switch' },
-  { mac:'84:78:48:54:59:d4', name:'UPS Tower',        model:'USWDA24',  type:'switch' },
+  { mac:'84:78:48:54:59:d4', name:'UPS Tower',        model:'USWDA24',  type:'ups'    },
   { mac:'78:45:58:e5:1f:99', name:'Wohnen',           model:'UAP6MP',   type:'ap'     },
   { mac:'f4:e2:c6:20:cc:bf', name:'Terrasse',         model:'U7MSH',    type:'ap'     },
   { mac:'1c:0b:8b:b8:1c:b9', name:'Technikraum',      model:'UAPA693',  type:'ap'     },
@@ -396,6 +430,13 @@ const THREAT_OIDs = {
   'th-blocked':  '0_userdata.0.Network.Unifi.ThreatsBlocked-24h',
   'th-honeypot': '0_userdata.0.Network.Unifi.HoneypotTriggered-24h',
 };
+
+// NAS (Proxmox storage_nas)
+const NAS_OIDs = {
+  'nas-used':  'proxmox.0.storage_nas.used',
+  'nas-total': 'proxmox.0.storage_nas.total',
+  'nas-lev':   'proxmox.0.storage_nas.used_lev',
+};
 const VMS = [
   { id:'lxc_ebusd',        name:'ebusd'        },
   { id:'lxc_esphome',      name:'esphome'      },
@@ -420,6 +461,7 @@ function fmtPct(v)  { const n = num(v); return n === null ? '–' : Math.round(n
 function fmtCpu(v)  { const n = num(v); return n === null ? '–' : (n < 10 ? n.toFixed(1) : Math.round(n)) + '<span class="u"> %</span>'; }
 function fmtTemp(v) { const n = num(v); return n === null ? '–' : Math.round(n) + '<span class="u"> °C</span>'; }
 function fmtBytes(v){ const n = num(v); if (n === null) return '—'; return n >= 1000 ? (n / 1000).toFixed(2) + ' TB' : n.toFixed(0) + ' GB'; }
+function fmtMiB(v){ const n = num(v); if (n === null) return '—'; if (n >= 1048576) return (n / 1048576).toFixed(2) + ' TB'; if (n >= 1024) return (n / 1024).toFixed(1) + ' GB'; return Math.round(n) + ' MiB'; }
 function fmtUptime(v){ const n = num(v); if (n === null) return '–'; const d = Math.floor(n / 86400), h = Math.floor((n % 86400) / 3600); return d > 0 ? `${d}d ${h}h` : `${h}h`; }
 function fmtTime(v) {
   if (v === null || v === undefined || v === '') return '–';
@@ -445,14 +487,15 @@ function buildLists() {
   document.getElementById('wlan-list').innerHTML = WLANS.map(w =>
     `<div class="row"><span>${w.name}</span><span class="cnt" id="wlan-${w.oidId}">–</span></div>`).join('');
   document.getElementById('dev-list').innerHTML = DEVICES.map(d => {
-    const extra = d.type === 'switch'
+    const poe = d.type === 'switch'
       ? `<span class="dstat poe" id="dev-${d.mac}-poe">–</span>`
-      : `<span class="dstat" id="dev-${d.mac}-temp">–</span>`;
+      : `<span class="dstat poe"></span>`;
     return `<div class="drow">
       <span class="ddot" id="dev-${d.mac}-dot"></span>
       <span class="dname">${d.name}<span class="dmodel">${d.model}</span></span>
       <span class="dstat" id="dev-${d.mac}-cpu">–</span>
-      ${extra}
+      <span class="dver" id="dev-${d.mac}-ver">–</span>
+      ${poe}
     </div>`;
   }).join('');
   document.getElementById('dev-summary').textContent = DEVICES.length + ' Devices';
@@ -545,20 +588,25 @@ function applyState(oid, val) {
   if (wlanM) { const el = document.getElementById('wlan-' + wlanM[1]); if (el) el.textContent = parseInt(val) || 0; return; }
 
   // Geräte-Health  (devices.<mac>.{isOnline | system.cpu | temperature | power})
-  if (oid === UNI_POLL_OID) { setText('uni-update', ' · ' + fmtTime(val)); return; }
+  if (oid === UNI_POLL_OID) { setText('uni-update', ' · Last Sync ' + fmtTime(val)); return; }
 
   // Threats
   if (oid === THREAT_OIDs['th-detected']) { setThreat('th-detected', val, 'warn'); return; }
   if (oid === THREAT_OIDs['th-blocked'])  { setThreat('th-blocked', val, 'info'); return; }
   if (oid === THREAT_OIDs['th-honeypot']) { setThreat('th-honeypot', val, 'alert'); return; }
 
-  const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|hasError|system\\.cpu|temperatures\\.CPU\\.value|power)$'));
+  // NAS
+  if (oid === NAS_OIDs['nas-used'])  { setText('nas-used', fmtMiB(val)); return; }
+  if (oid === NAS_OIDs['nas-total']) { setText('nas-total', fmtMiB(val)); return; }
+  if (oid === NAS_OIDs['nas-lev'])   { const n = num(val); setText('nas-lev', n === null ? '–' : Math.round(n) + '<span class="u"> %</span>'); const b = document.getElementById('nas-bar'); if (b && n !== null) b.style.width = Math.min(100, n) + '%'; return; }
+
+  const devM = oid.match(new RegExp('^' + esc + '\\.devices\\.([0-9a-f:]+)\\.(isOnline|hasError|system\\.cpu|version|power)$'));
   if (devM) {
     const mac = devM[1], leaf = devM[2];
     if (leaf === 'isOnline') { const dot = document.getElementById('dev-' + mac + '-dot'); if (dot) dot.className = 'ddot ' + ((val === true || val === 'true') ? 'on' : 'off'); }
     else if (leaf === 'hasError') { devError[mac] = (val === true || val === 'true'); renderErrors(); }
     else if (leaf === 'system.cpu') { const el = document.getElementById('dev-' + mac + '-cpu'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> %</span>'; }
-    else if (leaf === 'temperatures.CPU.value') { const el = document.getElementById('dev-' + mac + '-temp'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : Math.round(n) + '<span class="du"> °C</span>'; }
+    else if (leaf === 'version') { const el = document.getElementById('dev-' + mac + '-ver'); if (el) el.textContent = (val === null || val === undefined || val === '') ? '–' : String(val); }
     else if (leaf === 'power') { const el = document.getElementById('dev-' + mac + '-poe'); const n = num(val); if (el) el.innerHTML = n === null ? '–' : n.toFixed(1) + '<span class="du"> W</span>'; }
     return;
   }
@@ -594,14 +642,15 @@ const allOids = [...new Set([
   UNI_POLL_OID,
   ...DEVICES.flatMap(d => {
     const base = NS + '.devices.' + d.mac;
-    const list = [base + '.isOnline', base + '.hasError', base + '.system.cpu'];
-    list.push(d.type === 'switch' ? base + '.power' : base + '.temperatures.CPU.value');
+    const list = [base + '.isOnline', base + '.hasError', base + '.system.cpu', base + '.version'];
+    if (d.type === 'switch') list.push(base + '.power');
     return list;
   }),
   ...Object.values(PVE_OIDs),
   PVE_UPDATE_OID,
   ...VMS.flatMap(v => ['status', 'cpu', 'mem_lev'].map(l => 'proxmox.0.' + v.id + '.' + l)),
   ...Object.values(THREAT_OIDs),
+  ...Object.values(NAS_OIDs),
 ])];
 
 // ── Init: erst DOM-Listen bauen, dann Verbindung ──────────────────────────
