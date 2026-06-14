@@ -121,8 +121,10 @@ async function poll() {
 
     // honeypot: policy_type PROTECTION, Flows mit policies[].internal_type === 'HONEYPOT'
     const hp = await trafficFlows(['PROTECTION']);
-    const honeypot = (hp.status === 200 ? hp.data : []).filter(e =>
-      Array.isArray(e.policies) && e.policies.some(p => /honeypot/i.test((p.internal_type || '') + (p.name || '')))).length;
+    const hpFlows = (hp.status === 200 ? hp.data : []).filter(e =>
+      Array.isArray(e.policies) && e.policies.some(p => /honeypot/i.test((p.internal_type || '') + (p.name || ''))));
+    // distinct Quell-Hosts statt roher Flow-Zahl
+    const honeypot = new Set(hpFlows.map(e => (e.source && (e.source.ip || e.source.mac || e.source.id)) || '?')).size;
 
     if (DEBUG && det.data[0]) dlog('[unifi-threats] Sample: ' + JSON.stringify(det.data[0]).slice(0, 700));
 
