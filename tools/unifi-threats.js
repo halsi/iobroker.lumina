@@ -75,38 +75,41 @@ async function login() {
 
 // ── UniFi Network 10.x: IDS/IPS-Threats via v2 traffic-flows ──────────────
 //    POST /proxy/network/v2/api/site/<site>/traffic-flows mit policy_type-Filter.
-//    skip_count:false → Server liefert Gesamt-Count (kein Paging nötig).
+//    Kein Count-Feld in der Antwort -> Pagination bis Limit (MAX_PAGES) zum exakten Zaehlen.
 const V2 = '/proxy/network/v2/api/site/' + SITE;
+
+const PAGE = 100, MAX_PAGES = 10;   // Pagination bis 1000 Flows
 
 async function trafficFlows(policyTypes, actions) {
   if (!session) await login();
   const now = Date.now();
-  const body = {
-    timestampFrom: now - 24 * 3600 * 1000,
-    timestampTo: now,
-    pageNumber: 0,
-    pageSize: 100,
-    skip_count: false,
-    policy_type: policyTypes,
-    risk: [], action: actions || [], direction: [], protocol: [], policy: [],
-    service: [], source_host: [], source_mac: [], source_ip: [], source_port: [],
-    source_network_id: [], source_domain: [], source_zone_id: [], source_region: [],
-    destination_host: [], destination_mac: [], destination_ip: [], destination_port: [],
-    destination_network_id: [], destination_domain: [], destination_zone_id: [], destination_region: [],
-    in_network_id: [], out_network_id: [], next_ai_query: [], except_for: [], search_text: '',
-  };
   const path = V2 + '/traffic-flows';
-  let res = await httpReq('POST', path, { body, cookie: session.cookie, csrf: session.csrf });
-  if (res.status === 401) { await login(); res = await httpReq('POST', path, { body, cookie: session.cookie, csrf: session.csrf }); }
-  let json = {}; try { json = JSON.parse(res.body); } catch (e) {}
-  const data = Array.isArray(json) ? json : (json.data || json.flows || []);
-  const count = (typeof json.count === 'number') ? json.count
-              : (typeof json.total_count === 'number') ? json.total_count
-              : (typeof json.totalCount === 'number') ? json.totalCount : data.length;
+  let all = [], status = 0, capped = false;
+  for (let pg = 0; pg < MAX_PAGES; pg++) {
+    const body = {
+      timestampFrom: now - 24 * 3600 * 1000, timestampTo: now,
+      pageNumber: pg, pageSize: PAGE, skip_count: true,
+      policy_type: policyTypes,
+      risk: [], action: actions || [], direction: [], protocol: [], policy: [],
+      service: [], source_host: [], source_mac: [], source_ip: [], source_port: [],
+      source_network_id: [], source_domain: [], source_zone_id: [], source_region: [],
+      destination_host: [], destination_mac: [], destination_ip: [], destination_port: [],
+      destination_network_id: [], destination_domain: [], destination_zone_id: [], destination_region: [],
+      in_network_id: [], out_network_id: [], next_ai_query: [], except_for: [], search_text: '',
+    };
+    let res = await httpReq('POST', path, { body, cookie: session.cookie, csrf: session.csrf });
+    if (res.status === 401) { await login(); res = await httpReq('POST', path, { body, cookie: session.cookie, csrf: session.csrf }); }
+    status = res.status;
+    if (res.status !== 200) { dlog('[unifi-threats] traffic-flows ' + JSON.stringify(policyTypes) + ' p' + pg + ' → HTTP ' + res.status + ' ' + (res.body || '').replace(/\s+/g, ' ').slice(0, 200)); break; }
+    let json = {}; try { json = JSON.parse(res.body); } catch (e) {}
+    const data = Array.isArray(json) ? json : (json.data || json.flows || []);
+    all = all.concat(data);
+    if (data.length < PAGE) break;             // letzte (Teil-)Seite
+    if (pg === MAX_PAGES - 1) capped = true;    // Limit erreicht
+  }
   dlog('[unifi-threats] traffic-flows ' + JSON.stringify(policyTypes) + (actions ? ' act=' + JSON.stringify(actions) : '') +
-       ' → HTTP ' + res.status + ' count=' + count + ' len=' + data.length +
-       (res.status !== 200 ? ' ' + (res.body || '').replace(/\s+/g, ' ').slice(0, 400) : ''));
-  return { status: res.status, data, count };
+       ' → total=' + all.length + (capped ? '+' : '') + ' (HTTP ' + status + ')');
+  return { status, data: all, count: all.length, capped };
 }
 
 async function poll() {
@@ -114,10 +117,8 @@ async function poll() {
     const det = await trafficFlows(['INTRUSION_PREVENTION']);
     const detected = det.status === 200 ? det.count : 0;
 
-    // blocked: serverseitiger action-Filter ["blocked"] (gültiger Enum-Wert); sonst clientseitig
-    const blk = await trafficFlows(['INTRUSION_PREVENTION'], ['blocked']);
-    const blocked = blk.status === 200 ? blk.count
-                  : det.data.filter(e => String(e.action || '').toLowerCase() === 'blocked').length;
+    // blocked: aus denselben Detected-Flows (action === 'blocked')
+    const blocked = det.data.filter(e => String(e.action || '').toLowerCase() === 'blocked').length;
 
     // honeypot: policy_type PROTECTION, Flows mit policies[].internal_type === 'HONEYPOT'
     const hp = await trafficFlows(['PROTECTION']);
