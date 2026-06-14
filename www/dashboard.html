@@ -159,6 +159,17 @@ html, body {
 }
 .edit-mode .holo-label:active { cursor: grabbing; }
 
+/* Haustür-Akku-Warnung (Nuki) – rot blinkend, nur sichtbar bei < 30 % */
+@keyframes battWarnBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.18; } }
+#lb-batt-warn { display: none; white-space: nowrap; }
+#lb-batt-warn.batt-warn-active { display: block; }
+.edit-mode #lb-batt-warn { display: block; }   /* im Edit-Mode immer sichtbar zum Positionieren */
+#lb-batt-warn .node-name {
+  color: #FF2A2A; font-weight: 900; letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(255,42,42,0.95), 0 0 4px rgba(255,42,42,0.8);
+  animation: battWarnBlink 1s ease-in-out infinite;
+}
+
 .label-controls {
   display: none;
   position: absolute;
@@ -1546,6 +1557,13 @@ html, body {
     <span class="node-name">HAUS</span><br>
     <span class="node-value" id="v-house">–</span>
   </div>
+  <div id="lb-batt-warn" class="holo-label" data-size="24">
+    <div class="label-controls">
+      <button class="lbl-btn lbl-minus">−</button>
+      <button class="lbl-btn lbl-plus">+</button>
+    </div>
+    <span class="node-name">! Batteriewarnung !<br>Haustür</span>
+  </div>
   <div id="lb-battery" class="holo-label" data-size="22">
     <div class="label-controls">
       <button class="lbl-btn lbl-minus">−</button>
@@ -2703,6 +2721,7 @@ const OIDs = {
   bwtSalt:          '0_userdata.0.Generic.BWTSalt',
   bwtFlow:          'bwt.0.local.currentData.CurrentFlowrate_l_h',
   wasserzaehler:    '0_userdata.0.Wasser.Wasserverbrauch-Haus-Gesamt',
+  nukiBatt:         'mqtt.0.nuki.434A70D7.batteryChargeState',
   pvToLoad:         '0_userdata.0.Photovoltaik.PvToLoad',
   gridToLoad:       '0_userdata.0.Photovoltaik.GridToLoad',
   batToLoad:        '0_userdata.0.Photovoltaik.BatToLoad',
@@ -2716,7 +2735,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, poolPumpModus: 4, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false, wasserzaehler: null };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, poolPumpModus: 4, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false, wasserzaehler: null, nukiBatt: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -2903,6 +2922,14 @@ function updateWasserzaehler() {
   const digits = parts[0].padStart(5, '0').slice(-5)
                + (parts[1] || '000').padEnd(3, '0').slice(0, 3);
   for (let i = 0; i < 8; i++) cells[i].textContent = digits[i];
+}
+
+// Haustür-Akku-Warnung: rot blinkendes Label, nur sichtbar wenn < 30 %
+function updateNukiBattWarn() {
+  const el = document.getElementById('lb-batt-warn');
+  if (!el) return;
+  const low = live.nukiBatt != null && live.nukiBatt < 30;
+  el.classList.toggle('batt-warn-active', low);
 }
 
 function updateBWT() {
@@ -3173,6 +3200,10 @@ function applyState(oid, val) {
       updateWasserzaehler();
       break;
     }
+    case OIDs.nukiBatt:
+      live.nukiBatt = isNaN(n) ? null : n;
+      updateNukiBattWarn();
+      break;
     case OIDs.bwtSalt: {
       live.bwtSalt = (val === true || val === 'true' || val === 1 || val === '1');
       updateBWT();
@@ -3279,6 +3310,7 @@ const DEFAULT_LABEL_STATE = {
   'lb-hwc-heat':    { x: 1679, y: 140, size: 22 },
   'lb-klima':       { x: 1390, y: 415, size: 22 },
   'lb-bwt':         { x: 1500, y: 560, size: 17 },
+  'lb-batt-warn':   { x:  960, y:   40, size: 24 },
 };
 
 function loadLabelState() {
