@@ -25,6 +25,8 @@ const PASS = 'DEIN_PASSWORT';    // <-- eintragen
 const SITE = 'default';
 const INTERVAL_SEC = 60;
 const DEBUG = true;              // nach erfolgreicher Justierung auf false
+const WAN_MAC = 'd0:21:f9:85:67:e1';   // UDM Pro – fuer den WAN-Throughput-Verlauf
+const WAN_SAMPLE_SEC = 20;             // Sampling-Takt des 30-min-Graphen
 
 const https = require('https');
 const agent = new https.Agent({ rejectUnauthorized: false, keepAlive: true });
@@ -147,12 +149,17 @@ async function poll() {
 
     // Threats letzte 12h aus det (IPS) + hpFlows (Honeypot) -> nach Land + hoechster Schwere
     const sevRank = { detected: 1, honeypot: 2, blocked: 3 };
-    const thByCC = {}, recent = [];
+    const thByCC = {}, recent = [], localCnt = { blocked: 0, detected: 0, honeypot: 0 };
     const addThreat = (e, type) => {
       if (fts(e) !== 0 && fts(e) < h12) return;
       const cc = ccOf(e);
-      recent.push({ t: fts(e) || now2, cc: cc || '?', type, dst: (e.destination && (e.destination.zone_name || e.destination.network_name)) || '' });
+      const src = e.source || {};
+      recent.push({ t: fts(e) || now2, cc: cc || '', type,
+        dst: (e.destination && (e.destination.zone_name || e.destination.network_name)) || '',
+        srcZone: src.zone_name || src.network_name || (e.in && e.in.network_name) || '',
+        srcIp: src.ip || '' });
       if (cc) { const c = thByCC[cc] || { n: 0, sev: 'detected' }; c.n++; if (sevRank[type] > sevRank[c.sev]) c.sev = type; thByCC[cc] = c; }
+      else localCnt[type] = (localCnt[type] || 0) + 1;
     };
     det.data.forEach(e => addThreat(e, String(e.action || '').toLowerCase() === 'blocked' ? 'blocked' : 'detected'));
     hpFlows.forEach(e => addThreat(e, 'honeypot'));
@@ -163,6 +170,7 @@ async function poll() {
       flows: Object.entries(flowsByCC).map(([cc, n]) => ({ cc, n })).sort((a, b) => b.n - a.n).slice(0, 60),
       threats: Object.entries(thByCC).map(([cc, v]) => ({ cc, n: v.n, sev: v.sev })),
       recent: recent.slice(0, 12),
+      local: localCnt,
     }, 'Flow Map (JSON)');
     dlog('[unifi-threats] flowmap: flows=' + cur.data.length + ' countries=' + Object.keys(flowsByCC).length + ' threats=' + Object.keys(thByCC).length);
   } catch (e) {
@@ -189,5 +197,30 @@ async function setJson(id, obj, name) {
   await setStateAsync(id, JSON.stringify(obj), true);
 }
 
+// ── WAN-Throughput-Verlauf (30 min) fuer network.html ────────────────────────
+//    Sampelt die WAN-Rate aus dem unifi-network-Adapter (lokales getState, kein
+//    API-Call) und haelt einen 30-min-Ringpuffer als JSON. network.html zeichnet
+//    den Graphen zeitbasiert daraus -> nach jedem Reload sofort die letzten 30 min.
+const WAN_DL_OID = 'unifi-network.0.devices.' + WAN_MAC + '.wan1.current_download';
+const WAN_UL_OID = 'unifi-network.0.devices.' + WAN_MAC + '.wan1.current_upload';
+const WAN_WINDOW_MS = 30 * 60 * 1000;
+let wanHist = [];
+function readNum(id) {
+  try { const s = getState(id); if (!s || s.val == null) return 0; const n = (typeof s.val === 'number') ? s.val : parseFloat(s.val); return isNaN(n) ? 0 : n; }
+  catch (e) { return 0; }
+}
+async function sampleWan() {
+  try {
+    const now = Date.now();
+    wanHist.push({ t: now, d: readNum(WAN_DL_OID), u: readNum(WAN_UL_OID) });
+    wanHist = wanHist.filter(p => p.t >= now - WAN_WINDOW_MS);
+    await setJson(BASE + '.WanHistory', { ts: now, points: wanHist }, 'WAN Throughput 30min (JSON)');
+  } catch (e) { dlog('[unifi-threats] WAN-Sample Fehler: ' + e.message, 'error'); }
+}
+// Beim Start aus gespeichertem JSON wiederherstellen -> Verlauf ueberlebt Neustart
+try { const ex = getState(BASE + '.WanHistory'); if (ex && ex.val) { const o = JSON.parse(ex.val); if (Array.isArray(o.points)) wanHist = o.points.filter(p => p.t >= Date.now() - WAN_WINDOW_MS); } } catch (e) {}
+
 poll();
 setInterval(poll, INTERVAL_SEC * 1000);
+sampleWan();
+setInterval(sampleWan, WAN_SAMPLE_SEC * 1000);

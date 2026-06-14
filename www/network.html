@@ -489,20 +489,26 @@ function buildLists() {
     </div>`).join('');
 }
 
-// ── WAN sparkline ──────────────────────────────────────────────────────────
-const DL_HIST = [], UL_HIST = [], HIST_MAX = 80;
-function pushHist(arr, v) { arr.push(v); if (arr.length > HIST_MAX) arr.shift(); }
+// ── WAN sparkline ── 30-Min-Verlauf aus WanHistory-JSON (vom Poller gepflegt) ──
+const WAN_HIST_OID = '0_userdata.0.Network.Unifi.WanHistory';
+const SPARK_WIN_MS = 30 * 60 * 1000;   // 30-Minuten-Fenster
+let sparkPoints = [];                  // [{t, d, u}] der letzten 30 min
 function redrawSpark() {
+  const dl = document.getElementById('spark-dl'), ul = document.getElementById('spark-ul');
+  if (!sparkPoints.length) { if (dl) dl.setAttribute('points', ''); if (ul) ul.setAttribute('points', ''); return; }
   const W = 600, H = 132, pad = 8;
-  const max = Math.max(1, ...DL_HIST, ...UL_HIST) * 1.15;
-  const pts = arr => arr.length === 0 ? '' : arr.map((v, i) => {
-    const x = arr.length === 1 ? W : (i / (arr.length - 1)) * W;
-    const y = H - pad - (v / max) * (H - 2 * pad);
+  const tEnd = sparkPoints[sparkPoints.length - 1].t, tStart = tEnd - SPARK_WIN_MS;
+  const max = Math.max(1, ...sparkPoints.map(p => p.d || 0), ...sparkPoints.map(p => p.u || 0)) * 1.15;
+  const pts = key => sparkPoints.map(p => {
+    const x = Math.max(0, ((p.t - tStart) / SPARK_WIN_MS) * W);
+    const y = H - pad - ((p[key] || 0) / max) * (H - 2 * pad);
     return x.toFixed(1) + ',' + y.toFixed(1);
   }).join(' ');
-  const dl = document.getElementById('spark-dl'), ul = document.getElementById('spark-ul');
-  if (dl) dl.setAttribute('points', pts(DL_HIST));
-  if (ul) ul.setAttribute('points', pts(UL_HIST));
+  if (dl) dl.setAttribute('points', pts('d'));
+  if (ul) ul.setAttribute('points', pts('u'));
+}
+function applyWanHist(val) {
+  try { const o = (typeof val === 'string') ? JSON.parse(val) : val; if (o && Array.isArray(o.points)) { sparkPoints = o.points; redrawSpark(); } } catch (e) {}
 }
 
 // ── Client-Gesamtwert (Aggregat aus lan.connected_clients) ───────────────────
@@ -539,8 +545,9 @@ function renderErrors() {
 // ── Render dispatch ────────────────────────────────────────────────────────
 function applyState(oid, val) {
   // WAN
-  if (oid === WAN_OIDs['wan-dl'])   { setText('wan-dl', fmtMbit(val)); const n = num(val); if (n !== null) { if (DL_HIST.length === 0) pushHist(DL_HIST, n); pushHist(DL_HIST, n); redrawSpark(); } return; }
-  if (oid === WAN_OIDs['wan-ul'])   { setText('wan-ul', fmtMbit(val)); const n = num(val); if (n !== null) { if (UL_HIST.length === 0) pushHist(UL_HIST, n); pushHist(UL_HIST, n); redrawSpark(); } return; }
+  if (oid === WAN_OIDs['wan-dl'])   { setText('wan-dl', fmtMbit(val)); return; }
+  if (oid === WAN_OIDs['wan-ul'])   { setText('wan-ul', fmtMbit(val)); return; }
+  if (oid === WAN_HIST_OID)         { applyWanHist(val); return; }
   if (oid === WAN_OIDs['wan-ping']) { setText('wan-ping', fmtSt(val)); return; }
   if (oid === WAN_OIDs['st-dl'])    { setText('st-dl', fmtSt(val)); return; }
   if (oid === WAN_OIDs['st-ul'])    { setText('st-ul', fmtSt(val)); return; }
@@ -632,6 +639,7 @@ const allOids = [...new Set([
   ...VMS.flatMap(v => ['status', 'cpu', 'mem_lev'].map(l => 'proxmox.0.' + v.id + '.' + l)),
   ...Object.values(THREAT_OIDs),
   ...Object.values(NAS_OIDs),
+  WAN_HIST_OID,
 ])];
 
 // ── Init: erst DOM-Listen bauen, dann Verbindung ──────────────────────────
