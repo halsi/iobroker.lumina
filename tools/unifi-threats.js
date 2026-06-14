@@ -80,14 +80,14 @@ const V2 = '/proxy/network/v2/api/site/' + SITE;
 
 const PAGE = 100, MAX_PAGES = 10;   // Pagination bis 1000 Flows
 
-async function trafficFlows(policyTypes, actions) {
+async function trafficFlows(policyTypes, actions, windowMs) {
   if (!session) await login();
   const now = Date.now();
   const path = V2 + '/traffic-flows';
   let all = [], status = 0, capped = false;
   for (let pg = 0; pg < MAX_PAGES; pg++) {
     const body = {
-      timestampFrom: now - 24 * 3600 * 1000, timestampTo: now,
+      timestampFrom: now - (windowMs || 24 * 3600 * 1000), timestampTo: now,
       pageNumber: pg, pageSize: PAGE, skip_count: true,
       policy_type: policyTypes,
       risk: [], action: actions || [], direction: [], protocol: [], policy: [],
@@ -133,6 +133,38 @@ async function poll() {
     await setVal(BASE + '.ThreatsBlocked-24h', blocked, 'Threats Blocked (24h)');
     await setVal(BASE + '.HoneypotTriggered-24h', honeypot, 'Honeypot Triggered (24h)');
     dlog('[unifi-threats] detected=' + detected + ' blocked=' + blocked + ' honeypot=' + honeypot);
+
+    // ── FlowMap (Daten fuer flowmap.html) ──
+    const fts = e => e.flow_start_time || e.flow_end_time || e.time || 0;
+    const ccOf = e => (e.destination && e.destination.region) || (e.source && e.source.region) || null;
+    const now2 = Date.now(), h12 = now2 - 12 * 3600 * 1000;
+
+    // aktuelle Flows (~15 min, alle Policy-Typen) -> nach Ziel-/Quell-Land
+    const ALLPT = ['FIREWALL','AD_BLOCKING','NEXT_AI','QOS','INTRUSION_PREVENTION','PROTECTION','PORT_FORWARDING','SOURCE_NAT','DESTINATION_NAT','CONTENT_FILTERING','MASQUERADE_NAT'];
+    const cur = await trafficFlows(ALLPT, null, 15 * 60 * 1000);
+    const flowsByCC = {};
+    cur.data.forEach(e => { const cc = ccOf(e); if (cc) flowsByCC[cc] = (flowsByCC[cc] || 0) + 1; });
+
+    // Threats letzte 12h aus det (IPS) + hpFlows (Honeypot) -> nach Land + hoechster Schwere
+    const sevRank = { detected: 1, honeypot: 2, blocked: 3 };
+    const thByCC = {}, recent = [];
+    const addThreat = (e, type) => {
+      if (fts(e) !== 0 && fts(e) < h12) return;
+      const cc = ccOf(e);
+      recent.push({ t: fts(e) || now2, cc: cc || '?', type, dst: (e.destination && (e.destination.zone_name || e.destination.network_name)) || '' });
+      if (cc) { const c = thByCC[cc] || { n: 0, sev: 'detected' }; c.n++; if (sevRank[type] > sevRank[c.sev]) c.sev = type; thByCC[cc] = c; }
+    };
+    det.data.forEach(e => addThreat(e, String(e.action || '').toLowerCase() === 'blocked' ? 'blocked' : 'detected'));
+    hpFlows.forEach(e => addThreat(e, 'honeypot'));
+    recent.sort((a, b) => b.t - a.t);
+
+    await setJson(BASE + '.FlowMap', {
+      ts: now2,
+      flows: Object.entries(flowsByCC).map(([cc, n]) => ({ cc, n })).sort((a, b) => b.n - a.n).slice(0, 60),
+      threats: Object.entries(thByCC).map(([cc, v]) => ({ cc, n: v.n, sev: v.sev })),
+      recent: recent.slice(0, 12),
+    }, 'Flow Map (JSON)');
+    dlog('[unifi-threats] flowmap: flows=' + cur.data.length + ' countries=' + Object.keys(flowsByCC).length + ' threats=' + Object.keys(thByCC).length);
   } catch (e) {
     dlog('[unifi-threats] Fehler: ' + e.message, 'error');
     session = null; // Re-Login beim nächsten Lauf erzwingen
@@ -146,6 +178,15 @@ async function setVal(id, val, name) {
     _created[id] = true;
   }
   await setStateAsync(id, val, true);
+}
+
+const _createdJson = {};
+async function setJson(id, obj, name) {
+  if (!_createdJson[id]) {
+    if (!existsState(id)) await createStateAsync(id, '', false, { name: name || id.split('.').pop(), type: 'string', role: 'json', read: true, write: false });
+    _createdJson[id] = true;
+  }
+  await setStateAsync(id, JSON.stringify(obj), true);
 }
 
 poll();

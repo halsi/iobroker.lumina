@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Lumina Flow Map</title>
+<link rel="shortcut icon" href="favicon32.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon32.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:#4488FF; --lblue:#6AAEFF; --salmon:#F07C7C; --amber:#F5B14C; --purple:#CC99FF;
+  --glow:#52E5FF; --green:#44CC66; --bg:#0c0c15; --card-bg:#13131e; --card-bd:rgba(255,255,255,0.07);
+  --sep:rgba(255,255,255,0.06); --text:#e8e8f0; --muted:#8a93b0;
+}
+body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  width:1767px; height:938px; overflow:hidden; transform-origin:top left; }
+#main { display:flex; gap:14px; padding:16px; height:938px; }
+.card { background:var(--card-bg); border-radius:16px; border:1px solid var(--card-bd); overflow:hidden; display:flex; flex-direction:column; min-height:0; }
+.card-header { display:flex; align-items:center; gap:9px; padding:10px 16px; font-size:22px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--lblue); background:rgba(106,174,255,0.08); flex-shrink:0; }
+.card-header .hx { margin-left:auto; font-size:14px; font-weight:600; letter-spacing:1px; color:var(--muted); }
+.ch-dot { width:9px; height:9px; border-radius:50%; background:var(--lblue); flex-shrink:0; }
+
+/* map */
+.mapcol { flex:1; min-width:0; }
+#mapwrap { flex:1; position:relative; min-height:0; }
+#map { width:100%; height:100%; display:block; }
+.land { fill:#16233e; stroke:#22335a; stroke-width:0.4; }
+.flow { fill:none; stroke:var(--lblue); opacity:0.4; stroke-dasharray:3 9; stroke-linecap:round; animation:flowdash 2.6s linear infinite; }
+@keyframes flowdash { to { stroke-dashoffset:-120; } }
+.threat { fill:none; opacity:0.55; stroke-linecap:round; }
+.legend { position:absolute; left:14px; bottom:10px; display:flex; gap:16px; font-size:13px; }
+.legend span { color:var(--muted); }
+
+/* side */
+.side { width:430px; flex-shrink:0; display:flex; flex-direction:column; gap:14px; }
+.metric { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.big { font-size:40px; font-weight:800; line-height:1; color:var(--lblue); }
+.sub { font-size:13px; color:var(--muted); margin-top:4px; }
+.tbreak { display:flex; gap:18px; margin-top:6px; font-size:18px; font-weight:700; }
+.row { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--sep); font-size:16px; }
+.row:last-child { border-bottom:none; }
+.cdot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:9px; }
+.rrow { display:grid; grid-template-columns:12px auto 1fr auto; gap:9px; align-items:center; padding:6px 0; border-bottom:1px solid var(--sep); font-size:14px; }
+.rrow:last-child { border-bottom:none; }
+.rrow .tm { color:var(--muted); font-variant-numeric:tabular-nums; }
+.rrow .ds { color:var(--muted); text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.grow { flex:1; }
+.card-body { padding:12px 16px 14px; overflow:hidden; }
+</style>
+</head>
+<body>
+<main id="main">
+  <div class="mapcol card">
+    <div class="card-header"><span class="ch-dot"></span>Flow Map<span class="hx" id="fm-ts">—</span></div>
+    <div id="mapwrap">
+      <svg id="map" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" aria-label="Welt-Flow-Map">
+        <g id="world"></g>
+        <g id="arcs"></g>
+        <g id="home-layer"></g>
+      </svg>
+      <div class="legend">
+        <span style="color:var(--lblue)">● Flow</span>
+        <span style="color:var(--salmon)">● Blocked</span>
+        <span style="color:var(--amber)">● Detected</span>
+        <span style="color:var(--purple)">● Honeypot</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="card"><div class="card-body">
+      <div class="metric">Flows · live</div>
+      <div class="big" id="flows-total">–</div>
+      <div class="sub" id="flows-sub">— Länder</div>
+    </div></div>
+    <div class="card"><div class="card-body">
+      <div class="metric">Threats · 24h</div>
+      <div class="tbreak">
+        <span style="color:var(--salmon)" id="th-blocked">–</span>
+        <span style="color:var(--amber)" id="th-detected">–</span>
+        <span style="color:var(--purple)" id="th-honeypot">–</span>
+      </div>
+      <div class="sub">blocked · detected · honeypot</div>
+    </div></div>
+    <div class="card"><div class="card-header" style="font-size:15px; letter-spacing:1.5px;"><span class="ch-dot"></span>Top Countries</div>
+      <div class="card-body" id="top-list"></div></div>
+    <div class="card grow"><div class="card-header" style="font-size:15px; letter-spacing:1.5px;"><span class="ch-dot" style="background:var(--salmon)"></span>Recent Threats</div>
+      <div class="card-body grow" id="recent-list" style="overflow-y:auto;"></div></div>
+  </div>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const HOME = { lat: 48.36, lon: 16.28, label: 'HOME · AT' };   // Kleinwilfersdorf 2105
+const FLOWMAP_OID = '0_userdata.0.Network.Unifi.FlowMap';
+const COUNT_OIDs = {
+  'th-blocked':  '0_userdata.0.Network.Unifi.ThreatsBlocked-24h',
+  'th-detected': '0_userdata.0.Network.Unifi.ThreatsDetected-24h',
+  'th-honeypot': '0_userdata.0.Network.Unifi.HoneypotTriggered-24h',
+};
+const SEV_COLOR = { blocked:'#F07C7C', detected:'#F5B14C', honeypot:'#CC99FF' };
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+let CC = {};            // ISO2 -> [lat, lon, name]
+let lastFlowMap = null;
+
+function projXY(lat, lon) { return [ (lon + 180) / 360 * 1000, (90 - lat) / 180 * 500 ]; }
+function el(tag, attrs) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+function fmtTime(ms) { const d = new Date(ms); return d.toLocaleTimeString('de-AT', { hour:'2-digit', minute:'2-digit' }); }
+
+// ── Weltkarte rendern ──
+function ringPath(ring) { return ring.map((pt,i) => { const [x,y]=projXY(pt[1],pt[0]); return (i?'L':'M')+x.toFixed(1)+','+y.toFixed(1); }).join(' ') + 'Z'; }
+function geomPath(g) { let d=''; if (g.type==='Polygon') g.coordinates.forEach(r => d+=ringPath(r)); else if (g.type==='MultiPolygon') g.coordinates.forEach(p => p.forEach(r => d+=ringPath(r))); return d; }
+async function buildWorld() {
+  try {
+    const gj = await (await fetch('assets/world.geo.json')).json();
+    const w = document.getElementById('world');
+    gj.features.forEach(f => { const d = geomPath(f.geometry); if (d) w.appendChild(el('path', { d, class:'land' })); });
+  } catch (e) { console.warn('world.geo.json:', e); }
+}
+
+// ── Bogen Quelle->Home ──
+function arcPath(sx, sy, hx, hy) {
+  const mx=(sx+hx)/2, my=(sy+hy)/2, dx=hx-sx, dy=hy-sy, len=Math.hypot(dx,dy)||1;
+  const lift=Math.min(len*0.22, 120), cx=mx + (-dy/len)*lift, cy=my + (dx/len)*lift;
+  return `M${sx.toFixed(1)},${sy.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${hx.toFixed(1)},${hy.toFixed(1)}`;
+}
+
+function render(fm) {
+  lastFlowMap = fm;
+  const arcs = document.getElementById('arcs'); arcs.innerHTML='';
+  const homeL = document.getElementById('home-layer'); homeL.innerHTML='';
+  const [hx,hy] = projXY(HOME.lat, HOME.lon);
+
+  // Flows (hellblau, ruhiger Strom)
+  (fm.flows||[]).forEach(f => {
+    const c = CC[f.cc]; if (!c) return;
+    const [sx,sy] = projXY(c[0], c[1]);
+    const sw = Math.max(0.6, Math.min(4.5, 0.6 + Math.log2(f.n+1)*0.6));
+    arcs.appendChild(el('path', { d: arcPath(sx,sy,hx,hy), class:'flow', 'stroke-width': sw.toFixed(2) }));
+  });
+
+  // Threats (farbig, einschlagend)
+  (fm.threats||[]).forEach((t,i) => {
+    const c = CC[t.cc]; if (!c) return;
+    const [sx,sy] = projXY(c[0], c[1]);
+    const col = SEV_COLOR[t.sev] || SEV_COLOR.detected;
+    const id = 'tarc'+i;
+    arcs.appendChild(el('path', { id, d: arcPath(sx,sy,hx,hy), class:'threat', stroke: col, 'stroke-width':'2' }));
+    arcs.appendChild(el('circle', { cx:sx, cy:sy, r:'3.5', fill:col, opacity:'0.9' }));
+    // einschlagender Punkt entlang des Bogens
+    const dot = el('circle', { r:'4', fill:col });
+    dot.setAttribute('filter','drop-shadow(0 0 4px '+col+')');
+    const am = el('animateMotion', { dur:(1.2 + (i%5)*0.25)+'s', repeatCount:'indefinite', keyPoints:'0;1;1', keyTimes:'0;0.55;1', calcMode:'linear', rotate:'0' });
+    const mp = el('mpath', {}); mp.setAttribute('href', '#'+id); mp.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+id);
+    am.appendChild(mp); dot.appendChild(am); arcs.appendChild(dot);
+  });
+
+  // Home + Impact-Ringe (pulsierend, wenn Threats vorhanden)
+  if ((fm.threats||[]).length) {
+    for (let k=0;k<2;k++) {
+      const ring = el('circle', { cx:hx, cy:hy, r:'5', fill:'none', stroke:'#F07C7C', 'stroke-width':'1.5' });
+      ring.appendChild(el('animate', { attributeName:'r', values:'5;26', dur:'1.8s', begin:(k*0.9)+'s', repeatCount:'indefinite' }));
+      ring.appendChild(el('animate', { attributeName:'opacity', values:'0.8;0', dur:'1.8s', begin:(k*0.9)+'s', repeatCount:'indefinite' }));
+      homeL.appendChild(ring);
+    }
+  }
+  const glow = el('circle', { cx:hx, cy:hy, r:'14', fill:'#52E5FF', opacity:'0.18' });
+  homeL.appendChild(glow);
+  homeL.appendChild(el('circle', { cx:hx, cy:hy, r:'4.5', fill:'#52E5FF' }));
+  const lbl = el('text', { x:hx, y:hy+16, fill:'#52E5FF', 'font-size':'11', 'text-anchor':'middle', 'font-weight':'700' });
+  lbl.textContent = HOME.label; homeL.appendChild(lbl);
+
+  // Seitenpanel
+  document.getElementById('fm-ts').textContent = fm.ts ? '↻ ' + fmtTime(fm.ts) : '';
+  const total = (fm.flows||[]).reduce((a,f)=>a+f.n, 0);
+  document.getElementById('flows-total').textContent = total.toLocaleString('de-AT');
+  document.getElementById('flows-sub').textContent = (fm.flows||[]).length + ' Länder';
+  // Top countries (nach Flow-Anzahl), Threat-Farbe falls vorhanden
+  const thMap = {}; (fm.threats||[]).forEach(t => thMap[t.cc]=t.sev);
+  document.getElementById('top-list').innerHTML = (fm.flows||[]).slice(0,7).map(f => {
+    const name = (CC[f.cc] && CC[f.cc][2]) || f.cc;
+    const col = thMap[f.cc] ? SEV_COLOR[thMap[f.cc]] : 'var(--lblue)';
+    return `<div class="row"><span><span class="cdot" style="background:${col}"></span>${name}</span><span style="color:${col};font-weight:700">${f.n.toLocaleString('de-AT')}</span></div>`;
+  }).join('') || '<div class="sub">keine Daten</div>';
+  // Recent threats
+  document.getElementById('recent-list').innerHTML = (fm.recent||[]).map(r => {
+    const name = (CC[r.cc] && CC[r.cc][2]) || r.cc;
+    const col = SEV_COLOR[r.type] || 'var(--lblue)';
+    return `<div class="rrow"><span class="cdot" style="background:${col}"></span><span class="tm">${fmtTime(r.t)}</span><span>${name}</span><span class="ds">${r.dst||''}</span></div>`;
+  }).join('') || '<div class="sub">keine Threats</div>';
+}
+
+function setCount(id, val) { const e = document.getElementById(id); if (e) e.textContent = (val===null||val===undefined) ? '–' : (Number(val) >= 1000 ? '1000+' : Math.round(Number(val))); }
+
+// ── Init: Assets laden, dann Socket ──
+(async () => {
+  await buildWorld();
+  try { CC = await (await fetch('assets/country-centroids.json')).json(); } catch (e) { console.warn('centroids:', e); }
+  if (lastFlowMap) render(lastFlowMap);
+
+  const socket = io({ path: '/socket.io' });
+  const subs = [FLOWMAP_OID, ...Object.values(COUNT_OIDs)];
+  function applyState(oid, val) {
+    if (oid === FLOWMAP_OID) { try { render(JSON.parse(val)); } catch (e) {} return; }
+    for (const id in COUNT_OIDs) if (oid === COUNT_OIDs[id]) setCount(id, val);
+  }
+  socket.on('connect', () => subs.forEach(oid => {
+    socket.emit('subscribe', oid, { ack:true }, ()=>{});
+    socket.emit('getStates', [oid], (err, states) => { if (!states) return; const e=states[oid]; if (e && e.val!==null && e.val!==undefined) applyState(oid, e.val); });
+  }));
+  socket.on('stateChange', (oid, state) => { if (state && state.val!==null && state.val!==undefined) applyState(oid, state.val); });
+})();
+
+// auto-reload nach langem Hintergrund
+let _hiddenAt=null;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState==='hidden') _hiddenAt=Date.now();
+  else if (_hiddenAt && Date.now()-_hiddenAt>30000) location.reload(); else _hiddenAt=null;
+});
+</script>
+<script>
+(function(){
+  function scaleToFit(){ const vw=window.visualViewport?window.visualViewport.width:window.innerWidth, vh=window.visualViewport?window.visualViewport.height:window.innerHeight; const s=Math.min(vw/1767, vh/938); document.body.style.transform = s>=1?'':`scale(${s})`; }
+  scaleToFit();
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', scaleToFit); else window.addEventListener('resize', scaleToFit);
+})();
+</script>
+</body>
+</html>
