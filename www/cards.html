@@ -454,7 +454,6 @@ body {
         <div class="row double-sep"><span class="lbl">Einspeisung</span><span class="val" id="e-einspeisung"><span class="loading">…</span></span></div>
         <div class="row"><span class="lbl">PV</span><span class="val" id="e-pv"><span class="loading">…</span></span></div>
         <div class="row"><span class="lbl">Hausverbrauch</span><span class="val" id="e-load"><span class="loading">…</span></span></div>
-        <div class="row"><span class="lbl">Wallbox</span><span class="val" id="e-wb-power-now"><span class="loading">…</span></span></div>
         <div class="row"><span class="lbl">Autarkie</span><span class="val" id="e-autarkie"><span class="loading">…</span></span></div>
       </div>
     </div>
@@ -709,6 +708,13 @@ body {
       </div>
     </div>
 
+    <div class="card card-lblue">
+      <div class="card-header"><span class="ch-dot"></span>Wasserzähler</div>
+      <div class="card-body">
+        <div class="row"><span class="lbl">Zählerstand</span><span class="val" id="wz-total"><span class="loading">…</span></span></div>
+      </div>
+    </div>
+
   </div>
 
 
@@ -761,7 +767,6 @@ const ENERGIE_OIDs = {
   'e-batt-pct':     'bydhvs.0.State.SOC',
   'e-batt-rem':     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
   'e-batt-power':   '0_userdata.0.Photovoltaik.SignedBat',
-  'e-wb-power-now': '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
   'e-wb-power':     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
   'e-wb-pv':        '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
   'e-wb-status':    '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Status',
@@ -790,6 +795,7 @@ const WASSER_OIDs = {
   'pool-pump':          '0_userdata.0.Pool.Pool-Pumpe-Modus',
   'bwt-salt':           '0_userdata.0.Generic.BWTSalt',
   'bwt-flow':           'bwt.0.local.currentData.CurrentFlowrate_l_h',
+  'wz-total':           '0_userdata.0.Wasser.Wasserverbrauch-Haus-Gesamt',
 };
 const VALVE_OIDs = {
   'v-garten':     '0_userdata.0.Wasser.Gartenwasserventil',
@@ -1045,6 +1051,11 @@ function setWasser(elId, val) {
     const el=document.getElementById('bwt-flow'), n=parseFloat(val);
     if (!el) return;
     el.innerHTML = isNaN(n) ? '–' : n.toFixed(0) + '<span class="u"> l/h</span>';
+  } else if (elId==='wz-total') {
+    const el=document.getElementById('wz-total'), n=parseFloat(val);
+    if (!el) return;
+    el.innerHTML = isNaN(n) ? '–'
+      : n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + '<span class="u"> m³</span>';
   }
 }
 function setValve(elId, val) {
