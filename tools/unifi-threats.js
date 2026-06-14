@@ -76,7 +76,6 @@ async function login() {
 // ── UniFi Network 10.x: IDS/IPS-Threats via v2 traffic-flows ──────────────
 //    POST /proxy/network/v2/api/site/<site>/traffic-flows mit policy_type-Filter.
 //    skip_count:false → Server liefert Gesamt-Count (kein Paging nötig).
-const V1 = '/proxy/network/api/s/' + SITE;
 const V2 = '/proxy/network/v2/api/site/' + SITE;
 
 async function trafficFlows(policyTypes, actions) {
@@ -110,33 +109,20 @@ async function trafficFlows(policyTypes, actions) {
   return { status: res.status, data, count };
 }
 
-// Honeypot ist kein traffic-flow policy_type -> über Alarme der letzten 24h heuristisch zählen
-async function listAlarms() {
-  if (!session) await login();
-  const path = V1 + '/list/alarm';
-  let res = await httpReq('GET', path, { cookie: session.cookie, csrf: session.csrf });
-  if (res.status === 401) { await login(); res = await httpReq('GET', path, { cookie: session.cookie, csrf: session.csrf }); }
-  let json = {}; try { json = JSON.parse(res.body); } catch (e) {}
-  const data = Array.isArray(json) ? json : (json.data || []);
-  dlog('[unifi-threats] list/alarm → HTTP ' + res.status + ' len=' + data.length);
-  return { status: res.status, data };
-}
-
 async function poll() {
   try {
-    const dayAgo = Date.now() - 24 * 3600 * 1000;
     const det = await trafficFlows(['INTRUSION_PREVENTION']);
-
     const detected = det.status === 200 ? det.count : 0;
-    // serverseitiger action-Filter wird abgelehnt -> blocked clientseitig zählen (action != 'allowed')
-    const blocked  = det.data.filter(e => String(e.action || '').toLowerCase() !== 'allowed').length;
 
-    // Honeypot über Alarme (heuristisch: JSON enthält "honeypot")
-    let honeypot = 0;
-    try {
-      const al = await listAlarms();
-      honeypot = al.data.filter(a => { const t = a.time || a.timestamp || 0; return (!t || t >= dayAgo) && /honeypot/i.test(JSON.stringify(a)); }).length;
-    } catch (e) { dlog('[unifi-threats] Honeypot/Alarm: ' + e.message, 'warn'); }
+    // blocked: serverseitiger action-Filter ["blocked"] (gültiger Enum-Wert); sonst clientseitig
+    const blk = await trafficFlows(['INTRUSION_PREVENTION'], ['blocked']);
+    const blocked = blk.status === 200 ? blk.count
+                  : det.data.filter(e => String(e.action || '').toLowerCase() === 'blocked').length;
+
+    // honeypot: policy_type PROTECTION, Flows mit policies[].internal_type === 'HONEYPOT'
+    const hp = await trafficFlows(['PROTECTION']);
+    const honeypot = (hp.status === 200 ? hp.data : []).filter(e =>
+      Array.isArray(e.policies) && e.policies.some(p => /honeypot/i.test((p.internal_type || '') + (p.name || '')))).length;
 
     if (DEBUG && det.data[0]) dlog('[unifi-threats] Sample: ' + JSON.stringify(det.data[0]).slice(0, 700));
 
