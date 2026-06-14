@@ -480,6 +480,7 @@ body {
           </div>
         </div>
         <div class="row"><span class="lbl">Restkapazität</span><span class="val" id="e-batt-rem"><span class="loading">…</span></span></div>
+        <div class="row"><span class="lbl">Leistung</span><span class="val" id="e-batt-power"><span class="loading">…</span></span></div>
         <div class="row" style="justify-content:center;padding-top:10px;">
           <button class="lcars-btn" onclick="pressEffect(this);forceBattCharge()">Manual Charge</button>
         </div>
@@ -759,6 +760,7 @@ const ENERGIE_OIDs = {
   'e-forecast':     '0_userdata.0.Photovoltaik.PV-Forecast',
   'e-batt-pct':     'bydhvs.0.State.SOC',
   'e-batt-rem':     '0_userdata.0.Photovoltaik.Battery.Battery-Remaining-Capacity',
+  'e-batt-power':   '0_userdata.0.Photovoltaik.SignedBat',
   'e-wb-power-now': '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
   'e-wb-power':     '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-Aktuell',
   'e-wb-pv':        '0_userdata.0.Photovoltaik.Wallbox.Wallbox-Leistung-PV',
@@ -922,6 +924,19 @@ function setEnergie(elId, val) {
       el.innerHTML = fmtPct(val); break;
     case 'e-pv-day': case 'e-bezug-day': case 'e-load-day': case 'e-forecast': case 'e-batt-rem':
       el.innerHTML = fmtKWh(val); break;
+    case 'e-batt-power': {
+      // SignedBat ist invertiert: minus = laden, plus = entladen.
+      // Anzeige umgedreht -> positiv = laden, negativ = entladen.
+      const raw = parseFloat(val);
+      if (isNaN(raw)) { el.innerHTML = '–'; break; }
+      const p = -raw, abs = Math.abs(p);
+      const num  = abs >= 1000 ? (abs/1000).toFixed(2) + '<span class="u"> kW</span>'
+                               : Math.round(abs) + '<span class="u"> W</span>';
+      const sign = p > 0.5 ? '+' : (p < -0.5 ? '−' : '');
+      const color = p > 0.5 ? '#44CC66' : (p < -0.5 ? '#FF9C7A' : '#888');
+      el.innerHTML = `<span style="color:${color};">${sign}${num}</span>`;
+      break;
+    }
     case 'e-wb-power-now': case 'e-wb-power': case 'e-wb-pv':
       el.innerHTML = fmtKW(val); break;
     case 'e-wb-status':
