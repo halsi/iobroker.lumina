@@ -1,0 +1,2 @@
+ultralytics>=8.3.0
+# torch is pulled in transitively; on Apple Silicon Macs the wheel includes MPS support

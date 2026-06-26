@@ -622,6 +622,10 @@ body {
         <button class="pump-btn" id="cp-pump-3" onclick="crdSetPumpMode(3)">STUFE 3</button>
         <button class="pump-btn" id="cp-pump-4" onclick="crdSetPumpMode(4)">AUS</button>
       </div>
+      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:8px 16px 4px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Roboter</div>
+      <div class="pump-row" style="grid-template-columns:1fr;">
+        <button class="pump-btn" id="cp-robot" onclick="crdToggleRobot()">POOLROBOTER</button>
+      </div>
     </div>
 
     <div class="card card-teal2">
@@ -804,6 +808,7 @@ const VALVE_OIDs = {
   'v-hochbeet':   '0_userdata.0.Wasser.Gartenwasser-Hochbeet',
   'v-giesskanne': '0_userdata.0.Wasser.Giesskanne',
 };
+const POOL_ROBOT_OID = 'shelly.0.SHPLG-S#BC0E73#1.Relay0.Switch';
 
 // ── LG Klimaanlagen ────────────────────────────────────────────────────────
 const LG_ROOMS = {
@@ -1065,6 +1070,16 @@ function setValve(elId, val) {
 function crdSetPumpMode(val) {
   socket.emit('setState', '0_userdata.0.Pool.Pool-Pumpe-Modus', { val, ack: false });
 }
+function setRobot(val) {
+  const btn = document.getElementById('cp-robot'); if (!btn) return;
+  const on = (val===true||val==='true'||val===1||val==='1');
+  btn.classList.toggle('pump-active-stufe', on);
+  btn.textContent = on ? 'ROBOTER AKTIV' : 'POOLROBOTER';
+}
+function crdToggleRobot() {
+  const btn = document.getElementById('cp-robot'); if (!btn) return;
+  socket.emit('setState', POOL_ROBOT_OID, { val: !btn.classList.contains('pump-active-stufe'), ack: false });
+}
 function toggleValve(elId) {
   const btn=document.getElementById(elId); if (!btn) return;
   socket.emit('setState', VALVE_OIDs[elId], { val: !btn.classList.contains('valve-on'), ack: false });
@@ -1161,6 +1176,7 @@ const allOids = [...new Set([
   ...Object.values(LG_OIDs),
   NUKI_LOCK_OID, NUKI_BATT_OID, SHIELD_OID, HWC_HEAT_OID,
   BATT_CHARGE_OID, SOMMER_OID, URLAUB_OID, HEIZKURVE_OID,
+  POOL_ROBOT_OID,
 ])];
 
 // ── applyState ─────────────────────────────────────────────────────────────
@@ -1172,6 +1188,7 @@ function applyState(oid, val) {
   if (oidToCar[oid])     setCar(oidToCar[oid], val);
   if (oidToWasser[oid])  setWasser(oidToWasser[oid], val);
   if (oidToValve[oid])   setValve(oidToValve[oid], val);
+  if (oid===POOL_ROBOT_OID) setRobot(val);
   if (oid===NUKI_LOCK_OID)  setNukiLock(val);
   if (oid===NUKI_BATT_OID)  setNukiBatt(val);
   if (oid===SHIELD_OID)     setShield(val);
