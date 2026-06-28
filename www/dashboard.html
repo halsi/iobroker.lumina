@@ -1026,6 +1026,7 @@ html, body {
 .ppp-pump-btn.pheat-auto-on { background: rgba(68,255,136,0.22); color: #55DD88; border-color: rgba(68,255,136,0.5); box-shadow: 0 0 10px rgba(68,255,136,0.25); }
 .ppp-pump-btn.pheat-heat-on { background: rgba(255,110,60,0.22); color: #FF7755; border-color: rgba(255,110,60,0.5); box-shadow: 0 0 10px rgba(255,110,60,0.25); }
 .ppp-pump-btn.pheat-cool-on { background: rgba(106,174,255,0.22); color: #6AAEFF; border-color: rgba(106,174,255,0.5); box-shadow: 0 0 10px rgba(106,174,255,0.25); }
+.ppp-pump-btn.ppp-pheat-btn { min-width: 0; padding: 9px 2px; font-size: 10px; letter-spacing: 0.6px; line-height: 1.25; }
 
 /* ── Gartenwasser popup ─────────────────────────────────────────── */
 #gartenwasser-popup-backdrop {
@@ -1894,9 +1895,9 @@ html, body {
       <div style="border-top:1px solid rgba(68,136,255,0.15);margin:4px -16px 0;padding:14px 16px 6px;">
         <div class="bep-status-lbl" style="text-align:center;">POOL-HEIZUNG</div>
         <div class="ppp-pump-row">
-          <button class="ppp-pump-btn" id="ppp-pheat-auto" onclick="pppTogglePoolHeat('auto')">AUTOMATIK</button>
-          <button class="ppp-pump-btn" id="ppp-pheat-heat" onclick="pppTogglePoolHeat('heat')">BOOST&nbsp;HEAT</button>
-          <button class="ppp-pump-btn" id="ppp-pheat-cool" onclick="pppTogglePoolHeat('cool')">BOOST&nbsp;COOL</button>
+          <button class="ppp-pump-btn ppp-pheat-btn" id="ppp-pheat-auto" onclick="pppTogglePoolHeat('auto')">AUTOMATIK</button>
+          <button class="ppp-pump-btn ppp-pheat-btn" id="ppp-pheat-heat" onclick="pppTogglePoolHeat('heat')">BOOST HEAT</button>
+          <button class="ppp-pump-btn ppp-pheat-btn" id="ppp-pheat-cool" onclick="pppTogglePoolHeat('cool')">BOOST COOL</button>
         </div>
       </div>
     </div>
