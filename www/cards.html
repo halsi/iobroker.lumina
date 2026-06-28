@@ -90,8 +90,8 @@ body {
 
 .card-header {
   display: flex; align-items: center; gap: 8px;
-  padding: 9px 16px;
-  font-size: 21px; font-weight: 700;
+  padding: 7px 16px;
+  font-size: 20px; font-weight: 700;
   letter-spacing: 2.5px; text-transform: uppercase;
 }
 .ch-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
@@ -138,19 +138,19 @@ body {
 .card-beige  .lbl { color: var(--beige); }
 
 /* ── Card body & rows ────────────────────────────────────────────── */
-.card-body { padding: 4px 16px 10px; }
+.card-body { padding: 3px 16px 7px; }
 
 .row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 7px 0;
+  padding: 5px 0;
   border-bottom: 1px solid var(--sep);
 }
 .row:last-child { border-bottom: none; }
-.row.double-sep { border-bottom: 2px solid rgba(255,255,255,0.12); padding-bottom: 9px; margin-bottom: 2px; }
+.row.double-sep { border-bottom: 2px solid rgba(255,255,255,0.12); padding-bottom: 7px; margin-bottom: 2px; }
 
-.lbl { font-size: 21px; }
-.val { font-size: 21px; font-weight: 600; color: #fff; }
-.val .u { font-size: 21px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+.lbl { font-size: 20px; }
+.val { font-size: 20px; font-weight: 600; color: #fff; }
+.val .u { font-size: 20px; font-weight: 400; color: var(--muted); margin-left: 2px; }
 .val.loading { color: #2a2a3a; font-size: 14px; }
 
 /* ── Battery bar ─────────────────────────────────────────────────── */
@@ -262,9 +262,9 @@ body {
 .valve-off { background: rgba(153,204,255,0.08); color: var(--lblue); border-color: rgba(153,204,255,0.2); }
 
 /* ── Pool pump buttons ───────────────────────────────────────────── */
-.pump-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; padding: 10px 16px 14px; }
+.pump-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; padding: 6px 16px 8px; }
 .pump-btn {
-  padding: 9px 4px; font-family: inherit; font-size: 11px; font-weight: 800;
+  padding: 8px 4px; font-family: inherit; font-size: 11px; font-weight: 800;
   letter-spacing: 1px; text-transform: uppercase; border-radius: 10px; cursor: pointer;
   border: 1px solid rgba(68,136,255,0.25); background: rgba(68,136,255,0.07); color: var(--blue);
   transition: background 0.15s; -webkit-tap-highlight-color: transparent;
@@ -618,18 +618,18 @@ body {
           <span class="val" id="pool-orp"><span class="loading">…</span></span>
         </div>
       </div>
-      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:8px 16px 4px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Pumpe</div>
+      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:6px 16px 3px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Pumpe</div>
       <div class="pump-row">
         <button class="pump-btn" id="cp-pump-1" onclick="crdSetPumpMode(1)">STUFE 1</button>
         <button class="pump-btn" id="cp-pump-2" onclick="crdSetPumpMode(2)">STUFE 2</button>
         <button class="pump-btn" id="cp-pump-3" onclick="crdSetPumpMode(3)">STUFE 3</button>
         <button class="pump-btn" id="cp-pump-4" onclick="crdSetPumpMode(4)">AUS</button>
       </div>
-      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:8px 16px 4px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Roboter</div>
+      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:6px 16px 3px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Roboter</div>
       <div class="pump-row" style="grid-template-columns:1fr;">
         <button class="pump-btn" id="cp-robot" onclick="crdToggleRobot()">POOLROBOTER</button>
       </div>
-      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:8px 16px 4px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Heizung</div>
+      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:6px 16px 3px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Heizung</div>
       <div class="pump-row" style="grid-template-columns:repeat(3,1fr);">
         <button class="pump-btn" id="cp-pheat-auto" onclick="crdTogglePoolHeat('auto')">AUTOMATIK</button>
         <button class="pump-btn" id="cp-pheat-heat" onclick="crdTogglePoolHeat('heat')">BOOST&nbsp;HEAT</button>
