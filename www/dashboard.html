@@ -1023,6 +1023,9 @@ html, body {
   background: rgba(255,85,85,0.25); color: #FF8888;
   border-color: rgba(255,85,85,0.6); box-shadow: 0 0 10px rgba(255,85,85,0.25);
 }
+.ppp-pump-btn.pheat-auto-on { background: rgba(68,255,136,0.22); color: #55DD88; border-color: rgba(68,255,136,0.5); box-shadow: 0 0 10px rgba(68,255,136,0.25); }
+.ppp-pump-btn.pheat-heat-on { background: rgba(255,110,60,0.22); color: #FF7755; border-color: rgba(255,110,60,0.5); box-shadow: 0 0 10px rgba(255,110,60,0.25); }
+.ppp-pump-btn.pheat-cool-on { background: rgba(106,174,255,0.22); color: #6AAEFF; border-color: rgba(106,174,255,0.5); box-shadow: 0 0 10px rgba(106,174,255,0.25); }
 
 /* ── Gartenwasser popup ─────────────────────────────────────────── */
 #gartenwasser-popup-backdrop {
@@ -1888,6 +1891,14 @@ html, body {
           <button class="bep-btn bep-btn-off" onclick="pppSetRobot(false)">DEAKTIVIEREN</button>
         </div>
       </div>
+      <div style="border-top:1px solid rgba(68,136,255,0.15);margin:4px -16px 0;padding:14px 16px 6px;">
+        <div class="bep-status-lbl" style="text-align:center;">POOL-HEIZUNG</div>
+        <div class="ppp-pump-row">
+          <button class="ppp-pump-btn" id="ppp-pheat-auto" onclick="pppTogglePoolHeat('auto')">AUTOMATIK</button>
+          <button class="ppp-pump-btn" id="ppp-pheat-heat" onclick="pppTogglePoolHeat('heat')">BOOST&nbsp;HEAT</button>
+          <button class="ppp-pump-btn" id="ppp-pheat-cool" onclick="pppTogglePoolHeat('cool')">BOOST&nbsp;COOL</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2696,6 +2707,9 @@ const OIDs = {
   poolORP:        '0_userdata.0.Pool.PoolORP',
   poolPumpModus:  '0_userdata.0.Pool.Pool-Pumpe-Modus',
   poolRobot:      'shelly.0.SHPLG-S#BC0E73#1.Relay0.Switch',
+  poolHeatAuto:   '0_userdata.0.Pool.PoolHeizung-Automatik',
+  poolHeatBoost:  '0_userdata.0.Pool.PoolHeizung-Boost-Heat',
+  poolCoolBoost:  '0_userdata.0.Pool.PoolHeizung-Boost-Cool',
   alarmActivated:   'alarm.0.status.activated',
   alarmSharpInside: 'alarm.0.status.sharp_inside_activated',
   beregnerActive:   '0_userdata.0.Wasser.Gartenberegner',
@@ -2721,7 +2735,7 @@ const OIDs = {
 };
 
 // ── Live state (verbatim from energie.html) ────────────────────────────────
-const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, poolPumpModus: 4, poolRobot: false, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false, wasserzaehler: null, nukiBatt: null };
+const live = { pv: 0, load: 0, bezug: 0, einspeisung: 0, wbPower: 0, wbPowerGrid: 0, wbPowerPV: 0, carSoc: null, carPresence: false, battSoc: null, nacht: false, poolTemp: null, tempOut: null, tempIn: null, vorlaufTemp: null, hwcStorageTemp: null, poolHeizTarget: null, bodenfeuchte: null, bodenfeuchteGurken: null, bodenfeuchteTomaten: null, poolAbdeckung: false, poolPH: null, poolORP: null, poolPumpModus: 4, poolRobot: false, poolHeatAuto: false, poolHeatBoost: false, poolCoolBoost: false, alarmActivated: false, alarmSharpInside: false, beregnerActive: false, ventilGarten: false, ventilHochbeet: false, ventilGieskanne: false, ventilPool: false, hwcHeating: false, pvToLoad: 0, gridToLoad: 0, batToLoad: 0, pvToGrid: 0, gridToBat: 0, pvToBat: 0, bwtSalt: false, bwtFlow: 0, bwtActive: false, wasserzaehler: null, nukiBatt: null };
 const THRESH = (typeof LUMINA_CONFIG !== 'undefined') ? LUMINA_CONFIG.flowThreshold : 100;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -3141,6 +3155,9 @@ function applyState(oid, val) {
       if (window.pppUpdateRobotBtn) window.pppUpdateRobotBtn();
       break;
     }
+    case OIDs.poolHeatAuto:  live.poolHeatAuto  = (val === true || val === 'true' || val === 1 || val === '1'); if (window.pppUpdateHeatBtns) window.pppUpdateHeatBtns(); break;
+    case OIDs.poolHeatBoost: live.poolHeatBoost = (val === true || val === 'true' || val === 1 || val === '1'); if (window.pppUpdateHeatBtns) window.pppUpdateHeatBtns(); break;
+    case OIDs.poolCoolBoost: live.poolCoolBoost = (val === true || val === 'true' || val === 1 || val === '1'); if (window.pppUpdateHeatBtns) window.pppUpdateHeatBtns(); break;
     case OIDs.alarmActivated:   live.alarmActivated   = !!val; updateShieldLabel(); break;
     case OIDs.alarmSharpInside: live.alarmSharpInside = !!val; updateShieldLabel(); break;
     case OIDs.ventilGarten: {
@@ -3763,6 +3780,23 @@ function initAnchorDrag(anchorEl) {
     const sock = window._dashSocket; if (!sock) return;
     sock.emit('setState', OIDs.poolRobot, { val, ack: false });
   };
+  const PPP_HEAT = {
+    auto: { oid: 'poolHeatAuto',  btn: 'ppp-pheat-auto', cls: 'pheat-auto-on', live: 'poolHeatAuto'  },
+    heat: { oid: 'poolHeatBoost', btn: 'ppp-pheat-heat', cls: 'pheat-heat-on', live: 'poolHeatBoost' },
+    cool: { oid: 'poolCoolBoost', btn: 'ppp-pheat-cool', cls: 'pheat-cool-on', live: 'poolCoolBoost' },
+  };
+  window.pppUpdateHeatBtns = function pppUpdateHeatBtns() {
+    Object.values(PPP_HEAT).forEach(c => {
+      const btn = document.getElementById(c.btn); if (!btn) return;
+      btn.classList.toggle(c.cls, !!live[c.live]);
+    });
+  };
+  window.pppTogglePoolHeat = function pppTogglePoolHeat(key) {
+    const sock = window._dashSocket; if (!sock) return;
+    const c = PPP_HEAT[key]; if (!c) return;
+    sock.emit('setState', OIDs[c.oid], { val: !live[c.live], ack: false });
+    scheduleAutoClose(window.closePoolPopup);
+  };
   window.updatePoolPopup = function updatePoolPopup() {
     const fmtTemp = v => v != null ? v.toFixed(1) + ' °C' : '–';
     const fmtPH   = v => v != null ? v.toFixed(1) + ' pH' : '–';
@@ -3773,6 +3807,7 @@ function initAnchorDrag(anchorEl) {
     pppUpdateValveBtn();
     pppUpdatePumpBtns();
     pppUpdateRobotBtn();
+    pppUpdateHeatBtns();
   }
 
   window.openPoolPopup = function() {
@@ -3813,6 +3848,18 @@ function initAnchorDrag(anchorEl) {
     poolLabel.style.webkitTapHighlightColor = 'transparent';
     poolLabel.addEventListener('click', () => { if (!editMode) openPoolPopup(); });
   }
+  // Pool-Heizung node + label — click opens pool popup (heating control inside)
+  ['n-poolheizung', 'lb-poolheizung'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.cursor = 'pointer';
+    el.style.webkitTapHighlightColor = 'transparent';
+    el.addEventListener('click', e => {
+      if (editMode) return;
+      e.stopPropagation();
+      openPoolPopup();
+    });
+  });
 
   // ── Hochbeet popup ─────────────────────────────────────────────────────────
   window.hbpUpdateBtn = function hbpUpdateBtn() {

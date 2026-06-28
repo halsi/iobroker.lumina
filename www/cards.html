@@ -271,6 +271,9 @@ body {
 }
 .pump-btn.pump-active-stufe { background: rgba(68,136,255,0.3); color: #88CCFF; border-color: rgba(68,136,255,0.7); box-shadow: 0 0 10px rgba(68,136,255,0.3); }
 .pump-btn.pump-active-aus   { background: rgba(255,85,85,0.25);  color: #FF8888; border-color: rgba(255,85,85,0.6);   box-shadow: 0 0 10px rgba(255,85,85,0.25); }
+.pump-btn.pheat-auto-on { background: rgba(68,255,136,0.22); color: #55DD88; border-color: rgba(68,255,136,0.5); box-shadow: 0 0 10px rgba(68,255,136,0.25); }
+.pump-btn.pheat-heat-on { background: rgba(255,110,60,0.22); color: #FF7755; border-color: rgba(255,110,60,0.5); box-shadow: 0 0 10px rgba(255,110,60,0.25); }
+.pump-btn.pheat-cool-on { background: rgba(106,174,255,0.22); color: #6AAEFF; border-color: rgba(106,174,255,0.5); box-shadow: 0 0 10px rgba(106,174,255,0.25); }
 
 /* ── Klima toggle buttons ────────────────────────────────────────── */
 .clim-controls { padding: 8px 16px 14px; display: flex; flex-direction: column; gap: 7px; }
@@ -626,6 +629,12 @@ body {
       <div class="pump-row" style="grid-template-columns:1fr;">
         <button class="pump-btn" id="cp-robot" onclick="crdToggleRobot()">POOLROBOTER</button>
       </div>
+      <div style="border-top:1px solid rgba(68,136,255,0.12);padding:8px 16px 4px;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--blue);text-transform:uppercase;">Heizung</div>
+      <div class="pump-row" style="grid-template-columns:repeat(3,1fr);">
+        <button class="pump-btn" id="cp-pheat-auto" onclick="crdTogglePoolHeat('auto')">AUTOMATIK</button>
+        <button class="pump-btn" id="cp-pheat-heat" onclick="crdTogglePoolHeat('heat')">BOOST&nbsp;HEAT</button>
+        <button class="pump-btn" id="cp-pheat-cool" onclick="crdTogglePoolHeat('cool')">BOOST&nbsp;COOL</button>
+      </div>
     </div>
 
     <div class="card card-teal2">
@@ -809,6 +818,13 @@ const VALVE_OIDs = {
   'v-giesskanne': '0_userdata.0.Wasser.Giesskanne',
 };
 const POOL_ROBOT_OID = 'shelly.0.SHPLG-S#BC0E73#1.Relay0.Switch';
+const POOL_HEAT_OIDs = {
+  auto: '0_userdata.0.Pool.PoolHeizung-Automatik',
+  heat: '0_userdata.0.Pool.PoolHeizung-Boost-Heat',
+  cool: '0_userdata.0.Pool.PoolHeizung-Boost-Cool',
+};
+const POOL_HEAT_BTN = { auto: 'cp-pheat-auto', heat: 'cp-pheat-heat', cool: 'cp-pheat-cool' };
+const POOL_HEAT_CLS = { auto: 'pheat-auto-on', heat: 'pheat-heat-on', cool: 'pheat-cool-on' };
 
 // ── LG Klimaanlagen ────────────────────────────────────────────────────────
 const LG_ROOMS = {
@@ -1080,6 +1096,15 @@ function crdToggleRobot() {
   const btn = document.getElementById('cp-robot'); if (!btn) return;
   socket.emit('setState', POOL_ROBOT_OID, { val: !btn.classList.contains('pump-active-stufe'), ack: false });
 }
+function setPoolHeat(key, val) {
+  const btn = document.getElementById(POOL_HEAT_BTN[key]); if (!btn) return;
+  const on = (val===true||val==='true'||val===1||val==='1');
+  btn.classList.toggle(POOL_HEAT_CLS[key], on);
+}
+function crdTogglePoolHeat(key) {
+  const btn = document.getElementById(POOL_HEAT_BTN[key]); if (!btn) return;
+  socket.emit('setState', POOL_HEAT_OIDs[key], { val: !btn.classList.contains(POOL_HEAT_CLS[key]), ack: false });
+}
 function toggleValve(elId) {
   const btn=document.getElementById(elId); if (!btn) return;
   socket.emit('setState', VALVE_OIDs[elId], { val: !btn.classList.contains('valve-on'), ack: false });
@@ -1165,6 +1190,7 @@ const oidToEnergie = {}; Object.entries(ENERGIE_OIDs).forEach(([id,oid])=>{ if(!
 const oidToCar     = {}; Object.entries(CAR_OIDs).forEach(([id,oid])=>{ oidToCar[oid]=id; });
 const oidToWasser  = {}; Object.entries(WASSER_OIDs).forEach(([id,oid])=>{ oidToWasser[oid]=id; });
 const oidToValve   = {}; Object.entries(VALVE_OIDs).forEach(([id,oid])=>{ oidToValve[oid]=id; });
+const oidToPoolHeat= {}; Object.entries(POOL_HEAT_OIDs).forEach(([k,oid])=>{ oidToPoolHeat[oid]=k; });
 
 const allOids = [...new Set([
   ...Object.values(TEMP_OIDs),
@@ -1177,6 +1203,7 @@ const allOids = [...new Set([
   NUKI_LOCK_OID, NUKI_BATT_OID, SHIELD_OID, HWC_HEAT_OID,
   BATT_CHARGE_OID, SOMMER_OID, URLAUB_OID, HEIZKURVE_OID,
   POOL_ROBOT_OID,
+  ...Object.values(POOL_HEAT_OIDs),
 ])];
 
 // ── applyState ─────────────────────────────────────────────────────────────
@@ -1189,6 +1216,7 @@ function applyState(oid, val) {
   if (oidToWasser[oid])  setWasser(oidToWasser[oid], val);
   if (oidToValve[oid])   setValve(oidToValve[oid], val);
   if (oid===POOL_ROBOT_OID) setRobot(val);
+  if (oidToPoolHeat[oid])   setPoolHeat(oidToPoolHeat[oid], val);
   if (oid===NUKI_LOCK_OID)  setNukiLock(val);
   if (oid===NUKI_BATT_OID)  setNukiBatt(val);
   if (oid===SHIELD_OID)     setShield(val);
