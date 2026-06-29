@@ -4521,6 +4521,7 @@ function initAnchorDrag(anchorEl) {
     const next = LG_SWING_CYCLE[st.swingIdx];
     const sock = window._dashSocket; if (!sock) return;
     sock.emit('setState', `${LG_BASE[room]}.swing_mode.command`, { val: next, ack: false });
+    klpApply(`${room}-swing`, next); // sofortige Anzeige, ohne auf das state-Echo zu warten
   };
   window.klpTempAdj = function(room, delta) {
     const cur = LG_STATE[room].targetTemp; if (cur === null) return;

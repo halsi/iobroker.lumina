@@ -1173,7 +1173,9 @@ function lgSwingCycle(room) {
   const r = LG_ROOMS[room];
   if (r.swingIdx == null) r.swingIdx = Math.max(0, LG_SWING_CYCLE.indexOf(r.swing || 'off'));
   r.swingIdx = (r.swingIdx + 1) % LG_SWING_CYCLE.length;
-  lgSet(room, 'swing_mode', LG_SWING_CYCLE[r.swingIdx]);
+  const next = LG_SWING_CYCLE[r.swingIdx];
+  lgSet(room, 'swing_mode', next);
+  lgApply(`${room}-swing`, next); // sofortige Anzeige, ohne auf das state-Echo zu warten
 }
 function lgSet(room, param, val) {
   socket.emit('setState', `${LG_ROOMS[room].base}.${param}.command`, { val, ack: false });
