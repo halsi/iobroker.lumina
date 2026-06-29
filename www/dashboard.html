@@ -4487,6 +4487,8 @@ function initAnchorDrag(anchorEl) {
       });
     } else if (type === 'swing') {
       LG_STATE[room].swing = v;
+      const si = LG_SWING_CYCLE.indexOf(v);
+      if (si >= 0) LG_STATE[room].swingIdx = si;
       const btn = document.getElementById(`klp-${room}-swing-btn`);
       if (btn) {
         btn.textContent = LG_SWING_LABELS[v] || `Swing: ${v}`;
@@ -4511,8 +4513,12 @@ function initAnchorDrag(anchorEl) {
     sock.emit('setState', `${LG_BASE[room]}.${param}.command`, { val: next, ack: false });
   };
   window.klpSwingCycle = function(room) {
-    const cur = LG_STATE[room].swing || 'off';
-    const next = LG_SWING_CYCLE[(LG_SWING_CYCLE.indexOf(cur) + 1) % LG_SWING_CYCLE.length];
+    // Lokalen Zähler weiterdrehen statt aus dem Geräte-Echo zu rechnen,
+    // damit der Cycle nicht hängenbleibt, wenn das swing_mode.state-Echo nachhinkt.
+    const st = LG_STATE[room];
+    if (st.swingIdx == null) st.swingIdx = Math.max(0, LG_SWING_CYCLE.indexOf(st.swing || 'off'));
+    st.swingIdx = (st.swingIdx + 1) % LG_SWING_CYCLE.length;
+    const next = LG_SWING_CYCLE[st.swingIdx];
     const sock = window._dashSocket; if (!sock) return;
     sock.emit('setState', `${LG_BASE[room]}.swing_mode.command`, { val: next, ack: false });
   };

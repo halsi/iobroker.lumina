@@ -1152,6 +1152,8 @@ function lgApply(key, val) {
     });
   } else if (type === 'swing') {
     LG_ROOMS[room].swing = v;
+    const si = LG_SWING_CYCLE.indexOf(v);
+    if (si >= 0) LG_ROOMS[room].swingIdx = si;
     const btn = document.getElementById(`lg-${room}-swing-btn`);
     if (btn) {
       btn.textContent = LG_SWING_LABELS[v] || `Swing: ${v}`;
@@ -1166,10 +1168,12 @@ function lgToggle(room, param, val) {
   lgSet(room, param, next);
 }
 function lgSwingCycle(room) {
-  const cur = LG_ROOMS[room].swing || 'off';
-  const idx = LG_SWING_CYCLE.indexOf(cur);
-  const next = LG_SWING_CYCLE[(idx + 1) % LG_SWING_CYCLE.length];
-  lgSet(room, 'swing_mode', next);
+  // Lokalen Zähler weiterdrehen statt aus dem Geräte-Echo zu rechnen,
+  // damit der Cycle nicht hängenbleibt, wenn das swing_mode.state-Echo nachhinkt.
+  const r = LG_ROOMS[room];
+  if (r.swingIdx == null) r.swingIdx = Math.max(0, LG_SWING_CYCLE.indexOf(r.swing || 'off'));
+  r.swingIdx = (r.swingIdx + 1) % LG_SWING_CYCLE.length;
+  lgSet(room, 'swing_mode', LG_SWING_CYCLE[r.swingIdx]);
 }
 function lgSet(room, param, val) {
   socket.emit('setState', `${LG_ROOMS[room].base}.${param}.command`, { val, ack: false });
